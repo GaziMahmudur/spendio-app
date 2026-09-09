@@ -33,10 +33,34 @@
       </div>
       <nav class="sidebar-nav">
         <!-- WALLET SWITCHER -->
-        <div class="wallet-switcher" style="margin: 0 0 16px 0; padding: 16px; background: var(--bg-surface-2); border-radius: var(--radius-sm); border: 1px solid var(--border);">
-          <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px;">Current Wallet</div>
-          <select id="walletSelect" class="filter-select" style="width: 100%; border:none; background:transparent;" onchange="switchWallet(this.value)">
-          </select>
+        <div
+          class="wallet-switcher"
+          style="
+            margin: 0 0 16px 0;
+            padding: 16px;
+            background: var(--bg-surface-2);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+          "
+        >
+          <div
+            style="
+              font-size: 11px;
+              font-weight: 700;
+              color: var(--text-muted);
+              text-transform: uppercase;
+              margin-bottom: 8px;
+              letter-spacing: 0.5px;
+            "
+          >
+            Current Wallet
+          </div>
+          <select
+            id="walletSelect"
+            class="filter-select"
+            style="width: 100%; border: none; background: transparent"
+            onchange="switchWallet(this.value)"
+          ></select>
         </div>
         <a
           href="#"
@@ -105,13 +129,21 @@
           ><span class="nav-label">Install App</span>
         </a>
         <a
-          href="https://github.com/GaziMahmudur/spendwise-app/releases/download/v1.1/app-debug.apk"
+          href="assets/SpendWise-v1.2.apk?v=1.2"
           target="_blank"
           class="nav-item"
           id="nav-download-apk"
-          style="background: var(--primary-xlight); color: var(--primary); font-weight: 700; margin-top: auto; border: 1px solid var(--primary-light); box-shadow: var(--shadow-sm);"
+          style="
+            background: var(--primary-xlight);
+            color: var(--primary);
+            font-weight: 700;
+            margin-top: auto;
+            border: 1px solid var(--primary-light);
+            box-shadow: var(--shadow-sm);
+          "
         >
-          <span class="nav-icon">🤖</span><span class="nav-label">Get Android App</span>
+          <span class="nav-icon">🤖</span
+          ><span class="nav-label">Get Android App (v1.2)</span>
         </a>
       </nav>
       <div class="sidebar-footer">

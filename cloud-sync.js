@@ -37,6 +37,24 @@ let _currentUser = null;
 let _syncInProgress = false;
 let _cloudInitialized = false;
 
+// Async Race Condition Protection: Session Token & UID tracking
+let _currentSessionId = 0;
+
+function getUserStorageKey(uid) {
+  if (uid) return `spendwise_v2_${uid}`;
+  return "spendwise_v2";
+}
+
+function getUserMigrationKey(uid) {
+  if (uid) return `spendwise_cloud_migrated_v1_${uid}`;
+  return "spendwise_cloud_migrated_v1";
+}
+
+function getUserMetaKey(uid) {
+  if (uid) return `spendwise_cloud_meta_${uid}`;
+  return "spendwise_cloud_meta";
+}
+
 const MIGRATION_KEY = "spendwise_cloud_migrated_v1";
 const CLOUD_META_KEY = "spendwise_cloud_meta";
 
@@ -66,8 +84,9 @@ async function getNativeFirebaseAuthentication() {
   // Fallback for vanilla-JS projects where the plugin proxy is not exposed
   // globally. This does not require a bundler.
   try {
-    const mod =
-      await import("https://cdn.jsdelivr.net/npm/@capacitor-firebase/authentication@8.3.0/+esm");
+    const mod = await import(
+      "https://cdn.jsdelivr.net/npm/@capacitor-firebase/authentication@8.3.0/+esm"
+    );
     return mod.FirebaseAuthentication || null;
   } catch (err) {
     console.error(
@@ -96,11 +115,13 @@ async function initFirebase() {
   }
 
   try {
-    const { initializeApp, getApps } =
-      await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { initializeApp, getApps } = await import(
+      "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"
+    );
 
-    const { getFirestore, doc, setDoc, getDoc, collection } =
-      await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const { getFirestore, doc, setDoc, getDoc, collection } = await import(
+      "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"
+    );
 
     const {
       getAuth,
@@ -111,8 +132,9 @@ async function initFirebase() {
       signInWithCredential,
       signOut,
       onAuthStateChanged,
-    } =
-      await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+    } = await import(
+      "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"
+    );
 
     if (!getApps().length) {
       _firebaseApp = initializeApp(FIREBASE_CONFIG);
@@ -153,12 +175,28 @@ async function initFirebase() {
     }
 
     onAuthStateChanged(_auth, async (user) => {
+      _currentSessionId++;
+      const thisSessionId = _currentSessionId;
+      const activeUid = user ? user.uid : null;
+
       _currentUser = user;
+
+      if (typeof setStorageUserUid === "function") {
+        setStorageUserUid(activeUid);
+      }
+
+      if (typeof loadState === "function") {
+        loadState();
+        if (typeof renderAll === "function") {
+          renderAll();
+        }
+      }
+
       updateCloudUI();
 
       if (user) {
         try {
-          await checkAndRunMigration();
+          await checkAndRunMigration(thisSessionId, activeUid);
         } catch (err) {
           console.error("[SpendWise Cloud] Post-login migration error:", err);
         }
@@ -250,70 +288,130 @@ async function cloudSignIn() {
 }
 
 async function cloudSignOut() {
-  if (!_auth) return;
+  _currentSessionId++; // Invalidate any pending async operations immediately
 
-  try {
-    const { signOut } = window._fsModules;
+  const oldUid = _currentUser ? _currentUser.uid : null;
 
-    // Clear the native Firebase session too. This is harmless when the
-    // plugin is unavailable because the web Firebase session is still cleared.
-    if (isNativeAndroid()) {
-      const FirebaseAuthentication = await getNativeFirebaseAuthentication();
+  if (_auth) {
+    try {
+      const { signOut } = window._fsModules;
 
-      if (FirebaseAuthentication) {
-        try {
-          await FirebaseAuthentication.signOut();
-        } catch (nativeErr) {
-          console.warn("[SpendWise Cloud] Native sign-out warning:", nativeErr);
+      if (isNativeAndroid()) {
+        const FirebaseAuthentication = await getNativeFirebaseAuthentication();
+
+        if (FirebaseAuthentication) {
+          try {
+            await FirebaseAuthentication.signOut();
+          } catch (nativeErr) {
+            console.warn("[SpendWise Cloud] Native sign-out warning:", nativeErr);
+          }
         }
       }
+
+      await signOut(_auth);
+    } catch (err) {
+      console.error("[SpendWise Cloud] Sign-out error:", err);
     }
-
-    await signOut(_auth);
-
-    _currentUser = null;
-    updateCloudUI();
-    showToast("Signed out from cloud backup.", "info");
-  } catch (err) {
-    console.error("[SpendWise Cloud] Sign-out error:", err);
-    showToast("Sign-out error: " + err.message, "error");
   }
+
+  _currentUser = null;
+
+  // Wipe isolated user storage keys and legacy keys on sign-out
+  if (oldUid) {
+    localStorage.removeItem(getUserStorageKey(oldUid));
+    localStorage.removeItem(getUserMigrationKey(oldUid));
+    localStorage.removeItem(getUserMetaKey(oldUid));
+  }
+  localStorage.removeItem("spendwise_v2");
+  localStorage.removeItem(MIGRATION_KEY);
+  localStorage.removeItem(CLOUD_META_KEY);
+
+  if (typeof setStorageUserUid === "function") {
+    setStorageUserUid(null);
+  }
+
+  // Reload empty app state and re-render UI
+  if (typeof loadState === "function") {
+    loadState();
+    if (typeof renderAll === "function") {
+      renderAll();
+    }
+  }
+
+  updateCloudUI();
+  showToast("Signed out from cloud backup. Local data cleared.", "info");
 }
 
 // ─────────────────────────────────────────────────────
 // AUTO-MIGRATION ON FIRST SIGN-IN
 // ─────────────────────────────────────────────────────
-async function checkAndRunMigration() {
+async function checkAndRunMigration(requestSessionId = null, targetUid = null) {
   if (!_currentUser) return;
-  const alreadyMigrated = localStorage.getItem(MIGRATION_KEY);
+  const activeUid = targetUid || _currentUser.uid;
+  const activeSessionId = requestSessionId !== null ? requestSessionId : _currentSessionId;
+
+  const migrationKey = getUserMigrationKey(activeUid);
+  const alreadyMigrated = localStorage.getItem(migrationKey);
   if (alreadyMigrated) return;
 
   // Check if user already has cloud data
-  const cloudData = await fetchCloudData();
+  const cloudData = await fetchCloudData(activeUid);
+
+  // RACE CONDITION GUARD: Ensure user/session hasn't changed while awaiting cloud data
+  if (
+    _currentSessionId !== activeSessionId ||
+    !_currentUser ||
+    _currentUser.uid !== activeUid
+  ) {
+    console.warn("[SpendWise Cloud] Stale migration fetch discarded for UID:", activeUid);
+    return;
+  }
+
   if (cloudData && cloudData.expenses && cloudData.expenses.length > 0) {
-    // Cloud has data → ask user whether to restore or overwrite
-    localStorage.setItem(MIGRATION_KEY, "merged");
+    localStorage.setItem(migrationKey, "merged");
     updateCloudStatus(
       "synced",
       `Cloud data found (${cloudData.expenses.length} expenses). Auto-restoring…`,
     );
-    await restoreFromCloud(true); // silent mode
+    await restoreFromCloud(true, activeSessionId, activeUid);
     return;
   }
 
-  // Cloud is empty → push local data to cloud
-  const localState = getLocalState();
+  // Cloud is empty for this user UID
+  const localState = getLocalState(activeUid);
+  const legacyRaw = localStorage.getItem("spendwise_v2");
+  let dataToPush = localState;
+
+  // Migrate guest data to isolated user storage if localState for this UID is empty
+  if (
+    (!localState.expenses || localState.expenses.length === 0) &&
+    legacyRaw
+  ) {
+    try {
+      const parsedLegacy = JSON.parse(legacyRaw);
+      if (parsedLegacy.expenses && parsedLegacy.expenses.length > 0) {
+        dataToPush = parsedLegacy;
+        localStorage.setItem(getUserStorageKey(activeUid), JSON.stringify(dataToPush));
+        if (typeof loadState === "function") {
+          loadState();
+          if (typeof renderAll === "function") renderAll();
+        }
+      }
+    } catch (e) {}
+  }
+
   const totalItems =
-    (localState.expenses?.length || 0) +
-    (localState.balanceRecords?.length || 0);
+    (dataToPush.expenses?.length || 0) +
+    (dataToPush.balanceRecords?.length || 0);
+
   if (totalItems > 0) {
     updateCloudStatus(
       "syncing",
       `Migrating ${totalItems} local records to cloud…`,
     );
-    const success = await pushToCloud(localState, true);
+    const success = await pushToCloud(dataToPush, true, activeSessionId, activeUid);
     if (success) {
-      localStorage.setItem(MIGRATION_KEY, "done");
+      localStorage.setItem(migrationKey, "done");
       updateCloudStatus(
         "synced",
         `✅ ${totalItems} records backed up to cloud!`,
@@ -321,7 +419,7 @@ async function checkAndRunMigration() {
       showToast(`☁️ ${totalItems} records auto-backed up to cloud!`, "success");
     }
   } else {
-    localStorage.setItem(MIGRATION_KEY, "done");
+    localStorage.setItem(migrationKey, "done");
     updateCloudStatus("synced", "Cloud backup ready.");
   }
 }
@@ -329,9 +427,11 @@ async function checkAndRunMigration() {
 // ─────────────────────────────────────────────────────
 // CORE CLOUD OPERATIONS
 // ─────────────────────────────────────────────────────
-function getLocalState() {
+function getLocalState(targetUid = null) {
   try {
-    const raw = localStorage.getItem("spendwise_v2");
+    const uid = targetUid || (_currentUser ? _currentUser.uid : null);
+    const key = getUserStorageKey(uid);
+    const raw = localStorage.getItem(key);
     return raw
       ? JSON.parse(raw)
       : { expenses: [], categories: [], balanceRecords: [] };
@@ -340,26 +440,51 @@ function getLocalState() {
   }
 }
 
-async function pushToCloud(dataObj, silent = false) {
+async function pushToCloud(dataObj, silent = false, requestSessionId = null, targetUid = null) {
   if (!_currentUser || !_db) return false;
+  const activeUid = targetUid || _currentUser.uid;
+  const activeSessionId = requestSessionId !== null ? requestSessionId : _currentSessionId;
+
+  // RACE CONDITION GUARD
+  if (
+    _currentSessionId !== activeSessionId ||
+    !_currentUser ||
+    _currentUser.uid !== activeUid
+  ) {
+    console.warn("[SpendWise Cloud] Push discarded due to session/UID mismatch.");
+    return false;
+  }
+
   if (_syncInProgress) return false;
   _syncInProgress = true;
   if (!silent) updateCloudStatus("syncing", "Uploading to cloud…");
+
   try {
     const { doc, setDoc } = window._fsModules;
-    const userId = _currentUser.uid;
     const payload = {
       ...dataObj,
       _meta: {
         uploadedAt: new Date().toISOString(),
         deviceId: getDeviceId(),
         appVersion: "2.0",
-        uid: userId,
+        uid: activeUid,
         email: _currentUser.email,
         displayName: _currentUser.displayName,
       },
     };
-    await setDoc(doc(_db, "spendwise_backups", userId), payload);
+
+    await setDoc(doc(_db, "spendwise_backups", activeUid), payload);
+
+    // RE-VERIFY SESSION BEFORE CONFIRMING
+    if (
+      _currentSessionId !== activeSessionId ||
+      !_currentUser ||
+      _currentUser.uid !== activeUid
+    ) {
+      console.warn("[SpendWise Cloud] Session changed after cloud push completion.");
+      return false;
+    }
+
     saveMeta({
       lastBackup: new Date().toISOString(),
       email: _currentUser.email,
@@ -384,11 +509,12 @@ async function pushToCloud(dataObj, silent = false) {
   }
 }
 
-async function fetchCloudData() {
-  if (!_currentUser || !_db) return null;
+async function fetchCloudData(targetUid = null) {
+  const activeUid = targetUid || (_currentUser ? _currentUser.uid : null);
+  if (!activeUid || !_db) return null;
   try {
     const { doc, getDoc } = window._fsModules;
-    const snap = await getDoc(doc(_db, "spendwise_backups", _currentUser.uid));
+    const snap = await getDoc(doc(_db, "spendwise_backups", activeUid));
     return snap.exists() ? snap.data() : null;
   } catch (err) {
     console.error("[SpendWise Cloud] Fetch error:", err);
@@ -396,14 +522,29 @@ async function fetchCloudData() {
   }
 }
 
-async function restoreFromCloud(silent = false) {
+async function restoreFromCloud(silent = false, requestSessionId = null, targetUid = null) {
   if (!_currentUser || !_db) {
     if (!silent) showToast("Please sign in first.", "error");
     return;
   }
+  const activeUid = targetUid || _currentUser.uid;
+  const activeSessionId = requestSessionId !== null ? requestSessionId : _currentSessionId;
+
   if (!silent) updateCloudStatus("syncing", "Downloading from cloud…");
+
   try {
-    const cloudData = await fetchCloudData();
+    const cloudData = await fetchCloudData(activeUid);
+
+    // RACE CONDITION GUARD BEFORE APPLYING
+    if (
+      _currentSessionId !== activeSessionId ||
+      !_currentUser ||
+      _currentUser.uid !== activeUid
+    ) {
+      console.warn("[SpendWise Cloud] Late cloud restore response discarded.");
+      return;
+    }
+
     if (!cloudData) {
       if (!silent) {
         updateCloudStatus("idle", "No cloud backup found.");
@@ -423,21 +564,39 @@ async function restoreFromCloud(silent = false) {
         ? cleanData.balanceRecords
         : [],
       currency: cleanData.currency || "taka",
+      accounts: cleanData.accounts || null,
+      activeAccountId: cleanData.activeAccountId || null,
     };
 
-    // Merge or replace — merge keeps local-only data
-    const localState = getLocalState();
+    const localState = getLocalState(activeUid);
     const merged = mergeStates(localState, restoredState);
 
-    localStorage.setItem("spendwise_v2", JSON.stringify(merged));
-    // Reload app state
+    // FINAL RACE CONDITION GUARD BEFORE PERSISTING
+    if (
+      _currentSessionId !== activeSessionId ||
+      !_currentUser ||
+      _currentUser.uid !== activeUid
+    ) {
+      console.warn("[SpendWise Cloud] Discarding state merge due to session change.");
+      return;
+    }
+
+    const userStorageKey = getUserStorageKey(activeUid);
+    localStorage.setItem(userStorageKey, JSON.stringify(merged));
+
+    if (typeof setStorageUserUid === "function") {
+      setStorageUserUid(activeUid);
+    }
+
     if (typeof loadState === "function") {
       loadState();
-      renderAll();
+      if (typeof renderAll === "function") {
+        renderAll();
+      }
     }
 
     const total =
-      restoredState.expenses.length + restoredState.balanceRecords.length;
+      (merged.expenses?.length || 0) + (merged.balanceRecords?.length || 0);
     if (!silent) {
       updateCloudStatus("synced", `Restored ${total} records.`);
       showToast(`☁️ Restored ${total} records from cloud!`, "success");
@@ -568,7 +727,9 @@ function updateCloudStatus(type, message) {
     synced: "var(--green)",
     error: "var(--red)",
   };
-  el.innerHTML = `<span class="cloud-status-icon">${icons[type] || "☁️"}</span> ${message}`;
+  el.innerHTML = `<span class="cloud-status-icon">${
+    icons[type] || "☁️"
+  }</span> ${message}`;
   el.style.color = colors[type] || "var(--text-muted)";
   if (type === "syncing" || type === "signing-in") {
     el.classList.add("pulsing");
@@ -619,15 +780,19 @@ function confirmAction(title, message) {
 // METADATA HELPERS
 // ─────────────────────────────────────────────────────
 function saveMeta(data) {
-  const existing = getMeta() || {};
+  const activeUid = _currentUser ? _currentUser.uid : null;
+  const metaKey = getUserMetaKey(activeUid);
+  const existing = getMeta(activeUid) || {};
   localStorage.setItem(
-    CLOUD_META_KEY,
+    metaKey,
     JSON.stringify({ ...existing, ...data }),
   );
 }
-function getMeta() {
+function getMeta(targetUid = null) {
   try {
-    return JSON.parse(localStorage.getItem(CLOUD_META_KEY) || "null");
+    const activeUid = targetUid || (_currentUser ? _currentUser.uid : null);
+    const metaKey = getUserMetaKey(activeUid);
+    return JSON.parse(localStorage.getItem(metaKey) || "null");
   } catch {
     return null;
   }

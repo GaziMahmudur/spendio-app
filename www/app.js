@@ -569,6 +569,19 @@ function gcsRefresh(selectId) {
   if (_gSelects[selectId]) _gSelects[selectId].refresh();
 }
 
+let _currentStorageUid = null;
+
+function setStorageUserUid(uid) {
+  _currentStorageUid = uid || null;
+}
+
+function getActiveStateKey() {
+  if (_currentStorageUid) {
+    return `spendwise_v2_${_currentStorageUid}`;
+  }
+  return "spendwise_v2";
+}
+
 const STATE_KEY = "spendwise_v2";
 let state = {
   expenses: [],
@@ -816,9 +829,31 @@ function saveQuickCategory() {
 
 // ── PERSISTENCE & WALLET MANAGER ───────────────────────
 function loadState() {
+  const activeKey = getActiveStateKey();
   try {
-    const raw = localStorage.getItem(STATE_KEY);
-    if (raw) Object.assign(state, JSON.parse(raw));
+    const raw = localStorage.getItem(activeKey);
+    if (raw) {
+      // Clear memory fully before loading new state, so stale keys
+      // like `accounts` don't override the restored data.
+      for (const key in state) {
+        delete state[key];
+      }
+      Object.assign(state, JSON.parse(raw));
+    } else {
+      // Clear all state keys if there is no data in localStorage
+      // (e.g., after logging out or explicitly resetting data)
+      for (const key in state) {
+        delete state[key];
+      }
+      Object.assign(state, {
+        expenses: [],
+        categories: DEFAULT_CATEGORIES.map((c) => ({ ...c })),
+        balanceRecords: [],
+        currency: "taka",
+        accounts: null,
+        activeAccountId: null,
+      });
+    }
   } catch (e) {}
 
   if (!state.accounts) {
@@ -852,8 +887,9 @@ function saveState() {
   state.accounts[activeId].expenses = state.expenses;
   state.accounts[activeId].balanceRecords = state.balanceRecords;
 
-  localStorage.setItem(STATE_KEY, JSON.stringify(state));
-  if (typeof pushToCloud === "function") {
+  const activeKey = getActiveStateKey();
+  localStorage.setItem(activeKey, JSON.stringify(state));
+  if (typeof pushToCloud === "function" && _currentUser) {
     clearTimeout(_autoBackupTimer);
     _autoBackupTimer = setTimeout(() => {
       pushToCloud(state, true);
