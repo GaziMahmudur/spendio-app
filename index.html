@@ -2,7 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <script src="capacitor.js"></script>
     <meta
       name="description"
       content="SpendWise – A modern expense tracker with categories, balance tracking, and data export."
@@ -835,17 +836,6 @@
                 required
               />
             </div>
-            <script>
-              if ("serviceWorker" in navigator) {
-                navigator.serviceWorker
-                  .getRegistrations()
-                  .then(function (registrations) {
-                    for (let registration of registrations) {
-                      registration.unregister();
-                    }
-                  });
-              }
-            </script>
             <div class="form-group">
               <label class="form-label">Date</label>
               <input type="date" class="form-input" id="expDate" required />

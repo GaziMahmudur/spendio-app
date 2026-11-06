@@ -1,5 +1,13 @@
 apply plugin: 'com.android.application'
 
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
 android {
     namespace = "io.spendwise.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -18,10 +26,11 @@ android {
     }
     signingConfigs {
         release {
-            storeFile file('release-key.jks')
-            storePassword 'spendwise123'
-            keyAlias 'spendwise-key'
-            keyPassword 'spendwise123'
+            def storeFilePath = localProperties.getProperty('RELEASE_STORE_FILE') ?: 'release-key.jks'
+            storeFile file(storeFilePath)
+            storePassword localProperties.getProperty('RELEASE_STORE_PASSWORD') ?: ''
+            keyAlias localProperties.getProperty('RELEASE_KEY_ALIAS') ?: ''
+            keyPassword localProperties.getProperty('RELEASE_KEY_PASSWORD') ?: ''
         }
     }
     buildTypes {

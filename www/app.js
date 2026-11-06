@@ -2422,7 +2422,7 @@ function executeImport() {
   }
 
   // Save and reload
-  localStorage.setItem("spendwise_v2", JSON.stringify(finalState));
+  localStorage.setItem(getActiveStateKey(), JSON.stringify(finalState));
   loadState();
   renderAll();
   clearImportPreview();
@@ -2545,189 +2545,57 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-let _datePickers = {};
-function dpSetValue(id, val) {
-  document.getElementById(id).value = val;
-  if (_datePickers[id]) _datePickers[id]._syncTrigger();
-}
-function initDatePickers() {
-  document.querySelectorAll(`input[type="date"]`).forEach((inp) => {
-    if (!inp.dataset.dpInit) {
-      inp.dataset.dpInit = "1";
-      _datePickers[inp.id] = new CustomDatepicker(inp);
-    }
-  });
-}
-class CustomDatepicker {
-  constructor(input) {
-    this.input = input;
-    this.date = input.value ? new Date(input.value) : new Date();
-    this.currentMonth = this.date.getMonth();
-    this.currentYear = this.date.getFullYear();
-    this._closeOnOutside = this._closeOnOutside.bind(this);
-    this._build();
-  }
-  _build() {
-    this.wrap = document.createElement("div");
-    this.wrap.className = "dp-wrap";
-    this.input.parentNode.insertBefore(this.wrap, this.input);
-    this.wrap.appendChild(this.input);
-    this.trigger = document.createElement("button");
-    this.trigger.type = "button";
-    this.trigger.className = "dp-trigger";
-    this.wrap.appendChild(this.trigger);
-    this.calendar = document.createElement("div");
-    this.calendar.className = "dp-calendar";
-    this.wrap.appendChild(this.calendar);
-    this.trigger.addEventListener("click", (e) => {
-      e.stopPropagation();
-      this._toggle();
-    });
-    this.input.addEventListener("change", () => this._syncTrigger());
-    this._syncTrigger();
-  }
-  _syncTrigger() {
-    if (this.input.value) {
-      const d = new Date(this.input.value);
-      this.trigger.innerHTML = `<span style="font-weight:600; color:var(--text-primary);">${d.toLocaleDateString(
-        "en-US",
-        { month: "short", day: "numeric", year: "numeric" },
-      )}</span>`;
-    } else {
-      this.trigger.innerHTML = `<span class="dp-placeholder">Select date</span>`;
-    }
-    this.date = this.input.value ? new Date(this.input.value) : new Date();
-    this.currentMonth = this.date.getMonth();
-    this.currentYear = this.date.getFullYear();
-  }
-  _toggle() {
-    if (this.calendar.classList.contains("open")) this._close();
-    else this._open();
-  }
-  _open() {
-    document
-      .querySelectorAll(".dp-calendar.open")
-      .forEach((c) => c.classList.remove("open"));
-    this.calendar.classList.add("open");
-    this.trigger.classList.add("open");
-    this._render();
-    this.calendar.style.right = "0";
-    this.calendar.style.left = "auto";
-    let rect = this.calendar.getBoundingClientRect();
-    if (rect.left < 0) {
-      this.calendar.style.right = "auto";
-      this.calendar.style.left = "0";
-    }
-    document.addEventListener("click", this._closeOnOutside);
-  }
-  _close() {
-    this.calendar.classList.remove("open");
-    this.trigger.classList.remove("open");
-    document.removeEventListener("click", this._closeOnOutside);
-  }
-  _closeOnOutside(e) {
-    if (!this.wrap.contains(e.target)) this._close();
-  }
-  _render() {
-    const monthNames = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
-    const firstDay = new Date(this.currentYear, this.currentMonth, 1).getDay();
-    const daysInMonth = new Date(
-      this.currentYear,
-      this.currentMonth + 1,
-      0,
-    ).getDate();
-    let html = `
-      <div class="dp-header">
-        <div class="dp-month-label">${monthNames[this.currentMonth]} ${
-      this.currentYear
-    }</div>
-        <div style="display:flex;gap:4px;">
-          <button type="button" class="dp-nav-btn prev-mo">?</button>
-          <button type="button" class="dp-nav-btn next-mo">?</button>
-        </div>
-      </div>
-      <div class="dp-weekdays">
-        <div class="dp-wd">Su</div><div class="dp-wd">Mo</div><div class="dp-wd">Tu</div>
-        <div class="dp-wd">We</div><div class="dp-wd">Th</div><div class="dp-wd">Fr</div><div class="dp-wd">Sa</div>
-      </div>
-      <div class="dp-days">
-    `;
-    for (let i = 0; i < firstDay; i++) {
-      html += `<div class="dp-day dp-day--empty"></div>`;
-    }
-    const todayStr = new Date().toLocaleDateString("en-CA").split("T")[0];
-    const selStr = this.input.value;
-    for (let i = 1; i <= daysInMonth; i++) {
-      const mm = String(this.currentMonth + 1).padStart(2, "0");
-      const dd = String(i).padStart(2, "0");
-      const dStr = `${this.currentYear}-${mm}-${dd}`;
-      let cls = "dp-day";
-      if (dStr === todayStr) cls += " dp-day--today";
-      if (dStr === selStr) cls += " dp-day--selected";
-      html += `<div class="${cls}" data-date="${dStr}">${i}</div>`;
-    }
-    html += `</div>
-      <div class="dp-footer">
-        <button type="button" class="dp-footer-btn dp-clear-btn">Clear</button>
-        <button type="button" class="dp-footer-btn dp-today-btn">Today</button>
-      </div>`;
-    this.calendar.innerHTML = html;
-    this.calendar.querySelector(".prev-mo").addEventListener("click", (e) => {
-      e.stopPropagation();
-      this.currentMonth--;
-      if (this.currentMonth < 0) {
-        this.currentMonth = 11;
-        this.currentYear--;
+// ── ANDROID HARDWARE BACK BUTTON (Capacitor App) ─────────
+(function initHardwareBackButton() {
+  function handleBackButton() {
+    const App = window.Capacitor?.Plugins?.App;
+    if (!App) return;
+
+    App.addListener('backButton', ({ canGoBack }) => {
+      // 1. Close open modals
+      const openModal = document.querySelector('.modal-backdrop.open, .copy-preview-modal.open, .qcat-panel.open');
+      if (openModal) {
+        if (openModal.id === 'addExpenseModal') {
+          closeAddExpenseModal();
+        } else if (openModal.id === 'confirmModal') {
+          closeConfirmModal();
+        } else if (openModal.id === 'copyTextModal') {
+          closeCopyModal();
+        } else if (openModal.id === 'importResultModal') {
+          closeImportResultModal();
+        } else if (openModal.classList.contains('qcat-panel')) {
+          toggleQuickCat();
+        } else {
+          openModal.classList.remove('open');
+        }
+        return;
       }
-      this._render();
-    });
-    this.calendar.querySelector(".next-mo").addEventListener("click", (e) => {
-      e.stopPropagation();
-      this.currentMonth++;
-      if (this.currentMonth > 11) {
-        this.currentMonth = 0;
-        this.currentYear++;
+
+      // 2. Close mobile sidebar menu if open
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar && sidebar.classList.contains('open')) {
+        closeSidebar();
+        return;
       }
-      this._render();
+
+      // 3. Navigate back to dashboard if on another page
+      if (typeof currentPage !== 'undefined' && currentPage !== 'dashboard') {
+        navigateTo('dashboard');
+        return;
+      }
+
+      // 4. Default back / exit
+      if (canGoBack) {
+        window.history.back();
+      } else {
+        App.exitApp();
+      }
     });
-    this.calendar
-      .querySelectorAll(".dp-day:not(.dp-day--empty)")
-      .forEach((d) => {
-        d.addEventListener("click", (e) => {
-          e.stopPropagation();
-          this.input.value = d.dataset.date;
-          this._syncTrigger();
-          this._close();
-        });
-      });
-    this.calendar
-      .querySelector(".dp-clear-btn")
-      .addEventListener("click", (e) => {
-        e.stopPropagation();
-        this.input.value = "";
-        this._syncTrigger();
-        this._close();
-      });
-    this.calendar
-      .querySelector(".dp-today-btn")
-      .addEventListener("click", (e) => {
-        e.stopPropagation();
-        this.input.value = todayStr;
-        this._syncTrigger();
-        this._close();
-      });
   }
-}
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', handleBackButton);
+  } else {
+    handleBackButton();
+  }
+})();

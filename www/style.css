@@ -4,54 +4,71 @@
    ========================================= */
 
 :root {
-  /* ── Shikho Brand Colors ── */
-  --primary: #6d28d9;
-  --primary-dark: #5b21b6;
-  --primary-light: #8b5cf6;
-  --primary-xlight: #ede9fe;
-  --primary-hover: #7c3aed;
+  /* ── Apple Design Tokens (from design.md) ── */
+  --primary: #0066cc;               /* Action Blue */
+  --primary-focus: #0071e3;         /* Focus Blue */
+  --primary-on-dark: #2997ff;       /* Sky Link Blue */
+  --primary-dark: #004d99;
+  --primary-light: #4796eb;
+  --primary-xlight: #e8f2fc;        /* Soft Blue Accent Surface */
+  --primary-hover: #0077ed;
 
-  /* ── Backgrounds ── */
-  --bg-body: #f4f5f7;
-  --bg-surface: #ffffff;
-  --bg-surface-2: #f8f7ff;
+  /* ── Neutral Canvas & Surfaces ── */
+  --bg-body: #f5f5f7;              /* Canvas Parchment */
+  --bg-surface: #ffffff;           /* Pure White */
+  --bg-surface-2: #fafafc;         /* Surface Pearl */
   --bg-sidebar: #ffffff;
+  --bg-tile-dark: #272729;         /* Surface Tile 1 */
+  --bg-tile-dark-2: #2a2a2c;       /* Surface Tile 2 */
+  --surface-black: #000000;
 
-  /* ── Borders ── */
-  --border: #e5e7eb;
-  --border-focus: #8b5cf6;
+  /* ── Borders & Hairlines ── */
+  --border: #e0e0e0;               /* Hairline */
+  --border-focus: #0071e3;
+  --divider-soft: #f0f0f0;
 
-  /* ── Text ── */
-  --text-primary: #111827;
-  --text-secondary: #374151;
-  --text-muted: #6b7280;
+  /* ── Text Hierarchy ── */
+  --text-primary: #1d1d1f;         /* Near-Black Ink */
+  --text-secondary: #333333;       /* Ink Muted 80 */
+  --text-muted: #7a7a7a;           /* Ink Muted 48 */
   --text-on-primary: #ffffff;
+  --text-on-dark: #ffffff;
+  --body-muted: #cccccc;
 
   /* ── Status Colors ── */
-  --green: #10b981;
-  --green-light: #d1fae5;
-  --green-dark: #065f46;
-  --red: #ef4444;
-  --red-light: #fee2e2;
-  --red-dark: #991b1b;
-  --amber: #f59e0b;
-  --cyan: #06b6d4;
-  --blue: #3b82f6;
-  --pink: #ec4899;
+  --green: #34c759;
+  --green-light: #e8f9ed;
+  --green-dark: #248a3d;
+  --red: #ff3b30;
+  --red-light: #feebe9;
+  --red-dark: #c41c13;
+  --amber: #ff9500;
+  --cyan: #32ade6;
+  --blue: #0066cc;
+  --pink: #af52de;
 
-  /* ── Layout ── */
+  /* ── Apple Geometric Radii ── */
+  --radius: 18px;                  /* rounded.lg */
+  --radius-sm: 8px;                /* rounded.sm */
+  --radius-xs: 5px;                /* rounded.xs */
+  --radius-md: 11px;               /* rounded.md */
+  --radius-pill: 9999px;           /* rounded.pill */
+
+  /* ── Layout & Responsive Safe Areas ── */
   --sidebar-w: 240px;
-  --topbar-h: 64px;
-  --radius: 16px;
-  --radius-sm: 10px;
-  --radius-xs: 8px;
-  --transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  --topbar-h: calc(54px + env(safe-area-inset-top, 0px));
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --transition: 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
 
-  /* ── Shadows ── */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.12);
-  --shadow-primary: 0 8px 24px rgba(109, 40, 217, 0.28);
+  /* ── Apple Elevation (Clean hairlines & soft product shadow) ── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 0 1px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.08);
+  --shadow-product: rgba(0, 0, 0, 0.22) 3px 5px 30px 0;
+  --shadow-primary: 0 4px 14px rgba(0, 102, 204, 0.25);
 }
 
 *,
@@ -67,7 +84,9 @@ html {
 }
 
 body {
-  font-family: "Hind Siliguri", "Inter", system-ui, sans-serif;
+  padding-bottom: var(--safe-bottom);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Hind Siliguri", "Inter", system-ui, sans-serif;
+  letter-spacing: -0.224px;
   background: var(--bg-body);
   color: var(--text-primary);
   min-height: 100vh;
@@ -794,16 +813,18 @@ body {
 
 /* ── BAR CHART ── */
 .bar-chart-card {
-  overflow: visible;
+  overflow: visible !important;
 }
 
 .bar-chart-container {
   display: flex;
   align-items: flex-end;
-  gap: 8px;
-  height: 140px;
-  padding-top: 16px;
-  overflow-x: auto;
+  gap: 12px;
+  height: 185px;
+  padding-top: 55px;
+  padding-bottom: 6px;
+  overflow: visible !important;
+  position: relative;
 }
 
 .bar-wrap {
@@ -813,45 +834,73 @@ body {
   gap: 6px;
   flex: 1;
   min-width: 36px;
+  position: relative;
+  cursor: pointer;
+  outline: none;
 }
 
 .bar {
   width: 100%;
   border-radius: 6px 6px 0 0;
   background: linear-gradient(180deg, var(--primary-light), var(--primary));
-  transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s;
   position: relative;
-  cursor: pointer;
-  min-height: 4px;
+  min-height: 6px;
 }
 
-.bar:hover {
-  filter: brightness(1.1);
+.bar-wrap:hover .bar,
+.bar-wrap:focus .bar,
+.bar-wrap:active .bar {
+  filter: brightness(1.15);
 }
 
 .bar-tooltip {
   position: absolute;
-  bottom: calc(100% + 6px);
+  bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
   background: var(--primary-dark);
   color: #fff;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 12px;
+  padding: 5px 11px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
   white-space: nowrap;
   display: none;
-  z-index: 10;
+  z-index: 999;
+  box-shadow: 0 4px 14px rgba(91, 33, 182, 0.4);
+  pointer-events: none;
 }
 
+.bar-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px 5px 0 5px;
+  border-style: solid;
+  border-color: var(--primary-dark) transparent transparent transparent;
+}
+
+.bar-wrap:hover .bar-tooltip,
+.bar-wrap:focus .bar-tooltip,
+.bar-wrap:active .bar-tooltip,
 .bar:hover .bar-tooltip {
-  display: block;
+  display: block !important;
 }
 
 .bar-label {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-muted);
   font-weight: 600;
+  text-align: center;
+  transition: color 0.2s;
+}
+
+.bar-wrap:hover .bar-label,
+.bar-wrap:focus .bar-label {
+  color: var(--primary);
 }
 
 /* ═══════════════════════════════════════════
@@ -2328,6 +2377,9 @@ input[type="number"]::-webkit-inner-spin-button {
   .glass-card {
     overflow: hidden;
   }
+  .bar-chart-card {
+    overflow: visible !important;
+  }
   /* Ensure preview table scrolls within its card */
   .preview-table-wrap {
     margin: 0 -4px;
@@ -3080,4 +3132,107 @@ body.dropdown-open::before {
   max-height: 250px;
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+/* ── DATEPICKER VIEWPORT OVERFLOW FIXES ── */
+.dp-wrap.open-level {
+  z-index: 1000 !important;
+  position: relative;
+}
+.dp-calendar.dropup {
+  top: auto !important;
+  bottom: calc(100% + 6px) !important;
+  transform: translateY(8px) scale(0.97);
+}
+.dp-calendar.open.dropup {
+  transform: translateY(0) scale(1) !important;
+}
+
+.add-balance-card,
+.balance-layout .glass-card {
+  overflow: visible !important;
+}
+
+/* ── WALLET SWITCHER TRUNCATION & SIZING ── */
+.wallet-switcher {
+  max-width: 100%;
+  overflow: visible;
+  position: relative;
+}
+.wallet-switcher .gcs-wrap {
+  width: 100%;
+  display: block;
+}
+.wallet-switcher .gcs-trigger {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wallet-switcher .gcs-trigger-label {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: calc(100% - 24px);
+}
+.wallet-switcher .gcs-dropdown {
+  width: 100%;
+  max-width: 100%;
+  right: 0;
+  left: 0;
+}
+.gcs-option-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Apple Action Button Micro-Interactions (transform: scale(0.95)) ── */
+button:active,
+.btn:active,
+.btn-primary:active,
+.btn-secondary:active,
+.btn-add-topbar:active,
+.nav-item:active,
+.gcs-trigger:active,
+.dp-trigger:active {
+  transform: scale(0.95) !important;
+}
+
+.btn-primary,
+.btn-add-topbar {
+  background: var(--primary) !important;
+  color: #ffffff !important;
+  border-radius: var(--radius-pill) !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+  border: none !important;
+  transition: all var(--transition) !important;
+}
+
+.btn-primary:hover,
+.btn-add-topbar:hover {
+  background: var(--primary-focus) !important;
+  box-shadow: 0 2px 8px rgba(0, 102, 204, 0.25) !important;
+  transform: translateY(-0.5px);
+}
+
+.btn-secondary {
+  background: var(--bg-surface-2) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-pill) !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+  transition: all var(--transition) !important;
+}
+
+.btn-secondary:hover {
+  background: var(--divider-soft) !important;
+  color: var(--primary) !important;
+  border-color: var(--hairline) !important;
 }
