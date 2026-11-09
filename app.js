@@ -569,10 +569,26 @@ function gcsRefresh(selectId) {
   if (_gSelects[selectId]) _gSelects[selectId].refresh();
 }
 
-let _currentStorageUid = null;
+// ── USER-STORAGE UID INITIALIZATION ───────────────────────
+// Pre-load the last active logged-in UID from localStorage so the initial loadState()
+// immediately reads the logged-in user's data with ZERO delay, before Firebase Auth resolves!
+let _currentStorageUid = (() => {
+  try {
+    return localStorage.getItem("spendwise_active_storage_uid") || null;
+  } catch (e) {
+    return null;
+  }
+})();
 
 function setStorageUserUid(uid) {
   _currentStorageUid = uid || null;
+  try {
+    if (uid) {
+      localStorage.setItem("spendwise_active_storage_uid", uid);
+    } else {
+      localStorage.removeItem("spendwise_active_storage_uid");
+    }
+  } catch (e) {}
 }
 
 function getActiveStateKey() {
@@ -648,6 +664,14 @@ let qcatSelectedColor = PRESET_COLORS[0];
 
 // ── INIT ───────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
+  // Detect Windows OS and activate crisp vector icon set for Windows desktop
+  const isWindows = /Windows|Win32|Win64/i.test(navigator.userAgent || navigator.platform || "");
+  if (isWindows) {
+    document.documentElement.classList.add("is-windows");
+  }
+  if (typeof lucide !== "undefined" && lucide.createIcons) {
+    lucide.createIcons();
+  }
   if (window.Capacitor && window.Capacitor.isNativePlatform()) {
     const installBtn = document.getElementById("nav-install");
     const downloadBtn = document.getElementById("nav-download-apk");
@@ -874,8 +898,13 @@ function loadState() {
   }
 
   state.expenses = state.expenses || [];
-  state.categories = state.categories || [];
+  if (!state.categories || state.categories.length === 0) {
+    state.categories = DEFAULT_CATEGORIES.map((c) => ({ ...c }));
+  }
   state.balanceRecords = state.balanceRecords || [];
+  if (!state.savingsVaults) {
+    state.savingsVaults = [];
+  }
 }
 
 let _autoBackupTimer = null;
@@ -898,14 +927,32 @@ function saveState() {
 }
 
 function initWalletSelector() {
-  const sel = document.getElementById("walletSelect");
-  if (!sel) return;
-  sel.innerHTML = Object.entries(state.accounts || {})
-    .map(([id, acc]) => `<option value="${id}">${escHtml(acc.name)}</option>`)
-    .join("");
-  sel.value = state.activeAccountId;
+  // Ensure default wallet profile exists in accounts
+  if (!state.accounts || typeof state.accounts !== "object" || Object.keys(state.accounts).length === 0) {
+    state.accounts = {
+      wallet_main: {
+        name: "Main Wallet",
+        expenses: state.expenses || [],
+        balanceRecords: state.balanceRecords || [],
+      },
+    };
+    state.activeAccountId = "wallet_main";
+  }
 
-  if (typeof gcsRefresh === "function") gcsRefresh("walletSelect");
+  const activeId = state.activeAccountId || "wallet_main";
+  state.activeAccountId = activeId;
+  if (!state.accounts[activeId]) {
+    state.accounts[activeId] = {
+      name: "Main Wallet",
+      expenses: state.expenses || [],
+      balanceRecords: state.balanceRecords || [],
+    };
+  }
+
+  const display = document.getElementById("currentWalletDisplay");
+  if (display) {
+    display.textContent = state.accounts[activeId].name || "Main Wallet";
+  }
 }
 
 function switchWallet(id) {
@@ -960,11 +1007,13 @@ function navigateTo(page) {
     transactions: "Transactions",
     categories: "Categories",
     balance: "Balance",
+    savings: "Savings & Goals",
     export: "Export / Import",
     cloud: "Cloud Backup",
   };
   document.getElementById("topbarTitle").textContent = titles[page] || "";
   closeSidebar();
+  if (page === "savings") renderSavingsPage();
   if (page === "export") renderExportPreview();
   if (page === "transactions") populateCategoryFilter();
 }
@@ -1023,43 +1072,155 @@ function renderAll() {
   renderCategories();
   renderBalanceHistory();
   populateCategoryDropdowns();
+  initWalletSelector();
+  renderSavingsPage();
+  if (typeof lucide !== "undefined" && lucide.createIcons) {
+    try { lucide.createIcons(); } catch(e) {}
+  }
   if (currentPage === "export") renderExportPreview();
+}
+
+// ── DASHBOARD FILTER STATE & HELPERS ───────────────────
+let dashFilterMode = "all";
+let dashCustomStart = "";
+let dashCustomEnd = "";
+
+function setDashboardFilter(mode) {
+  dashFilterMode = mode;
+  document.querySelectorAll("#dashFilterPills .dash-filter-pill").forEach((btn) => {
+    btn.classList.toggle("active", btn.getAttribute("data-filter") === mode);
+  });
+  const customInputs = document.getElementById("dashCustomRangeInputs");
+  if (customInputs) customInputs.classList.toggle("show", mode === "custom");
+  if (mode === "custom") {
+    const todayStr = today();
+    if (!dashCustomStart) dashCustomStart = firstDayOfMonth();
+    if (!dashCustomEnd) dashCustomEnd = todayStr;
+    const sEl = document.getElementById("dashStartDate");
+    const eEl = document.getElementById("dashEndDate");
+    if (sEl) sEl.value = dashCustomStart;
+    if (eEl) eEl.value = dashCustomEnd;
+  }
+  renderDashboard();
+}
+
+function onCustomDateRangeChange() {
+  const sEl = document.getElementById("dashStartDate");
+  const eEl = document.getElementById("dashEndDate");
+  if (sEl && sEl.value) dashCustomStart = sEl.value;
+  if (eEl && eEl.value) dashCustomEnd = eEl.value;
+  renderDashboard();
+}
+
+function getFilteredDataForDashboard() {
+  const now = new Date();
+  const todayStr = today();
+  let startDate = null;
+  let endDate = null;
+  let labelText = "All Time History";
+
+  if (dashFilterMode === "today") {
+    startDate = todayStr;
+    endDate = todayStr;
+    labelText = "Today (" + fmtDate(todayStr) + ")";
+  } else if (dashFilterMode === "week") {
+    const w = new Date(now);
+    w.setDate(now.getDate() - 6);
+    startDate = w.toISOString().split("T")[0];
+    endDate = todayStr;
+    labelText = "This Week (" + fmtDate(startDate) + " - " + fmtDate(endDate) + ")";
+  } else if (dashFilterMode === "month") {
+    startDate = firstDayOfMonth();
+    endDate = todayStr;
+    labelText = now.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  } else if (dashFilterMode === "custom") {
+    startDate = dashCustomStart || firstDayOfMonth();
+    endDate = dashCustomEnd || todayStr;
+    labelText = fmtDate(startDate) + " to " + fmtDate(endDate);
+  } else {
+    labelText = "All Time History";
+  }
+
+  const lblEl = document.getElementById("dashFilterActiveLabel");
+  if (lblEl) lblEl.innerHTML = "<span>📅</span> " + escHtml(labelText);
+
+  if (dashFilterMode === "all" || (!startDate && !endDate)) {
+    return { expenses: state.expenses, incomes: state.balanceRecords, isFiltered: false };
+  }
+
+  const filteredExpenses = state.expenses.filter((e) => e.date >= startDate && e.date <= endDate);
+  const filteredIncomes = state.balanceRecords.filter((b) => b.date >= startDate && b.date <= endDate);
+
+  return { expenses: filteredExpenses, incomes: filteredIncomes, isFiltered: true };
+}
+
+function getFilteredExpensesForDashboard() {
+  return getFilteredDataForDashboard().expenses;
 }
 
 // ── DASHBOARD ──────────────────────────────────────────
 function renderDashboard() {
-  const totalExpenses = state.expenses.reduce(
-    (s, e) => s + Number(e.amount),
-    0,
-  );
-  // Default to treating all balanceRecords as flat income deposits regardless of type
-  // This fully prevents the negative balance mathematical paradox users complained about
-  const totalIncome = state.balanceRecords.reduce(
-    (s, b) => s + Number(b.amount),
-    0,
-  );
-  const balance = totalIncome - totalExpenses;
+  const filteredData = typeof getFilteredDataForDashboard === "function"
+    ? getFilteredDataForDashboard()
+    : { expenses: state.expenses, incomes: state.balanceRecords, isFiltered: false };
 
-  document.getElementById("dashBalance").textContent = fmtAmount(balance);
-  document.getElementById("dashIncome").textContent = fmtAmount(totalIncome);
-  document.getElementById("dashExpenses").textContent =
-    fmtAmount(totalExpenses);
-  document.getElementById("dashExpenseCount").textContent = `${
-    state.expenses.length
-  } transaction${state.expenses.length !== 1 ? "s" : ""}`;
+  const filteredExpenses = filteredData.expenses;
+  const filteredIncomes = filteredData.incomes;
 
-  if (state.balanceRecords.length > 0) {
-    const latest = [...state.balanceRecords]
-      .sort((a, b) => new Date(a.date) - new Date(b.date))
-      .pop();
-    document.getElementById("dashBalanceDate").textContent = `As of ${fmtDate(
-      latest.date,
-    )}`;
-  } else {
-    document.getElementById("dashBalanceDate").textContent = "As of today";
+  const totalAllExpenses = state.expenses.reduce((s, e) => s + Number(e.amount), 0);
+  const totalAllIncome = state.balanceRecords.reduce((s, b) => s + Number(b.amount), 0);
+  const netWalletBalance = totalAllIncome - totalAllExpenses;
+
+  // Filtered sums
+  const displayedExpensesTotal = filteredExpenses.reduce((s, e) => s + Number(e.amount), 0);
+  const displayedIncomeTotal = filteredIncomes.reduce((s, b) => s + Number(b.amount), 0);
+
+  const dashBalEl = document.getElementById("dashBalance");
+  const dashIncEl = document.getElementById("dashIncome");
+  const dashIncSubEl = document.getElementById("dashIncomeSub");
+  const dashExpEl = document.getElementById("dashExpenses");
+  const dashCountEl = document.getElementById("dashExpenseCount");
+  const dashDateEl = document.getElementById("dashBalanceDate");
+
+  if (dashBalEl) dashBalEl.textContent = fmtAmount(netWalletBalance);
+
+  // Total Income dynamic display based on filter
+  if (dashIncEl) {
+    if (dashFilterMode === "all") {
+      dashIncEl.textContent = fmtAmount(totalAllIncome);
+    } else {
+      dashIncEl.textContent = fmtAmount(displayedIncomeTotal);
+    }
   }
 
-  renderRecentTransactions();
+  if (dashIncSubEl) {
+    if (dashFilterMode === "all") {
+      dashIncSubEl.textContent = "All time deposits";
+    } else {
+      dashIncSubEl.textContent = `${filteredIncomes.length} deposit${filteredIncomes.length !== 1 ? "s" : ""} in period`;
+    }
+  }
+
+  // Total Expenses display
+  if (dashExpEl) dashExpEl.textContent = fmtAmount(displayedExpensesTotal);
+
+  if (dashCountEl) {
+    if (dashFilterMode === "all") {
+      dashCountEl.textContent = `${state.expenses.length} transaction${state.expenses.length !== 1 ? "s" : ""}`;
+    } else {
+      dashCountEl.textContent = `${filteredExpenses.length} in selected period`;
+    }
+  }
+
+  if (dashDateEl) {
+    if (dashFilterMode === "all") {
+      dashDateEl.textContent = "All time net balance";
+    } else {
+      dashDateEl.textContent = `Current net balance`;
+    }
+  }
+
+  renderRecentTransactions(filteredExpenses);
   renderChart();
   renderBarChart();
 }
@@ -1077,18 +1238,20 @@ function computeCurrentBalance() {
 }
 
 // ── RECENT TRANSACTIONS ────────────────────────────────
-function renderRecentTransactions() {
+function renderRecentTransactions(listOverride) {
   const el = document.getElementById("recentTransactions");
-  const sorted = [...state.expenses]
+  if (!el) return;
+  const source = listOverride !== undefined ? listOverride : state.expenses;
+  const sorted = [...source]
     .sort((a, b) => new Date(b.date) - new Date(a.date))
     .slice(0, 8);
   if (!sorted.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🧾</div><p>No transactions yet.<br/>Add your first expense!</p></div>`;
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🧾</div><p>No transactions found for this period.<br/>Add an expense or switch filter!</p></div>`;
     return;
   }
   el.innerHTML = `<div class="preview-table-wrap">
     <table class="preview-table">
-      <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Note</th><th>Amount</th><th>Actions</th></tr></thead>
+      <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Note</th><th class="col-amount">Amount</th><th class="col-actions">Actions</th></tr></thead>
       <tbody>${sorted.map((e) => txItemHTML(e)).join("")}</tbody>
     </table>
   </div>`;
@@ -1101,22 +1264,20 @@ function txItemHTML(expense) {
     color: "#7c3aed",
   };
   return `<tr>
-    <td>${fmtDate(expense.date)}</td>
+    <td style="white-space: nowrap;">${fmtDate(expense.date)}</td>
     <td style="font-weight: 600;">${escHtml(expense.desc)}</td>
-    <td><span style="display:inline-block; padding: 4px 8px; border-radius: 4px; background: ${
+    <td style="white-space: nowrap;"><span style="display:inline-block; padding: 4px 8px; border-radius: 4px; background: ${
       cat.color
     }22; color: ${cat.color}; font-size: 11px; font-weight: 700;">${
     cat.icon
   } ${escHtml(cat.name)}</span></td>
     <td>${expense.note ? escHtml(expense.note) : "—"}</td>
-    <td style="text-align: right; font-weight: bold; color: var(--red);">−${fmtAmount(
-      expense.amount,
-    )}</td>
-    <td style="text-align: right; white-space: nowrap;">
-      <button style="background:none;border:none;cursor:pointer;font-size:16px;margin:0 4px;" title="Edit" onclick="editExpense('${
+    <td class="cell-amount">−${fmtAmount(expense.amount)}</td>
+    <td class="cell-actions">
+      <button style="background:none;border:none;cursor:pointer;font-size:15px;margin:0 3px;padding:3px;border-radius:4px;" title="Edit" onclick="editExpense('${
         expense.id
       }')">✏️</button>
-      <button style="background:none;border:none;cursor:pointer;font-size:16px;margin:0 4px;" title="Delete" onclick="promptDeleteExpense('${
+      <button style="background:none;border:none;cursor:pointer;font-size:15px;margin:0 3px;padding:3px;border-radius:4px;" title="Delete" onclick="promptDeleteExpense('${
         expense.id
       }')">🗑️</button>
     </td>
@@ -1125,8 +1286,12 @@ function txItemHTML(expense) {
 
 // ── DONUT CHART ────────────────────────────────────────
 function renderChart() {
-  const period = document.getElementById("chartPeriodFilter").value;
-  const filtered = filterByPeriod(state.expenses, period);
+  const periodEl = document.getElementById("chartPeriodFilter");
+  const period = periodEl ? periodEl.value : "all";
+  const baseExpenses = (typeof getFilteredExpensesForDashboard === "function" && dashFilterMode !== "all" && period === "all")
+    ? getFilteredExpensesForDashboard()
+    : state.expenses;
+  const filtered = filterByPeriod(baseExpenses, period);
 
   const groups = {};
   filtered.forEach((e) => {
@@ -1439,7 +1604,7 @@ function filterTransactions() {
   }
   el.innerHTML = `<div class="preview-table-wrap">
     <table class="preview-table">
-      <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Note</th><th>Amount</th><th>Actions</th></tr></thead>
+      <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Note</th><th class="col-amount">Amount</th><th class="col-actions">Actions</th></tr></thead>
       <tbody>${list.map((e) => txItemHTML(e)).join("")}</tbody>
     </table>
   </div>`;
@@ -1783,57 +1948,24 @@ function addBalance(event) {
   const amount = parseFloat(document.getElementById("balAmount").value);
   const date = document.getElementById("balDate").value;
   const note = document.getElementById("balNote").value.trim();
-  const type = document.querySelector('input[name="balType"]:checked').value;
 
   if (!amount || !date) return;
 
-  if (type === "set") {
-    // Create a brand new wallet tracking profile
-    saveState();
-    const id = "wallet_" + Date.now();
-    const walletName = note || `Balance Profile (${fmtDate(date)})`;
-    state.accounts[id] = {
-      name: walletName,
-      expenses: [],
-      balanceRecords: [],
-    };
+  state.balanceRecords.push({
+    id: uid(),
+    amount,
+    date,
+    note: note || "Income Deposit",
+    type: "add",
+    createdAt: new Date().toISOString(),
+  });
 
-    // Auto-switch to newly created wallet
-    state.activeAccountId = id;
-    state.expenses = [];
-    state.balanceRecords = [];
-
-    // Push the initial deposit
-    state.balanceRecords.push({
-      id: uid(),
-      amount,
-      date,
-      note: "Initial Balance Setup",
-      type: "add", // normalizes calculation logic
-      createdAt: new Date().toISOString(),
-    });
-
-    initWalletSelector();
-    saveState();
-    showToast("New balance profile created successfully!", "success");
-  } else {
-    state.balanceRecords.push({
-      id: uid(),
-      amount,
-      date,
-      note,
-      type,
-      createdAt: new Date().toISOString(),
-    });
-    saveState();
-    showToast("Balance added to current profile!", "success");
-  }
-
+  saveState();
   renderAll();
+  showToast("Balance successfully added to your wallet!", "success");
+
   document.getElementById("balanceForm").reset();
-  document.getElementById("balDate").value = new Date()
-    .toISOString()
-    .split("T")[0];
+  document.getElementById("balDate").value = new Date().toISOString().split("T")[0];
 }
 
 function renderBalanceHistory() {
@@ -1850,14 +1982,12 @@ function renderBalanceHistory() {
       (b) => `
     <div class="balance-item">
       <div class="bal-info">
-        <div class="bal-amount">${fmtAmount(b.amount)}</div>
+        <div class="bal-amount">+${fmtAmount(b.amount)}</div>
         <div class="bal-meta">${fmtDate(b.date)}${
         b.note ? " · " + escHtml(b.note) : ""
       }</div>
       </div>
-      <div class="bal-badge ${b.type === "add" ? "add" : ""}">${
-        b.type === "set" ? "Set" : "Added"
-      }</div>
+      <div class="bal-badge add">Income</div>
       <div class="bal-actions">
         <button class="tx-action-btn" onclick="promptDeleteBalance('${
           b.id
@@ -2511,37 +2641,11 @@ if ("serviceWorker" in navigator) {
     navigator.serviceWorker
       .register("./sw.js")
       .then((reg) => {
-        console.log(
-          "ServiceWorker registration successful with scope: ",
-          reg.scope,
-        );
-
-        // Listen for new updates
-        reg.onupdatefound = () => {
-          const installingWorker = reg.installing;
-          if (installingWorker == null) return;
-          installingWorker.onstatechange = () => {
-            if (
-              installingWorker.state === "installed" &&
-              navigator.serviceWorker.controller
-            ) {
-              // New update available, refresh after a moment
-              showToast("App updated successfully! Refreshing...", "info");
-              setTimeout(() => window.location.reload(), 1500);
-            }
-          };
-        };
+        console.log("ServiceWorker registration successful");
       })
       .catch((err) => {
         console.log("ServiceWorker registration failed: ", err);
       });
-  });
-
-  // Listen for SW messages
-  navigator.serviceWorker.addEventListener("message", (event) => {
-    if (event.data && event.data.type === "SW_UPDATED") {
-      window.location.reload();
-    }
   });
 }
 
@@ -2599,3 +2703,298 @@ if ("serviceWorker" in navigator) {
     handleBackButton();
   }
 })();
+
+
+// ── WALLET RENAME & SAVINGS VAULTS SYSTEM ───────────────
+function openRenameWalletModal() {
+  const activeId = state.activeAccountId || "wallet_main";
+  const curName = (state.accounts && state.accounts[activeId] && state.accounts[activeId].name) || "Main Wallet";
+  const inp = document.getElementById("renameWalletInput");
+  if (inp) inp.value = curName;
+  const modal = document.getElementById("renameWalletModal");
+  if (modal) modal.classList.add("open");
+  setTimeout(() => { if (inp) inp.focus(); }, 100);
+}
+
+function closeRenameWalletModal() {
+  const modal = document.getElementById("renameWalletModal");
+  if (modal) modal.classList.remove("open");
+}
+
+function handleRenameWalletBackdrop(e) {
+  if (e.target === document.getElementById("renameWalletModal")) closeRenameWalletModal();
+}
+
+function saveWalletName(e) {
+  e.preventDefault();
+  const inp = document.getElementById("renameWalletInput");
+  const newName = inp ? inp.value.trim() : "";
+  if (!newName) {
+    showToast("Please enter a valid wallet name.", "error");
+    return;
+  }
+
+  const activeId = state.activeAccountId || "wallet_main";
+  if (!state.accounts) state.accounts = {};
+  if (!state.accounts[activeId]) {
+    state.accounts[activeId] = {
+      name: newName,
+      expenses: state.expenses || [],
+      balanceRecords: state.balanceRecords || [],
+    };
+  } else {
+    state.accounts[activeId].name = newName;
+  }
+
+  saveState();
+  initWalletSelector();
+  closeRenameWalletModal();
+  showToast(`Wallet renamed to "${newName}"`, "success");
+}
+
+// ── SAVINGS VAULTS LOGIC ────────────────────────────────
+function openCreateSavingsModal() {
+  document.getElementById("vaultInputName").value = "";
+  document.getElementById("vaultInputTarget").value = "";
+  document.getElementById("vaultInputInitial").value = "";
+  const modal = document.getElementById("savingsVaultModal");
+  if (modal) modal.classList.add("open");
+  setTimeout(() => document.getElementById("vaultInputName").focus(), 100);
+}
+
+function closeCreateSavingsModal() {
+  const modal = document.getElementById("savingsVaultModal");
+  if (modal) modal.classList.remove("open");
+}
+
+function handleSavingsVaultBackdrop(e) {
+  if (e.target === document.getElementById("savingsVaultModal")) closeCreateSavingsModal();
+}
+
+function saveNewSavingsVault(e) {
+  e.preventDefault();
+  const name = document.getElementById("vaultInputName").value.trim();
+  const target = parseFloat(document.getElementById("vaultInputTarget").value) || 0;
+  const initial = parseFloat(document.getElementById("vaultInputInitial").value) || 0;
+
+  if (!name) {
+    showToast("Please enter a goal name.", "error");
+    return;
+  }
+
+  if (!state.savingsVaults) state.savingsVaults = [];
+
+  const vault = {
+    id: "vault_" + Date.now(),
+    name: name,
+    targetAmount: target,
+    currentAmount: 0,
+    createdAt: new Date().toISOString(),
+    records: []
+  };
+
+  if (initial > 0) {
+    vault.currentAmount = initial;
+    vault.records.push({
+      id: uid(),
+      amount: initial,
+      type: "deposit",
+      note: "Initial savings deposit",
+      date: today()
+    });
+
+    // Deduct from wallet expenses as savings transfer
+    state.expenses.push({
+      id: uid(),
+      desc: `Transferred to Savings: ${name}`,
+      amount: initial,
+      date: today(),
+      categoryId: "cat_shop",
+      note: "Moved to dedicated savings vault",
+      createdAt: new Date().toISOString()
+    });
+  }
+
+  state.savingsVaults.push(vault);
+  saveState();
+  renderAll();
+  closeCreateSavingsModal();
+  showToast(`Savings vault "${name}" created!`, "success");
+}
+
+function handleSavingsDeposit(e) {
+  e.preventDefault();
+  const vaultId = document.getElementById("savingsVaultSelect").value;
+  const amount = parseFloat(document.getElementById("savingsActionAmount").value);
+  const note = document.getElementById("savingsActionNote").value.trim();
+  const actionType = document.querySelector('input[name="savingsType"]:checked').value;
+
+  if (!vaultId || !amount || amount <= 0) {
+    showToast("Please enter a valid amount.", "error");
+    return;
+  }
+
+  const vault = (state.savingsVaults || []).find(v => v.id === vaultId);
+  if (!vault) {
+    showToast("Vault not found.", "error");
+    return;
+  }
+
+  if (actionType === "deposit") {
+    // Save money: add to vault, record expense in daily wallet
+    vault.currentAmount = (vault.currentAmount || 0) + amount;
+    vault.records.push({
+      id: uid(),
+      amount,
+      type: "deposit",
+      note: note || "Savings deposit",
+      date: today()
+    });
+
+    state.expenses.push({
+      id: uid(),
+      desc: `Saved to: ${vault.name}`,
+      amount: amount,
+      date: today(),
+      categoryId: "cat_shop",
+      note: note || "Moved from daily wallet to savings",
+      createdAt: new Date().toISOString()
+    });
+
+    showToast(`Deposited ${fmtAmount(amount)} to ${vault.name}`, "success");
+  } else {
+    // Withdraw money: check balance, deduct from vault, add to wallet balance
+    if (vault.currentAmount < amount) {
+      showToast(`Insufficient vault balance. Available: ${fmtAmount(vault.currentAmount)}`, "error");
+      return;
+    }
+    vault.currentAmount -= amount;
+    vault.records.push({
+      id: uid(),
+      amount,
+      type: "withdraw",
+      note: note || "Withdrawn to wallet",
+      date: today()
+    });
+
+    state.balanceRecords.push({
+      id: uid(),
+      amount: amount,
+      date: today(),
+      note: `Withdrawn from ${vault.name}`,
+      type: "add",
+      createdAt: new Date().toISOString()
+    });
+
+    showToast(`Withdrew ${fmtAmount(amount)} back to wallet balance!`, "info");
+  }
+
+  saveState();
+  renderAll();
+  document.getElementById("savingsActionAmount").value = "";
+  document.getElementById("savingsActionNote").value = "";
+}
+
+function deleteSavingsVault(id) {
+  const vault = (state.savingsVaults || []).find(v => v.id === id);
+  if (!vault) return;
+
+  if (!confirm(`Delete savings vault "${vault.name}"? If it has an active balance of ${fmtAmount(vault.currentAmount)}, it will be refunded back into your main wallet.`)) return;
+
+  if (vault.currentAmount > 0) {
+    state.balanceRecords.push({
+      id: uid(),
+      amount: vault.currentAmount,
+      date: today(),
+      note: `Refund from deleted vault: ${vault.name}`,
+      type: "add",
+      createdAt: new Date().toISOString()
+    });
+  }
+
+  state.savingsVaults = state.savingsVaults.filter(v => v.id !== id);
+  saveState();
+  renderAll();
+  showToast(`Vault "${vault.name}" deleted and refunded.`, "info");
+}
+
+function renderSavingsPage() {
+  const select = document.getElementById("savingsVaultSelect");
+  const grid = document.getElementById("savingsVaultsGrid");
+  const totalBadge = document.getElementById("savingsTotalBadge");
+
+  if (!state.savingsVaults) state.savingsVaults = [];
+
+  // Default initial vault if none
+  if (state.savingsVaults.length === 0) {
+    state.savingsVaults.push({
+      id: "vault_emergency",
+      name: "Emergency Fund",
+      targetAmount: 50000,
+      currentAmount: 0,
+      createdAt: new Date().toISOString(),
+      records: []
+    });
+  }
+
+  const vaults = state.savingsVaults;
+  const totalSaved = vaults.reduce((s, v) => s + (v.currentAmount || 0), 0);
+
+  if (totalBadge) totalBadge.textContent = `Total Saved: ${fmtAmount(totalSaved)}`;
+
+  if (select) {
+    select.innerHTML = vaults.map(v => `<option value="${v.id}">${escHtml(v.name)} (${fmtAmount(v.currentAmount)})</option>`).join("");
+  }
+
+  if (grid) {
+    if (vaults.length === 0) {
+      grid.innerHTML = `<div class="empty-state"><div class="empty-icon">💰</div><p>No savings vaults yet.<br/>Create one to start saving!</p></div>`;
+      return;
+    }
+
+    grid.innerHTML = vaults.map(v => {
+      const cur = v.currentAmount || 0;
+      const target = v.targetAmount || 0;
+      const pct = target > 0 ? Math.min(100, Math.round((cur / target) * 100)) : 100;
+
+      return `
+        <div class="savings-card">
+          <div>
+            <div class="savings-card-top">
+              <div style="min-width:0; flex:1;">
+                <h4 class="savings-card-title" title="${escHtml(v.name)}">${escHtml(v.name)}</h4>
+                <p class="savings-card-desc">${target > 0 ? 'Target: ' + fmtAmount(target) : 'Flexible Savings Goal'}</p>
+              </div>
+              <span class="savings-card-badge">${target > 0 ? pct + '% Saved' : 'Active'}</span>
+            </div>
+
+            <div style="font-size:22px; font-weight:800; color:var(--text-primary); letter-spacing:-0.4px; margin-bottom:8px;">
+              ${fmtAmount(cur)}
+            </div>
+
+            ${target > 0 ? `
+              <div class="savings-progress-wrap">
+                <div class="savings-progress-bar">
+                  <div class="savings-progress-fill" style="width:${pct}%;"></div>
+                </div>
+                <div class="savings-progress-text">
+                  <span>${fmtAmount(cur)}</span>
+                  <span>${fmtAmount(target)}</span>
+                </div>
+              </div>
+            ` : ''}
+          </div>
+
+          <div class="savings-card-actions">
+            <span style="font-size:11px; color:var(--text-muted); flex:1;">
+              Created: ${fmtDate(v.createdAt.split('T')[0])}
+            </span>
+            <button type="button" class="btn btn-secondary" onclick="deleteSavingsVault('${v.id}')" style="width:auto; padding:5px 9px; font-size:12px; color:var(--red);" title="Delete Vault">
+              🗑️
+            </button>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+}

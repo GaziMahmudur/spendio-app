@@ -4,7 +4,7 @@
    Auto-updates: new SW activates immediately and notifies clients
 ===================================================== */
 
-const CACHE_NAME = "spendwise-v5";
+const CACHE_NAME = "spendwise-v27";
 const OFFLINE_PAGE = "./index.html";
 
 // Core files to precache on install
@@ -54,17 +54,9 @@ self.addEventListener("activate", (event) => {
       ),
       // Take control of all existing clients immediately
       clients.claim(),
-    ]).then(() => {
-      // Notify all open tabs that a new version is active
-      clients.matchAll({ includeUncontrolled: true }).then((clientList) => {
-        clientList.forEach((client) => {
-          client.postMessage({ type: "SW_UPDATED" });
-        });
-      });
-    }),
+    ])
   );
 });
-
 // ── FETCH ──────────────────────────────────────────────
 self.addEventListener("fetch", (event) => {
   const { request } = event;

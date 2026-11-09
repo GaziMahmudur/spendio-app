@@ -15,12 +15,13 @@
       href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=1794246639047" />
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#6d28d9" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  </head>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
 
   <body>
     <!-- Mobile Nav Overlay -->
@@ -29,16 +30,17 @@
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-logo">
-        <div class="logo-icon">💸</div>
+        <div class="logo-icon"><span class="native-emoji">💸</span><i class="win-icon" data-lucide="wallet-cards"></i></div>
         <span class="logo-text">SpendWise</span>
       </div>
       <nav class="sidebar-nav">
-        <!-- WALLET SWITCHER -->
+        <!-- CURRENT WALLET INDICATOR -->
         <div
           class="wallet-switcher"
+          id="sidebarWalletBox"
           style="
             margin: 0 0 16px 0;
-            padding: 16px;
+            padding: 12px 14px;
             background: var(--bg-surface-2);
             border-radius: var(--radius-sm);
             border: 1px solid var(--border);
@@ -50,18 +52,39 @@
               font-weight: 700;
               color: var(--text-muted);
               text-transform: uppercase;
-              margin-bottom: 8px;
+              margin-bottom: 4px;
               letter-spacing: 0.5px;
             "
           >
-            Current Wallet
+            My Wallet
           </div>
-          <select
-            id="walletSelect"
-            class="filter-select"
-            style="width: 100%; border: none; background: transparent"
-            onchange="switchWallet(this.value)"
-          ></select>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="display:inline-flex; align-items:center;">
+              <span class="native-emoji" style="font-size: 15px;">💼</span>
+              <i class="win-icon" data-lucide="briefcase"></i>
+            </span>
+            <span
+              id="currentWalletDisplay"
+              onclick="openRenameWalletModal()"
+              style="
+                font-size: 14px;
+                font-weight: 700;
+                color: var(--text-primary);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                cursor: pointer;
+                padding: 2px 4px;
+                border-radius: 4px;
+                transition: all var(--transition);
+              "
+              title="Click to rename"
+              onmouseover="this.style.color='var(--primary)'; this.style.background='var(--primary-xlight)'"
+              onmouseout="this.style.color='var(--text-primary)'; this.style.background='transparent'"
+            >
+              Main Wallet
+            </span>
+          </div>
         </div>
         <a
           href="#"
@@ -96,7 +119,15 @@
           id="nav-balance"
           onclick="navigateTo('balance')"
         >
-          <span class="nav-icon">🏦</span><span class="nav-label">Balance</span>
+          <span class="nav-icon"><span class="native-emoji">🏦</span><i class="win-icon" data-lucide="landmark"></i></span><span class="nav-label">Balance</span>
+        </a>
+        <a
+          href="#"
+          class="nav-item"
+          id="nav-savings"
+          onclick="navigateTo('savings')"
+        >
+          <span class="nav-icon"><span class="native-emoji">💰</span><i class="win-icon" data-lucide="piggy-bank"></i></span><span class="nav-label">Savings</span>
         </a>
         <a
           href="#"
@@ -120,17 +151,7 @@
           >
         </a>
         <a
-          href="#"
-          class="nav-item"
-          id="nav-install"
-          style="display: none"
-          onclick="installPWA()"
-        >
-          <span class="nav-icon">📲</span
-          ><span class="nav-label">Install App</span>
-        </a>
-        <a
-          href="https://github.com/GaziMahmudur/spendwise-app/releases/download/v1.2/SpendWise-v1.2.apk"
+          href="https://github.com/GaziMahmudur/spendwise-app/releases/download/v1.3/SpendWise-v1.3.apk"
           target="_blank"
           class="nav-item"
           id="nav-download-apk"
@@ -144,7 +165,7 @@
           "
         >
           <span class="nav-icon">🤖</span
-          ><span class="nav-label">Get Android App (v1.2)</span>
+          ><span class="nav-label">Get Android App (v1.3)</span>
         </a>
       </nav>
       <div class="sidebar-footer">
@@ -170,6 +191,29 @@
         <!-- DASHBOARD PAGE -->
         <section class="page active" id="page-dashboard">
           <div class="dashboard-grid">
+            <!-- Smart Dashboard Quick-Filter Bar -->
+            <div class="dash-filter-container">
+              <div class="dash-filter-pills" id="dashFilterPills">
+                <button type="button" class="dash-filter-pill" data-filter="today" onclick="setDashboardFilter('today')">Today</button>
+                <button type="button" class="dash-filter-pill" data-filter="week" onclick="setDashboardFilter('week')">This Week</button>
+                <button type="button" class="dash-filter-pill active" data-filter="month" onclick="setDashboardFilter('month')">This Month</button>
+                <button type="button" class="dash-filter-pill" data-filter="all" onclick="setDashboardFilter('all')">All Time</button>
+                <button type="button" class="dash-filter-pill" data-filter="custom" onclick="setDashboardFilter('custom')">Custom</button>
+              </div>
+
+              <div class="dash-custom-range-wrap">
+                <!-- Custom Date Inputs (shown only on 'custom' filter) -->
+                <div class="dash-range-inputs" id="dashCustomRangeInputs">
+                  <input type="date" id="dashStartDate" class="dash-date-field" onchange="onCustomDateRangeChange()" />
+                  <span style="font-size: 12px; color: var(--text-muted);">to</span>
+                  <input type="date" id="dashEndDate" class="dash-date-field" onchange="onCustomDateRangeChange()" />
+                </div>
+                <div class="dash-date-badge" id="dashFilterActiveLabel">
+                  <span>📅</span> This Month
+                </div>
+              </div>
+            </div>
+
             <!-- Balance Cards -->
             <div class="cards-row">
               <div class="stat-card card-balance">
@@ -180,7 +224,7 @@
               <div class="stat-card card-income">
                 <div class="card-label">Total Income</div>
                 <div class="card-amount" id="dashIncome">0.00 taka</div>
-                <div class="card-sub">Initial deposits</div>
+                <div class="card-sub" id="dashIncomeSub">Initial deposits</div>
               </div>
               <div class="stat-card card-expenses">
                 <div class="card-label">Total Expenses</div>
@@ -333,7 +377,7 @@
         <section class="page" id="page-balance">
           <div class="balance-layout">
             <div class="glass-card add-balance-card">
-              <h2 class="card-title">Set / Add Balance</h2>
+              <h2 class="card-title">Add Money / Income</h2>
               <form id="balanceForm" onsubmit="addBalance(event)">
                 <div class="form-group">
                   <label class="form-label">Amount (taka)</label>
@@ -352,30 +396,17 @@
                   <input type="date" class="form-input" id="balDate" required />
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Note (optional)</label>
+                  <label class="form-label">Note / Source (optional)</label>
                   <input
                     type="text"
                     class="form-input"
                     id="balNote"
-                    placeholder="e.g., Monthly paycheck"
+                    placeholder="e.g., Monthly salary, Freelance, Gift"
                     maxlength="60"
                   />
                 </div>
-                <div class="form-group">
-                  <label class="form-label">Type</label>
-                  <div class="radio-group">
-                    <label class="radio-label">
-                      <input type="radio" name="balType" value="set" checked />
-                      Set as new balance
-                    </label>
-                    <label class="radio-label">
-                      <input type="radio" name="balType" value="add" /> Add to
-                      current balance
-                    </label>
-                  </div>
-                </div>
                 <button type="submit" class="btn btn-primary">
-                  Save Balance
+                  + Add to Wallet
                 </button>
               </form>
             </div>
@@ -386,6 +417,91 @@
                   <div class="empty-icon">🏦</div>
                   <p>No balance records yet.</p>
                 </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- WALLETS MANAGEMENT PAGE -->
+        <section class="page" id="page-savings">
+          <div class="page-header-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:16px;">
+            <div>
+              <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--green); margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+                <span>💰</span> Dedicated Savings Vaults
+              </div>
+              <h1 style="font-size:24px; font-weight:700; color:var(--text-primary); letter-spacing:-0.5px; margin:0;">Savings & Goals</h1>
+              <p style="font-size:13px; color:var(--text-muted); margin:4px 0 0 0;">Separate money from your daily spending wallet to save for specific purposes.</p>
+            </div>
+            <button
+              type="button"
+              class="btn btn-primary"
+              onclick="openCreateSavingsModal()"
+              style="width:auto; padding:9px 18px; font-size:13px; font-weight:600; border-radius:var(--radius-pill); display:inline-flex; align-items:center; gap:6px; background:#10b981 !important;"
+            >
+              <span>＋</span> New Savings Vault
+            </button>
+          </div>
+
+          <div class="savings-layout">
+            <!-- Add / Transfer to Savings Card -->
+            <div class="glass-card">
+              <h2 class="card-title" style="margin-bottom:16px;">Deposit / Withdraw Savings</h2>
+              <form id="savingsActionForm" onsubmit="handleSavingsDeposit(event)">
+                <div class="form-group">
+                  <label class="form-label">Select Vault</label>
+                  <select id="savingsVaultSelect" class="form-input" required>
+                    <!-- Populated by renderSavingsPage() -->
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Action Type</label>
+                  <div class="radio-group" style="display:flex; gap:16px;">
+                    <label class="radio-label">
+                      <input type="radio" name="savingsType" value="deposit" checked />
+                      Deposit (Save Money)
+                    </label>
+                    <label class="radio-label">
+                      <input type="radio" name="savingsType" value="withdraw" />
+                      Withdraw back to Wallet
+                    </label>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Amount (taka)</label>
+                  <input
+                    type="number"
+                    class="form-input"
+                    id="savingsActionAmount"
+                    placeholder="0.00"
+                    min="1"
+                    step="0.01"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Note (optional)</label>
+                  <input
+                    type="text"
+                    class="form-input"
+                    id="savingsActionNote"
+                    placeholder="e.g., Monthly stash, Emergency expense"
+                    maxlength="50"
+                  />
+                </div>
+                <button type="submit" class="btn btn-primary" style="background:#10b981 !important;">
+                  Confirm Transaction
+                </button>
+              </form>
+            </div>
+
+            <!-- Savings Vaults List -->
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                <h3 style="font-size:15px; font-weight:700; color:var(--text-primary); margin:0;">Active Savings Goals</h3>
+                <span id="savingsTotalBadge" style="font-size:13px; font-weight:700; color:var(--green);">Total Saved: 0.00 taka</span>
+              </div>
+              <div class="savings-vaults-grid" id="savingsVaultsGrid">
+                <!-- Rendered dynamically -->
               </div>
             </div>
           </div>
@@ -797,6 +913,97 @@
       </div>
     </main>
 
+    <!-- WALLET MODAL (Create / Edit) -->
+    <!-- RENAME WALLET MODAL -->
+      <div class="modal-backdrop" id="renameWalletModal" onclick="handleRenameWalletBackdrop(event)">
+        <div class="modal-box" style="max-width: 400px;">
+          <div class="modal-header">
+            <div>
+              <h2 class="modal-title">Rename Wallet</h2>
+              <p style="font-size: 13px; color: var(--text-muted); margin: 4px 0 0 0;">Give your wallet a custom name.</p>
+            </div>
+            <button class="modal-close" onclick="closeRenameWalletModal()">✕</button>
+          </div>
+          <form id="renameWalletForm" onsubmit="saveWalletName(event)">
+            <div class="form-group">
+              <label class="form-label">Wallet Name</label>
+              <input
+                type="text"
+                class="form-input"
+                id="renameWalletInput"
+                placeholder="e.g., My Personal Wallet, Shuvo's Wallet"
+                maxlength="30"
+                required
+              />
+            </div>
+            <div class="modal-actions" style="margin-top: 20px;">
+              <button type="button" class="btn btn-secondary" onclick="closeRenameWalletModal()">
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary">
+                Save Name
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- CREATE SAVINGS VAULT MODAL -->
+      <div class="modal-backdrop" id="savingsVaultModal" onclick="handleSavingsVaultBackdrop(event)">
+        <div class="modal-box" style="max-width: 420px;">
+          <div class="modal-header">
+            <div>
+              <h2 class="modal-title">New Savings Vault</h2>
+              <p style="font-size: 13px; color: var(--text-muted); margin: 4px 0 0 0;">Create a target for your future savings.</p>
+            </div>
+            <button class="modal-close" onclick="closeCreateSavingsModal()">✕</button>
+          </div>
+          <form id="savingsVaultForm" onsubmit="saveNewSavingsVault(event)">
+            <div class="form-group">
+              <label class="form-label">Goal / Purpose Name</label>
+              <input
+                type="text"
+                class="form-input"
+                id="vaultInputName"
+                placeholder="e.g., Emergency Fund, New Phone, Travel"
+                maxlength="35"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Target Amount (optional)</label>
+              <input
+                type="number"
+                class="form-input"
+                id="vaultInputTarget"
+                placeholder="e.g., 50000"
+                min="0"
+                step="1"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Starting Deposit (optional)</label>
+              <input
+                type="number"
+                class="form-input"
+                id="vaultInputInitial"
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+              />
+            </div>
+            <div class="modal-actions" style="margin-top: 24px;">
+              <button type="button" class="btn btn-secondary" onclick="closeCreateSavingsModal()">
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary" style="background:#10b981 !important;">
+                Create Vault
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
     <!-- ADD EXPENSE MODAL -->
     <div
       class="modal-backdrop"
@@ -1007,7 +1214,7 @@
       </div>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=1794246639047"></script>
     <script src="cloud-sync.js"></script>
   </body>
 </html>
