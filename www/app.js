@@ -1414,7 +1414,13 @@ function renderRecentTransactions(listOverride) {
   if (!el) return;
   const source = listOverride !== undefined ? listOverride : state.expenses;
   const sorted = [...source]
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .sort((a, b) => {
+      const diff = new Date(b.date) - new Date(a.date);
+      if (diff !== 0) return diff;
+      const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      return tB - tA;
+    })
     .slice(0, 8);
   if (!sorted.length) {
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">🧾</div><p>No transactions found for this period.<br/>Add an expense or switch filter!</p></div>`;
@@ -1767,8 +1773,20 @@ function filterTransactions() {
   if (catF) list = list.filter((e) => e.categoryId === catF);
 
   list.sort((a, b) => {
-    if (sort === "date-desc") return new Date(b.date) - new Date(a.date);
-    if (sort === "date-asc") return new Date(a.date) - new Date(b.date);
+    if (sort === "date-desc") {
+      const diff = new Date(b.date) - new Date(a.date);
+      if (diff !== 0) return diff;
+      const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      return tB - tA;
+    }
+    if (sort === "date-asc") {
+      const diff = new Date(a.date) - new Date(b.date);
+      if (diff !== 0) return diff;
+      const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return tA - tB;
+    }
     if (sort === "amount-desc") return Number(b.amount) - Number(a.amount);
     if (sort === "amount-asc") return Number(a.amount) - Number(b.amount);
     return 0;
