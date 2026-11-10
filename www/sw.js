@@ -1,10 +1,10 @@
 /* =====================================================
-   SpendWise – Service Worker
+   Spendio – Service Worker
    Strategy: Cache-first for assets, network-first for pages
    Auto-updates: new SW activates immediately and notifies clients
 ===================================================== */
 
-const CACHE_NAME = "spendwise-v48";
+const CACHE_NAME = "spendio-v49";
 const OFFLINE_PAGE = "./index.html";
 
 // Core files to precache on install

@@ -1,6 +1,6 @@
 {
   "appId": "io.spendwise.app",
-  "appName": "SpendWise",
+  "appName": "Spendio",
   "webDir": "www",
   "server": {
     "hostname": "localhost",
@@ -12,7 +12,9 @@
   "plugins": {
     "FirebaseAuthentication": {
       "skipNativeAuth": false,
-      "providers": ["google.com"]
+      "providers": [
+        "google.com"
+      ]
     }
   }
 }
