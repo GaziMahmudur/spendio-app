@@ -1636,10 +1636,76 @@ select.form-input option {
   margin-bottom: 14px;
 }
 
+.dp-header-text-container {
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 130px;
+  height: 24px;
+}
+
 .dp-month-label {
+  display: inline-block;
   font-size: 14px;
   font-weight: 700;
   color: var(--text-primary);
+  white-space: nowrap;
+  will-change: transform, opacity;
+}
+
+/* Sliding Animations for DatePicker Header (from Meal counting website) */
+.dp-slide-next-enter {
+  animation: dpSlideInRight 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.dp-slide-prev-enter {
+  animation: dpSlideInLeft 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.dp-slide-next-exit {
+  animation: dpSlideOutLeft 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.dp-slide-prev-exit {
+  animation: dpSlideOutRight 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes dpSlideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes dpSlideInLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes dpSlideOutLeft {
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+@keyframes dpSlideOutRight {
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
 }
 
 .dp-nav-btn {

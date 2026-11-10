@@ -15,7 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css?v=1794312620386" />
+    <link rel="stylesheet" href="style.css?v=1794313290809" />
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#6d28d9" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
@@ -34,58 +34,6 @@
         <span class="logo-text">SpendWise</span>
       </div>
       <nav class="sidebar-nav">
-        <!-- CURRENT WALLET INDICATOR -->
-        <div
-          class="wallet-switcher"
-          id="sidebarWalletBox"
-          style="
-            margin: 0 0 16px 0;
-            padding: 12px 14px;
-            background: var(--bg-surface-2);
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border);
-          "
-        >
-          <div
-            style="
-              font-size: 11px;
-              font-weight: 700;
-              color: var(--text-muted);
-              text-transform: uppercase;
-              margin-bottom: 4px;
-              letter-spacing: 0.5px;
-            "
-          >
-            My Wallet
-          </div>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="display:inline-flex; align-items:center;">
-              <span class="native-emoji" style="font-size: 15px;">💼</span>
-              <i class="win-icon" data-lucide="briefcase"></i>
-            </span>
-            <span
-              id="currentWalletDisplay"
-              onclick="openRenameWalletModal()"
-              style="
-                font-size: 14px;
-                font-weight: 700;
-                color: var(--text-primary);
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                cursor: pointer;
-                padding: 2px 4px;
-                border-radius: 4px;
-                transition: all var(--transition);
-              "
-              title="Click to rename"
-              onmouseover="this.style.color='var(--primary)'; this.style.background='var(--primary-xlight)'"
-              onmouseout="this.style.color='var(--text-primary)'; this.style.background='transparent'"
-            >
-              Main Wallet
-            </span>
-          </div>
-        </div>
         <a
           href="#"
           class="nav-item active"
@@ -858,42 +806,6 @@
       </div>
     </main>
 
-    <!-- WALLET MODAL (Create / Edit) -->
-    <!-- RENAME WALLET MODAL -->
-      <div class="modal-backdrop" id="renameWalletModal" onclick="handleRenameWalletBackdrop(event)">
-        <div class="modal-box" style="max-width: 400px;">
-          <div class="modal-header">
-            <div>
-              <h2 class="modal-title">Rename Wallet</h2>
-              <p style="font-size: 13px; color: var(--text-muted); margin: 4px 0 0 0;">Give your wallet a custom name.</p>
-            </div>
-            <button class="modal-close" onclick="closeRenameWalletModal()">✕</button>
-          </div>
-          <form id="renameWalletForm" onsubmit="saveWalletName(event)">
-            <div class="form-group">
-              <label class="form-label">Wallet Name</label>
-              <input
-                type="text"
-                class="form-input"
-                id="renameWalletInput"
-                placeholder="e.g., My Personal Wallet, Shuvo's Wallet"
-                maxlength="30"
-                required
-              />
-            </div>
-            <div class="modal-actions" style="margin-top: 20px;">
-              <button type="button" class="btn btn-secondary" onclick="closeRenameWalletModal()">
-                Cancel
-              </button>
-              <button type="submit" class="btn btn-primary">
-                Save Name
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-
       <!-- EDIT INCOME MODAL -->
       <div class="modal-backdrop" id="editIncomeModal" onclick="handleEditIncomeBackdrop(event)">
         <div class="modal-box" style="max-width: 420px;">
@@ -1173,7 +1085,7 @@
       </div>
     </div>
 
-    <script src="app.js?v=1794312620386"></script>
+    <script src="app.js?v=1794313290809"></script>
     <script src="cloud-sync.js?v=1794304819596"></script>
   </body>
 </html>

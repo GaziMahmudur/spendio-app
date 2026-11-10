@@ -133,29 +133,29 @@ class DatePicker {
 
     this.cal.innerHTML = `
       <div class="dp-header">
-        <button class="dp-nav-btn" id="dpPrev">&#8249;</button>
-        <span class="dp-month-label">${MONTHS[m]} ${y}</span>
-        <button class="dp-nav-btn" id="dpNext">&#8250;</button>
+        <button type="button" class="dp-nav-btn" id="dpPrev">&#8249;</button>
+        <div class="dp-header-text-container">
+          <span class="dp-month-label" id="dpMonthText">${MONTHS[m]} ${y}</span>
+        </div>
+        <button type="button" class="dp-nav-btn" id="dpNext">&#8250;</button>
       </div>
       <div class="dp-weekdays">${DAYS.map(
         (d) => `<span class="dp-wd">${d}</span>`,
       ).join("")}</div>
       <div class="dp-days">${dayCells}</div>
       <div class="dp-footer">
-        <button class="dp-footer-btn dp-clear-btn">Clear</button>
-        <button class="dp-footer-btn dp-today-btn">Today</button>
+        <button type="button" class="dp-footer-btn dp-clear-btn">Clear</button>
+        <button type="button" class="dp-footer-btn dp-today-btn">Today</button>
       </div>`;
 
     // Events
     this.cal.querySelector("#dpPrev").addEventListener("click", (e) => {
       e.stopPropagation();
-      this.viewDate.setMonth(this.viewDate.getMonth() - 1);
-      this._renderCal();
+      this._changeMonth(-1);
     });
     this.cal.querySelector("#dpNext").addEventListener("click", (e) => {
       e.stopPropagation();
-      this.viewDate.setMonth(this.viewDate.getMonth() + 1);
-      this._renderCal();
+      this._changeMonth(1);
     });
     this.cal.querySelector(".dp-clear-btn").addEventListener("click", (e) => {
       e.stopPropagation();
@@ -174,6 +174,30 @@ class DatePicker {
         this._select(new Date(y, m, d));
       });
     });
+  }
+
+  _changeMonth(delta) {
+    const label = this.cal.querySelector("#dpMonthText");
+    if (!label) {
+      this.viewDate.setMonth(this.viewDate.getMonth() + delta);
+      this._renderCal();
+      return;
+    }
+
+    const dir = delta > 0 ? "next" : "prev";
+    const exitClass = dir === "next" ? "dp-slide-next-exit" : "dp-slide-prev-exit";
+    const enterClass = dir === "next" ? "dp-slide-next-enter" : "dp-slide-prev-enter";
+
+    label.className = "dp-month-label " + exitClass;
+
+    setTimeout(() => {
+      this.viewDate.setMonth(this.viewDate.getMonth() + delta);
+      this._renderCal();
+      const newLabel = this.cal.querySelector("#dpMonthText");
+      if (newLabel) {
+        newLabel.className = "dp-month-label " + enterClass;
+      }
+    }, 180);
   }
 
   _select(date) {
