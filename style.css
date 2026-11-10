@@ -3829,8 +3829,15 @@ html.is-windows #sidebarWalletBox .win-icon {
 ══════════════════════════════════════════════════════ */
 @media (max-width: 600px) {
   .topbar {
-    padding: 0 12px !important;
-    gap: 8px !important;
+    padding: 0 16px !important;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(16px, env(safe-area-inset-right, 0px)) !important;
+    gap: 10px !important;
+  }
+  .pages-container {
+    padding: 16px !important;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(16px, env(safe-area-inset-right, 0px)) !important;
   }
   .topbar-title {
     font-size: 15px !important;
