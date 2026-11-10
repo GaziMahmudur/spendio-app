@@ -1199,6 +1199,14 @@ function setDashboardFilter(mode) {
   });
   updateDashPillIndicator(true);
 
+  // Trigger Apple-style subtle transition on dashboard data elements
+  const animEls = document.querySelectorAll(
+    "#dashIncome, #dashExpenses, #dashExpenseCount, #dashIncomeSub, #dashFilterActiveLabel, #recentTransactions, #donutChart, #chartLegend"
+  );
+  animEls.forEach((el) => {
+    el.classList.add(el.id === "dashFilterActiveLabel" ? "ios-badge-shift" : (el.classList.contains("card-amount") ? "ios-val-shift" : "ios-content-fade"));
+  });
+
   const customInputs = document.getElementById("dashCustomRangeInputs");
   if (customInputs) customInputs.classList.toggle("show", mode === "custom");
   if (mode === "custom") {
@@ -1210,7 +1218,15 @@ function setDashboardFilter(mode) {
     if (sEl) sEl.value = dashCustomStart;
     if (eEl) eEl.value = dashCustomEnd;
   }
-  renderDashboard();
+
+  setTimeout(() => {
+    renderDashboard();
+    requestAnimationFrame(() => {
+      animEls.forEach((el) => {
+        el.classList.remove("ios-badge-shift", "ios-val-shift", "ios-content-fade");
+      });
+    });
+  }, 90);
 }
 
 function onCustomDateRangeChange() {

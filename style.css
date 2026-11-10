@@ -471,12 +471,20 @@ body {
   font-size: 30px;
   font-weight: 800;
   line-height: 1.1;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.card-amount.ios-val-shift {
+  opacity: 0.25;
+  transform: translateY(3px) scale(0.97);
 }
 
 .card-sub {
   font-size: 12px;
   margin-top: 6px;
   opacity: 0.8;
+  transition: opacity 0.25s ease;
 }
 
 .dashboard-lower {
@@ -3722,6 +3730,24 @@ button:active,
   padding: 5px 12px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--border);
+  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.dash-date-badge.ios-badge-shift {
+  opacity: 0.3;
+  transform: translateY(-2px);
+}
+
+.preview-table-wrap,
+.transaction-list {
+  transition: opacity 0.25s ease;
+}
+
+.ios-content-fade {
+  opacity: 0.35 !important;
+  transform: translateY(4px);
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .dash-range-inputs {
