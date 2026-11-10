@@ -789,7 +789,9 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("resize", () => {
     updateDashPillIndicator(false);
   });
-  setTimeout(() => updateDashPillIndicator(false), 100);
+  initDashFilterPillState();
+  setTimeout(() => updateDashPillIndicator(false), 50);
+  setTimeout(() => updateDashPillIndicator(false), 200);
 });
 
 // ── CURRENCY UNIT ───────────────────────────────────
@@ -1176,9 +1178,24 @@ function renderAll() {
 }
 
 // ── DASHBOARD FILTER STATE & HELPERS ───────────────────
-let dashFilterMode = "all";
+let dashFilterMode = (() => {
+  try {
+    return localStorage.getItem("spendwise_dash_filter") || "all";
+  } catch (e) {
+    return "all";
+  }
+})();
 let dashCustomStart = "";
 let dashCustomEnd = "";
+
+function initDashFilterPillState() {
+  document.querySelectorAll("#dashFilterPills .dash-filter-pill").forEach((btn) => {
+    btn.classList.toggle("active", btn.getAttribute("data-filter") === dashFilterMode);
+  });
+  const customInputs = document.getElementById("dashCustomRangeInputs");
+  if (customInputs) customInputs.classList.toggle("show", dashFilterMode === "custom");
+  updateDashPillIndicator(false);
+}
 
 function updateDashPillIndicator(animate = true) {
   const container = document.getElementById("dashFilterPills");
@@ -1212,6 +1229,9 @@ function updateDashPillIndicator(animate = true) {
 
 function setDashboardFilter(mode) {
   dashFilterMode = mode;
+  try {
+    localStorage.setItem("spendwise_dash_filter", mode);
+  } catch (e) {}
   document.querySelectorAll("#dashFilterPills .dash-filter-pill").forEach((btn) => {
     btn.classList.toggle("active", btn.getAttribute("data-filter") === mode);
   });
