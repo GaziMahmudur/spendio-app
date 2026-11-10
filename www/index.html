@@ -15,7 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css?v=1794246639047" />
+    <link rel="stylesheet" href="style.css?v=1794302654446" />
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#6d28d9" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
@@ -155,9 +155,17 @@
           target="_blank"
           class="nav-item"
           id="nav-download-apk"
-          style="background: var(--primary-xlight); color: var(--primary); font-weight: 700; margin-top: auto; border: 1px solid var(--primary-light); box-shadow: var(--shadow-sm);"
+          style="
+            background: var(--primary-xlight);
+            color: var(--primary);
+            font-weight: 700;
+            margin-top: auto;
+            border: 1px solid var(--primary-light);
+            box-shadow: var(--shadow-sm);
+          "
         >
-          <span class="nav-icon"><span class="native-emoji">🤖</span><i class="win-icon" data-lucide="smartphone"></i></span><span class="nav-label">Get Android App (v1.3)</span>
+          <span class="nav-icon">🤖</span
+          ><span class="nav-label">Get Android App (v1.3)</span>
         </a>
       </nav>
       <div class="sidebar-footer">
@@ -378,7 +386,7 @@
                     class="form-input"
                     id="balAmount"
                     placeholder="0.00"
-                    min="0"
+                    min="0.01"
                     step="0.01"
                     required
                   />
@@ -397,7 +405,7 @@
                     maxlength="60"
                   />
                 </div>
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary" id="balSubmitBtn">
                   + Add to Wallet
                 </button>
               </form>
@@ -414,88 +422,32 @@
           </div>
         </section>
 
-        <!-- WALLETS MANAGEMENT PAGE -->
+        <!-- SAVINGS & GOALS PAGE -->
         <section class="page" id="page-savings">
           <div class="page-header-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:16px;">
             <div>
               <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--green); margin-bottom:4px; display:flex; align-items:center; gap:6px;">
-                <span>💰</span> Dedicated Savings Vaults
+                <span>💰</span> Savings Cards
               </div>
               <h1 style="font-size:24px; font-weight:700; color:var(--text-primary); letter-spacing:-0.5px; margin:0;">Savings & Goals</h1>
-              <p style="font-size:13px; color:var(--text-muted); margin:4px 0 0 0;">Separate money from your daily spending wallet to save for specific purposes.</p>
+              <p style="font-size:13px; color:var(--text-muted); margin:4px 0 0 0;">মেইন ওয়ালেট (Current Balance) থেকে টাকা আলাদা করে নির্দিষ্ট উদ্দেশ্যে সেভিংস কার্ডে জমান।</p>
             </div>
-            <button
-              type="button"
-              class="btn btn-primary"
-              onclick="openCreateSavingsModal()"
-              style="width:auto; padding:9px 18px; font-size:13px; font-weight:600; border-radius:var(--radius-pill); display:inline-flex; align-items:center; gap:6px; background:#10b981 !important;"
-            >
-              <span>＋</span> New Savings Vault
-            </button>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span id="savingsTotalBadge" style="font-size:14px; font-weight:700; color:var(--green); background:rgba(16,185,129,0.1); padding:8px 16px; border-radius:var(--radius-pill); border:1px solid rgba(16,185,129,0.25);">Total Saved: 0.00 taka</span>
+              <button
+                type="button"
+                class="btn btn-primary"
+                onclick="openAddExpenseModalForSavings()"
+                style="width:auto; padding:9px 18px; font-size:13px; font-weight:600; border-radius:var(--radius-pill); display:inline-flex; align-items:center; gap:6px; background:#10b981 !important;"
+              >
+                <span>＋</span> Add Savings
+              </button>
+            </div>
           </div>
 
-          <div class="savings-layout">
-            <!-- Add / Transfer to Savings Card -->
-            <div class="glass-card">
-              <h2 class="card-title" style="margin-bottom:16px;">Deposit / Withdraw Savings</h2>
-              <form id="savingsActionForm" onsubmit="handleSavingsDeposit(event)">
-                <div class="form-group">
-                  <label class="form-label">Select Vault</label>
-                  <select id="savingsVaultSelect" class="form-input" required>
-                    <!-- Populated by renderSavingsPage() -->
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Action Type</label>
-                  <div class="radio-group" style="display:flex; gap:16px;">
-                    <label class="radio-label">
-                      <input type="radio" name="savingsType" value="deposit" checked />
-                      Deposit (Save Money)
-                    </label>
-                    <label class="radio-label">
-                      <input type="radio" name="savingsType" value="withdraw" />
-                      Withdraw back to Wallet
-                    </label>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Amount (taka)</label>
-                  <input
-                    type="number"
-                    class="form-input"
-                    id="savingsActionAmount"
-                    placeholder="0.00"
-                    min="1"
-                    step="0.01"
-                    required
-                  />
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Note (optional)</label>
-                  <input
-                    type="text"
-                    class="form-input"
-                    id="savingsActionNote"
-                    placeholder="e.g., Monthly stash, Emergency expense"
-                    maxlength="50"
-                  />
-                </div>
-                <button type="submit" class="btn btn-primary" style="background:#10b981 !important;">
-                  Confirm Transaction
-                </button>
-              </form>
-            </div>
-
-            <!-- Savings Vaults List -->
-            <div>
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-                <h3 style="font-size:15px; font-weight:700; color:var(--text-primary); margin:0;">Active Savings Goals</h3>
-                <span id="savingsTotalBadge" style="font-size:13px; font-weight:700; color:var(--green);">Total Saved: 0.00 taka</span>
-              </div>
-              <div class="savings-vaults-grid" id="savingsVaultsGrid">
-                <!-- Rendered dynamically -->
-              </div>
-            </div>
+          <!-- Savings Cards Grid -->
+          <div class="savings-vaults-grid" id="savingsVaultsGrid">
+            <!-- Rendered dynamically -->
           </div>
         </section>
 
@@ -996,6 +948,56 @@
         </div>
       </div>
 
+      <!-- EDIT INCOME MODAL -->
+      <div class="modal-backdrop" id="editIncomeModal" onclick="handleEditIncomeBackdrop(event)">
+        <div class="modal-box" style="max-width: 420px;">
+          <div class="modal-header">
+            <div>
+              <h2 class="modal-title">Edit Income Record</h2>
+              <p style="font-size: 13px; color: var(--text-muted); margin: 4px 0 0 0;">Review or change details, then click Save.</p>
+            </div>
+            <button class="modal-close" onclick="closeEditIncomeModal()">✕</button>
+          </div>
+          <form id="editIncomeForm" onsubmit="saveEditedIncome(event)">
+            <input type="hidden" id="modalIncomeEditId" />
+            <div class="form-group">
+              <label class="form-label">Amount (taka)</label>
+              <input
+                type="number"
+                class="form-input"
+                id="modalIncomeAmount"
+                placeholder="0.00"
+                min="0.01"
+                step="0.01"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date</label>
+              <input type="date" class="form-input" id="modalIncomeDate" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Note / Source (optional)</label>
+              <input
+                type="text"
+                class="form-input"
+                id="modalIncomeNote"
+                placeholder="e.g., Monthly salary, Freelance, Gift"
+                maxlength="60"
+              />
+            </div>
+            <div class="modal-actions" style="margin-top: 24px; display:flex; gap:10px;">
+              <button type="button" class="btn btn-secondary" onclick="closeEditIncomeModal()" style="flex:1;">
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary" style="flex:1;">
+                Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
     <!-- ADD EXPENSE MODAL -->
     <div
       class="modal-backdrop"
@@ -1009,7 +1011,7 @@
             ✕
           </button>
         </div>
-        <form id="expenseForm" onsubmit="saveExpense(event)">
+        <form id="expenseForm" onsubmit="saveExpense(event)" novalidate>
           <input type="hidden" id="expenseEditId" />
           <div class="form-group">
             <label class="form-label">Description</label>
@@ -1040,7 +1042,7 @@
               <input type="date" class="form-input" id="expDate" required />
             </div>
           </div>
-          <div class="form-group">
+          <div class="form-group" id="expenseCategoryGroup">
             <label class="form-label">Category</label>
             <select class="form-input" id="expCategory" required>
               <option value="">Select a category</option>
@@ -1095,8 +1097,27 @@
             </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Note (optional)</label>
+            <div class="form-group" id="savingsCodeGroup" style="display:none;">
+              <label class="form-label" style="display:flex; justify-content:space-between; align-items:center;">
+                <span>Savings Goal / Unique Code</span>
+                <span style="font-size:11px; font-weight:normal; color:var(--text-muted);">Matches existing or creates new card</span>
+              </label>
+              <input
+                type="text"
+                class="form-input"
+                id="expSavingsCode"
+                placeholder="e.g., EMERGENCY, NEW-BIKE, VACATION"
+                maxlength="30"
+                style="text-transform: uppercase; font-weight: 700; letter-spacing: 1px;"
+              />
+              <div style="margin-top:6px; padding:8px 10px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); border-radius:6px; font-size:11.5px; color:var(--text-secondary); line-height:1.45;">
+                ℹ️ <b>নোট:</b> এই টাকাটি আপনার মেইন ওয়ালেটের <b>Current Balance</b> থেকে কেটে আলাদা হয়ে সেভিংস ফান্ডে জমা হবে।<br/>
+                💡 <b>Same code</b> দিলে ওই কার্ডে সেভিংস যোগ হবে, <b>নতুন code</b> দিলে নতুন সেভিংস কার্ড তৈরি হবে।
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Note (optional)</label>
             <input
               type="text"
               class="form-input"
@@ -1206,7 +1227,7 @@
       </div>
     </div>
 
-    <script src="app.js?v=1794246639047"></script>
-    <script src="cloud-sync.js"></script>
+    <script src="app.js?v=1794302654446"></script>
+    <script src="cloud-sync.js?v=1794302654446"></script>
   </body>
 </html>

@@ -698,6 +698,32 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load currency setting into input
   const cu = document.getElementById("currencyUnit");
   if (cu) cu.value = state.currency || "taka";
+
+  // Global Enter-key support for all forms and modals
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      const activeEl = document.activeElement;
+      if (
+        activeEl &&
+        activeEl.tagName === "INPUT" &&
+        activeEl.type !== "submit" &&
+        activeEl.type !== "button"
+      ) {
+        // Ignore inputs inside inline quick-category creator
+        if (activeEl.closest("#qcatPanel")) return;
+        const form = activeEl.closest("form");
+        if (form) {
+          e.preventDefault();
+          const submitBtn = form.querySelector("button[type='submit']");
+          if (submitBtn) {
+            submitBtn.click();
+          } else if (typeof form.requestSubmit === "function") {
+            form.requestSubmit();
+          }
+        }
+      }
+    }
+  });
 });
 
 // ── CURRENCY UNIT ───────────────────────────────────
@@ -918,11 +944,11 @@ function saveState() {
 
   const activeKey = getActiveStateKey();
   localStorage.setItem(activeKey, JSON.stringify(state));
-  if (typeof pushToCloud === "function" && _currentUser) {
+  if (typeof pushToCloud === "function" && _currentUser && !_isApplyingCloudChange) {
     clearTimeout(_autoBackupTimer);
     _autoBackupTimer = setTimeout(() => {
       pushToCloud(state, true);
-    }, 1500);
+    }, 800);
   }
 }
 
@@ -1968,6 +1994,73 @@ function addBalance(event) {
   document.getElementById("balDate").value = new Date().toISOString().split("T")[0];
 }
 
+function editBalance(id) {
+  const record = (state.balanceRecords || []).find((b) => b.id === id);
+  if (!record) return;
+
+  const idEl = document.getElementById("modalIncomeEditId");
+  const amtEl = document.getElementById("modalIncomeAmount");
+  const dateEl = document.getElementById("modalIncomeDate");
+  const noteEl = document.getElementById("modalIncomeNote");
+
+  if (idEl) idEl.value = id;
+  if (amtEl) amtEl.value = record.amount;
+  if (dateEl) dateEl.value = record.date;
+  if (noteEl) noteEl.value = record.note || "";
+
+  const modal = document.getElementById("editIncomeModal");
+  if (modal) {
+    modal.classList.add("open");
+    setTimeout(() => {
+      amtEl?.focus();
+      amtEl?.select();
+    }, 100);
+  }
+}
+
+function closeEditIncomeModal() {
+  const modal = document.getElementById("editIncomeModal");
+  if (modal) modal.classList.remove("open");
+  const form = document.getElementById("editIncomeForm");
+  if (form) form.reset();
+}
+
+function handleEditIncomeBackdrop(e) {
+  if (e.target === document.getElementById("editIncomeModal")) {
+    closeEditIncomeModal();
+  }
+}
+
+function saveEditedIncome(event) {
+  event.preventDefault();
+  const id = document.getElementById("modalIncomeEditId")?.value;
+  const amount = parseFloat(document.getElementById("modalIncomeAmount")?.value);
+  const date = document.getElementById("modalIncomeDate")?.value;
+  const note = document.getElementById("modalIncomeNote")?.value.trim();
+
+  if (!amount || !date || amount <= 0) {
+    showToast("Please enter a valid amount and date.", "error");
+    return;
+  }
+
+  const idx = (state.balanceRecords || []).findIndex((b) => b.id === id);
+  if (idx >= 0) {
+    state.balanceRecords[idx] = {
+      ...state.balanceRecords[idx],
+      amount,
+      date,
+      note: note || "Income Deposit",
+      updatedAt: new Date().toISOString(),
+    };
+    saveState();
+    renderAll();
+    closeEditIncomeModal();
+    showToast("Income record updated successfully!", "success");
+  } else {
+    showToast("Income record not found.", "error");
+  }
+}
+
 function renderBalanceHistory() {
   const el = document.getElementById("balanceHistory");
   const records = [...state.balanceRecords].sort(
@@ -1989,6 +2082,9 @@ function renderBalanceHistory() {
       </div>
       <div class="bal-badge add">Income</div>
       <div class="bal-actions">
+        <button class="tx-action-btn" onclick="editBalance('${
+          b.id
+        }')" title="Edit Income">✏️</button>
         <button class="tx-action-btn" onclick="promptDeleteBalance('${
           b.id
         }')" title="Delete">🗑️</button>

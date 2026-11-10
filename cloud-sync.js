@@ -36,6 +36,8 @@ let _auth = null;
 let _currentUser = null;
 let _syncInProgress = false;
 let _cloudInitialized = false;
+let _realtimeUnsubscribe = null;
+let _isApplyingCloudChange = false;
 
 // Async Race Condition Protection: Session Token & UID tracking
 let _currentSessionId = 0;
@@ -119,7 +121,7 @@ async function initFirebase() {
       "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"
     );
 
-    const { getFirestore, doc, setDoc, getDoc, collection } = await import(
+    const { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } = await import(
       "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"
     );
 
@@ -149,6 +151,7 @@ async function initFirebase() {
       doc,
       setDoc,
       getDoc,
+      onSnapshot,
       collection,
       GoogleAuthProvider,
       signInWithPopup,
@@ -200,6 +203,10 @@ async function initFirebase() {
         } catch (err) {
           console.error("[SpendWise Cloud] Post-login migration error:", err);
         }
+        // Start real-time cross-device sync listener
+        setupRealtimeSync(activeUid);
+      } else {
+        stopRealtimeSync();
       }
     });
 
@@ -288,6 +295,7 @@ async function cloudSignIn() {
 }
 
 async function cloudSignOut() {
+  stopRealtimeSync();
   _currentSessionId++; // Invalidate any pending async operations immediately
 
   const oldUid = _currentUser ? _currentUser.uid : null;
@@ -564,6 +572,7 @@ async function restoreFromCloud(silent = false, requestSessionId = null, targetU
         ? cleanData.balanceRecords
         : [],
       currency: cleanData.currency || "taka",
+      savingsVaults: cleanData.savingsVaults || [],
       accounts: cleanData.accounts || null,
       activeAccountId: cleanData.activeAccountId || null,
     };
@@ -640,7 +649,103 @@ function mergeStates(local, cloud) {
     categories: Object.values(catMap),
     balanceRecords: mergeArray(local.balanceRecords, cloud.balanceRecords),
     currency: cloud.currency || local.currency || "taka",
+    savingsVaults: cloud.savingsVaults || local.savingsVaults || [],
+    accounts: cloud.accounts || local.accounts || null,
+    activeAccountId: cloud.activeAccountId || local.activeAccountId || null,
   };
+}
+
+// ─────────────────────────────────────────────────────
+// REAL-TIME CROSS-DEVICE SYNC LISTENER
+// ─────────────────────────────────────────────────────
+function stopRealtimeSync() {
+  if (typeof _realtimeUnsubscribe === "function") {
+    try {
+      _realtimeUnsubscribe();
+    } catch (e) {}
+    _realtimeUnsubscribe = null;
+  }
+}
+
+function setupRealtimeSync(uid) {
+  stopRealtimeSync();
+  if (!uid || !_db) return;
+
+  try {
+    const { doc, onSnapshot } = window._fsModules;
+    if (!onSnapshot) return;
+
+    const docRef = doc(_db, "spendwise_backups", uid);
+    _realtimeUnsubscribe = onSnapshot(
+      docRef,
+      (docSnap) => {
+        if (!docSnap.exists()) return;
+        const cloudPayload = docSnap.data();
+        if (!cloudPayload) return;
+
+        // Check if update originated from this exact client session to avoid echo
+        const incomingDeviceId = cloudPayload._meta?.deviceId;
+        const myDeviceId = getDeviceId();
+        if (incomingDeviceId === myDeviceId && _syncInProgress) {
+          return;
+        }
+
+        const { _meta, ...cleanData } = cloudPayload;
+        const incomingState = {
+          expenses: Array.isArray(cleanData.expenses) ? cleanData.expenses : [],
+          categories: Array.isArray(cleanData.categories) ? cleanData.categories : [],
+          balanceRecords: Array.isArray(cleanData.balanceRecords) ? cleanData.balanceRecords : [],
+          currency: cleanData.currency || "taka",
+          savingsVaults: cleanData.savingsVaults || [],
+          accounts: cleanData.accounts || null,
+          activeAccountId: cleanData.activeAccountId || null,
+        };
+
+        const activeUid = _currentUser ? _currentUser.uid : null;
+        if (!activeUid || activeUid !== uid) return;
+
+        const currentLocal = getLocalState(activeUid);
+
+        // Check if incoming state is different from local state
+        const localJson = JSON.stringify(currentLocal);
+        const incomingJson = JSON.stringify(incomingState);
+        if (localJson === incomingJson) return;
+
+        console.log("[SpendWise Cloud] Real-time sync update received from device:", incomingDeviceId);
+        _isApplyingCloudChange = true;
+
+        const merged = mergeStates(currentLocal, incomingState);
+        const userStorageKey = getUserStorageKey(activeUid);
+        localStorage.setItem(userStorageKey, JSON.stringify(merged));
+
+        if (typeof setStorageUserUid === "function") {
+          setStorageUserUid(activeUid);
+        }
+
+        if (typeof loadState === "function") {
+          loadState();
+          if (typeof renderAll === "function") {
+            renderAll();
+          }
+        }
+
+        updateCloudStatus(
+          "synced",
+          `Auto-synced with cloud (${new Date().toLocaleTimeString()})`
+        );
+        showToast("☁️ Auto-synced with cloud update!", "info");
+
+        setTimeout(() => {
+          _isApplyingCloudChange = false;
+        }, 300);
+      },
+      (error) => {
+        console.warn("[SpendWise Cloud] Real-time sync listener error:", error);
+      }
+    );
+  } catch (err) {
+    console.warn("[SpendWise Cloud] Could not initialize real-time listener:", err);
+  }
 }
 
 // ─────────────────────────────────────────────────────
