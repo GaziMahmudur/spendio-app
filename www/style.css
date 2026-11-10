@@ -3576,7 +3576,7 @@ button:active,
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 0;
   padding: 10px 16px;
   background: var(--bg-surface);
   border: 1px solid var(--border);
@@ -3585,6 +3585,7 @@ button:active,
 }
 
 .dash-filter-pills {
+  position: relative;
   display: inline-flex;
   align-items: center;
   background: var(--bg-surface-2);
@@ -3592,20 +3593,38 @@ button:active,
   border-radius: var(--radius-pill);
   border: 1px solid var(--border);
   gap: 2px;
+  isolation: isolate;
+}
+
+.dash-pill-indicator {
+  position: absolute;
+  top: 3px;
+  left: 0;
+  height: calc(100% - 6px);
+  background: var(--bg-surface);
+  border-radius: var(--radius-pill);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+  z-index: 1;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, width;
 }
 
 .dash-filter-pill {
+  position: relative;
+  z-index: 2;
   border: none;
-  background: transparent;
+  background: transparent !important;
   padding: 6px 14px;
   font-size: 13px;
   font-weight: 500;
   color: var(--text-secondary);
   border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: all var(--transition);
+  transition: color 0.25s ease;
   font-family: inherit;
   white-space: nowrap;
+  box-shadow: none !important;
 }
 
 .dash-filter-pill:hover {
@@ -3613,10 +3632,10 @@ button:active,
 }
 
 .dash-filter-pill.active {
-  background: var(--bg-surface);
-  color: var(--primary);
+  color: var(--primary) !important;
   font-weight: 600;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  box-shadow: none !important;
+  background: transparent !important;
 }
 
 .dash-custom-range-wrap {
@@ -3851,7 +3870,14 @@ html.is-windows #sidebarWalletBox .win-icon {
     white-space: nowrap !important;
     flex-shrink: 0 !important;
   }
+  .dashboard-grid {
+    gap: 16px !important;
+  }
+  .cards-row {
+    gap: 16px !important;
+  }
   .dash-filter-container {
+    margin-bottom: 0 !important;
     padding: 8px 10px !important;
     gap: 8px !important;
     overflow: hidden !important;

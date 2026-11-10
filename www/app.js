@@ -744,6 +744,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   });
+  window.addEventListener("resize", () => {
+    updateDashPillIndicator(false);
+  });
+  setTimeout(() => updateDashPillIndicator(false), 100);
 });
 
 // ── CURRENCY UNIT ───────────────────────────────────
@@ -1061,6 +1065,7 @@ function navigateTo(page) {
   };
   document.getElementById("topbarTitle").textContent = titles[page] || "";
   closeSidebar();
+  if (page === "dashboard") setTimeout(() => updateDashPillIndicator(false), 50);
   if (page === "savings") renderSavingsPage();
   if (page === "export") renderExportPreview();
   if (page === "transactions") populateCategoryFilter();
@@ -1133,11 +1138,43 @@ let dashFilterMode = "all";
 let dashCustomStart = "";
 let dashCustomEnd = "";
 
+function updateDashPillIndicator(animate = true) {
+  const container = document.getElementById("dashFilterPills");
+  const indicator = document.getElementById("dashPillIndicator");
+  if (!container || !indicator) return;
+
+  const activeBtn = container.querySelector(`.dash-filter-pill[data-filter="${dashFilterMode}"]`);
+  if (!activeBtn) return;
+
+  const cRect = container.getBoundingClientRect();
+  const bRect = activeBtn.getBoundingClientRect();
+
+  const left = bRect.left - cRect.left + container.scrollLeft;
+  const width = bRect.width;
+
+  if (!animate) {
+    indicator.style.transition = "none";
+  } else {
+    indicator.style.transition = "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), width 0.35s cubic-bezier(0.16, 1, 0.3, 1)";
+  }
+
+  indicator.style.transform = `translateX(${left}px)`;
+  indicator.style.width = `${width}px`;
+
+  // On mobile, smoothly scroll active pill into visible container if partially hidden
+  if (container.scrollWidth > container.clientWidth) {
+    const scrollTarget = left - (container.clientWidth - width) / 2;
+    container.scrollTo({ left: Math.max(0, scrollTarget), behavior: animate ? "smooth" : "auto" });
+  }
+}
+
 function setDashboardFilter(mode) {
   dashFilterMode = mode;
   document.querySelectorAll("#dashFilterPills .dash-filter-pill").forEach((btn) => {
     btn.classList.toggle("active", btn.getAttribute("data-filter") === mode);
   });
+  updateDashPillIndicator(true);
+
   const customInputs = document.getElementById("dashCustomRangeInputs");
   if (customInputs) customInputs.classList.toggle("show", mode === "custom");
   if (mode === "custom") {
