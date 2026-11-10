@@ -156,6 +156,7 @@ body {
 ═══════════════════════════════════════════ */
 .sidebar {
   position: fixed;
+  overscroll-behavior: contain;
   top: 0;
   left: 0;
   width: var(--sidebar-w);
@@ -202,6 +203,7 @@ body {
   gap: 2px;
   padding: 16px 12px;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .nav-item {
@@ -269,6 +271,8 @@ body {
   background: rgba(17, 24, 39, 0.5);
   backdrop-filter: blur(4px);
   z-index: 99;
+  overscroll-behavior: contain;
+  touch-action: none;
 }
 
 /* ═══════════════════════════════════════════
@@ -2072,6 +2076,7 @@ input[type="number"]::-webkit-inner-spin-button {
   align-items: center;
   justify-content: center;
   padding: 16px;
+  overscroll-behavior: contain;
 }
 
 .copy-preview-modal.open {
@@ -2211,6 +2216,7 @@ input[type="number"]::-webkit-inner-spin-button {
   justify-content: center;
   padding: 40px 16px;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .modal-backdrop.open {
@@ -4055,3 +4061,15 @@ html.is-windows #sidebarWalletBox .win-icon {
   }
 }
 
+
+/* ── PREVENT BACKGROUND SCROLL WHEN SIDEBAR OR MODAL IS OPEN ── */
+body.sidebar-open,
+body.modal-open {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+@media (max-width: 900px) {
+  body.sidebar-open {
+    touch-action: none !important;
+  }
+}

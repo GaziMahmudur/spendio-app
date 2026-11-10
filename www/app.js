@@ -769,6 +769,28 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  
+  // Close modals or sidebar on Escape key
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      const openModal = document.querySelector('.modal-backdrop.open, .copy-preview-modal.open');
+      if (openModal) {
+        if (openModal.id === 'addExpenseModal') closeAddExpenseModal();
+        else if (openModal.id === 'confirmModal') closeConfirmModal();
+        else if (openModal.id === 'editIncomeModal') closeEditIncomeModal();
+        else if (openModal.id === 'copyTextModal') closeCopyModal();
+        else if (openModal.id === 'importResultModal') closeImportResultModal();
+        else openModal.classList.remove('open');
+        updateScrollLocks();
+        return;
+      }
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar && sidebar.classList.contains('open')) {
+        closeSidebar();
+      }
+    }
+  });
+
   // Global Enter-key support for all forms and modals
   document.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
@@ -1123,14 +1145,43 @@ function navigateTo(page) {
   if (page === "transactions") populateCategoryFilter();
 }
 
+
+// ── SCROLL LOCKING HELPERS ─────────────────────────────
+function updateScrollLocks() {
+  const hasOpenModal = !!document.querySelector('.modal-backdrop.open, .copy-preview-modal.open');
+  const sidebar = document.getElementById('sidebar');
+  const hasOpenSidebar = !!(sidebar && sidebar.classList.contains('open'));
+
+  // Body classes
+  document.body.classList.toggle('modal-open', hasOpenModal);
+  document.body.classList.toggle('sidebar-open', hasOpenSidebar);
+
+  // If any modal or mobile sidebar is open, lock body/pages-container scroll
+  if (hasOpenModal || (hasOpenSidebar && window.innerWidth <= 900)) {
+    document.body.style.overflow = 'hidden';
+    const pc = document.querySelector('.pages-container');
+    if (pc) pc.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+    const pc = document.querySelector('.pages-container');
+    if (pc) pc.style.overflow = '';
+  }
+}
+
 // ── SIDEBAR (MOBILE) ───────────────────────────────────
 function toggleSidebar() {
-  document.getElementById("sidebar").classList.toggle("open");
-  document.getElementById("navOverlay").classList.toggle("open");
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("navOverlay");
+  const isOpen = sidebar.classList.toggle("open");
+  if (overlay) overlay.classList.toggle("open", isOpen);
+  updateScrollLocks();
 }
 function closeSidebar() {
-  document.getElementById("sidebar").classList.remove("open");
-  document.getElementById("navOverlay").classList.remove("open");
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("navOverlay");
+  if (sidebar) sidebar.classList.remove("open");
+  if (overlay) overlay.classList.remove("open");
+  updateScrollLocks();
 }
 
 // ── DATE HELPERS ───────────────────────────────────────
@@ -1871,9 +1922,7 @@ function openAddExpenseModal(editId = null, defaultCatId = null) {
   // Re-populate category dropdown (reset() clears it)
   populateCategoryDropdowns();
   modal.classList.add("open");
-  document.body.style.overflow = "hidden";
-  const pc = document.querySelector(".pages-container");
-  if (pc) pc.style.overflow = "hidden";
+  updateScrollLocks();
 }
 
 function openAddExpenseModalForSavings() {
@@ -1882,9 +1931,7 @@ function openAddExpenseModalForSavings() {
 }
 function closeAddExpenseModal() {
   document.getElementById("addExpenseModal").classList.remove("open");
-  document.body.style.overflow = "";
-  const pc = document.querySelector(".pages-container");
-  if (pc) pc.style.overflow = "";
+  updateScrollLocks();
   // Also collapse quick-cat panel if open
   const panel = document.getElementById("qcatPanel");
   const togBtn = document.getElementById("qcatToggleBtn");
@@ -1986,6 +2033,7 @@ function promptDeleteExpense(id) {
   document.getElementById("confirmMessage").textContent =
     "Delete this expense? This cannot be undone.";
   document.getElementById("confirmModal").classList.add("open");
+  updateScrollLocks();
 }
 function promptDeleteCategory(id) {
   const used = state.expenses.some((e) => e.categoryId === id);
@@ -2005,6 +2053,7 @@ function promptDeleteBalance(id) {
 function closeConfirmModal() {
   document.getElementById("confirmModal").classList.remove("open");
   deleteTarget = null;
+  updateScrollLocks();
 }
 function handleConfirmBackdropClick(e) {
   if (e.target === document.getElementById("confirmModal")) closeConfirmModal();
@@ -2239,6 +2288,7 @@ function editBalance(id) {
   const modal = document.getElementById("editIncomeModal");
   if (modal) {
     modal.classList.add("open");
+    updateScrollLocks();
     setTimeout(() => {
       amtEl?.focus();
       amtEl?.select();
@@ -2249,6 +2299,7 @@ function editBalance(id) {
 function closeEditIncomeModal() {
   const modal = document.getElementById("editIncomeModal");
   if (modal) modal.classList.remove("open");
+  updateScrollLocks();
   const form = document.getElementById("editIncomeForm");
   if (form) form.reset();
 }
@@ -2607,6 +2658,7 @@ function exportCopyText() {
   // Show preview modal
   document.getElementById("copyTextArea").value = lines.join("\n");
   document.getElementById("copyTextModal").classList.add("open");
+  updateScrollLocks();
 }
 
 function doCopy() {
@@ -2632,6 +2684,7 @@ function fallbackCopy(text) {
 }
 function closeCopyModal() {
   document.getElementById("copyTextModal").classList.remove("open");
+  updateScrollLocks();
 }
 function handleCopyModalBackdrop(e) {
   if (e.target === document.getElementById("copyTextModal")) closeCopyModal();
@@ -2884,10 +2937,12 @@ function executeImport() {
   // Show result modal
   document.getElementById("importResultMsg").textContent = mergeMsg;
   document.getElementById("importResultModal").classList.add("open");
+  updateScrollLocks();
 }
 
 function closeImportResultModal() {
   document.getElementById("importResultModal").classList.remove("open");
+  updateScrollLocks();
 }
 
 // ── TOAST ──────────────────────────────────────────────
