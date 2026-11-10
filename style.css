@@ -77,6 +77,34 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Prevent accidental text highlight on interactive UI buttons, icons, pills */
+button,
+a,
+.nav-item,
+.btn,
+.stat-card,
+.dash-filter-pill,
+.gcs-trigger,
+.dp-trigger,
+.cs-trigger,
+.modal-close,
+.hamburger,
+.tx-action-btn,
+.emoji-btn,
+.color-swatch,
+.export-tab {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  outline: none;
+}
+
+button:focus,
+a:focus {
+  outline: none;
 }
 
 html {
