@@ -190,9 +190,13 @@ async function initFirebase() {
       }
 
       if (typeof loadState === "function") {
+        const curScrollY = window.scrollY;
         loadState();
         if (typeof renderAll === "function") {
           renderAll();
+        }
+        if (window.scrollY !== curScrollY) {
+          window.scrollTo(0, curScrollY);
         }
       }
 
@@ -611,9 +615,13 @@ async function restoreFromCloud(silent = false, requestSessionId = null, targetU
     }
 
     if (typeof loadState === "function") {
+      const curScrollY = window.scrollY;
       loadState();
       if (typeof renderAll === "function") {
         renderAll();
+      }
+      if (window.scrollY !== curScrollY) {
+        window.scrollTo(0, curScrollY);
       }
     }
 
@@ -736,9 +744,13 @@ function setupRealtimeSync(uid) {
         }
 
         if (typeof loadState === "function") {
+          const curScrollY = window.scrollY;
           loadState();
           if (typeof renderAll === "function") {
             renderAll();
+          }
+          if (window.scrollY !== curScrollY) {
+            window.scrollTo(0, curScrollY);
           }
         }
 

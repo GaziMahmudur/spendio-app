@@ -1,3 +1,8 @@
+// Prevent browser auto-jump or displacement on reload
+if ('scrollRestoration' in history) {
+  history.scrollRestoration = 'manual';
+}
+
 /* =====================================================
    SpendWise – app.js
    Full expense tracker logic: state, rendering, export
@@ -1143,7 +1148,15 @@ function navigateTo(page) {
   };
   document.getElementById("topbarTitle").textContent = titles[page] || "";
   closeSidebar();
-  if (page === "dashboard") setTimeout(() => updateDashPillIndicator(false), 50);
+  if (page === "dashboard") {
+    setTimeout(() => updateDashPillIndicator(false), 50);
+    const cards = document.querySelectorAll('.cards-row .stat-card');
+    cards.forEach(c => {
+      c.style.animation = 'none';
+      c.offsetHeight; // trigger reflow
+      c.style.animation = '';
+    });
+  }
   if (page === "savings") renderSavingsPage();
   if (page === "export") renderExportPreview();
   if (page === "transactions") populateCategoryFilter();
@@ -1284,10 +1297,54 @@ function updateDashPillIndicator(animate = true) {
   indicator.style.width = `${width}px`;
 
   // On mobile, smoothly scroll active pill into visible container if partially hidden
-  if (container.scrollWidth > container.clientWidth) {
+  if (animate && container.scrollWidth > container.clientWidth) {
     const scrollTarget = left - (container.clientWidth - width) / 2;
-    container.scrollTo({ left: Math.max(0, scrollTarget), behavior: animate ? "smooth" : "auto" });
+    container.scrollTo({ left: Math.max(0, scrollTarget), behavior: "smooth" });
   }
+}
+
+
+// Animate top 3 cards number transition: Exit to Left, then Enter from Left to Right
+function animateCardNumbersUpdate(callback) {
+  const cardElements = document.querySelectorAll('#dashBalance, #dashBalanceDate, #dashIncome, #dashIncomeSub, #dashExpenses, #dashExpenseCount');
+  if (!cardElements || cardElements.length === 0) {
+    if (typeof callback === "function") callback();
+    return;
+  }
+
+  // Phase 1: Wipe to Left
+  cardElements.forEach(el => {
+    el.classList.remove('num-slide-enter-active', 'num-slide-enter-prep');
+    el.classList.add('num-slide-exit');
+  });
+
+  // After exit completes (200ms), update data, prep at left, then smoothly slide into place
+  setTimeout(() => {
+    if (typeof callback === "function") callback();
+
+    // Prep: position at left while transparent
+    cardElements.forEach(el => {
+      el.classList.remove('num-slide-exit');
+      el.classList.add('num-slide-enter-prep');
+    });
+
+    // Next frame: animate to 0 (Left-to-Right entrance)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        cardElements.forEach(el => {
+          el.classList.remove('num-slide-enter-prep');
+          el.classList.add('num-slide-enter-active');
+        });
+
+        // Clean up classes after animation finishes
+        setTimeout(() => {
+          cardElements.forEach(el => {
+            el.classList.remove('num-slide-enter-active');
+          });
+        }, 400);
+      });
+    });
+  }, 200);
 }
 
 function setDashboardFilter(mode) {
@@ -1300,13 +1357,8 @@ function setDashboardFilter(mode) {
   });
   updateDashPillIndicator(true);
 
-  // Trigger Apple-style subtle transition on dashboard data elements
-  const animEls = document.querySelectorAll(
-    "#dashIncome, #dashExpenses, #dashExpenseCount, #dashIncomeSub, #dashFilterActiveLabel, #recentTransactions, #donutChart, #chartLegend"
-  );
-  animEls.forEach((el) => {
-    el.classList.add(el.id === "dashFilterActiveLabel" ? "ios-badge-shift" : (el.classList.contains("card-amount") ? "ios-val-shift" : "ios-content-fade"));
-  });
+  const otherAnimEls = document.querySelectorAll("#dashFilterActiveLabel, #recentTransactions, #donutChart, #chartLegend");
+  otherAnimEls.forEach((el) => el.classList.add("ios-content-fade"));
 
   const customInputs = document.getElementById("dashCustomRangeInputs");
   if (customInputs) customInputs.classList.toggle("show", mode === "custom");
@@ -1320,14 +1372,12 @@ function setDashboardFilter(mode) {
     if (eEl) eEl.value = dashCustomEnd;
   }
 
-  setTimeout(() => {
+  animateCardNumbersUpdate(() => {
     renderDashboard();
     requestAnimationFrame(() => {
-      animEls.forEach((el) => {
-        el.classList.remove("ios-badge-shift", "ios-val-shift", "ios-content-fade");
-      });
+      otherAnimEls.forEach((el) => el.classList.remove("ios-content-fade"));
     });
-  }, 90);
+  });
 }
 
 function onCustomDateRangeChange() {
@@ -1335,7 +1385,9 @@ function onCustomDateRangeChange() {
   const eEl = document.getElementById("dashEndDate");
   if (sEl && sEl.value) dashCustomStart = sEl.value;
   if (eEl && eEl.value) dashCustomEnd = eEl.value;
-  renderDashboard();
+  animateCardNumbersUpdate(() => {
+    renderDashboard();
+  });
 }
 
 function getFilteredDataForDashboard() {

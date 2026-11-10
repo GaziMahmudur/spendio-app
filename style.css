@@ -4073,3 +4073,63 @@ body.modal-open {
     touch-action: none !important;
   }
 }
+
+
+/* ═══════════════════════════════════════════
+   TOP 3 CARDS ENTRY & NUMERIC TRANSITIONS
+   ═══════════════════════════════════════════ */
+.cards-row .stat-card {
+  opacity: 0;
+  transform: translateY(22px) scale(0.96);
+  animation: cardEntryFadeUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.cards-row .stat-card:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.cards-row .stat-card:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.cards-row .stat-card:nth-child(3) {
+  animation-delay: 0.25s;
+}
+
+@keyframes cardEntryFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(22px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Smooth Right-to-Left Exit and Left-to-Right Enter for Amount Numbers */
+.card-amount,
+.card-sub {
+  will-change: transform, opacity;
+  transition: transform 0.22s cubic-bezier(0.4, 0, 1, 1), opacity 0.22s ease;
+}
+
+/* Phase 1: Exit to Left (right theke left er dike muche jabe) */
+.num-slide-exit {
+  opacity: 0 !important;
+  transform: translateX(-32px) !important;
+  filter: blur(2px);
+}
+
+/* Phase 2: Enter from Left to Right (shathe shathe abar left theke right er dike new number smoothly chole ashbe) */
+.num-slide-enter-prep {
+  opacity: 0 !important;
+  transform: translateX(-32px) !important;
+  transition: none !important;
+}
+
+.num-slide-enter-active {
+  opacity: 1 !important;
+  transform: translateX(0) !important;
+  filter: blur(0);
+  transition: transform 0.36s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.32s ease, filter 0.32s ease !important;
+}
