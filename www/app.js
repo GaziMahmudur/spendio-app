@@ -1305,42 +1305,66 @@ function updateDashPillIndicator(animate = true) {
 
 
 // Animate top 3 cards number transition: Exit to Left, then Enter from Left to Right
+// Also animates Recent Transactions: Slide down to exit, then slide up to enter
 function animateCardNumbersUpdate(callback) {
   const cardElements = document.querySelectorAll('#dashBalance, #dashBalanceDate, #dashIncome, #dashIncomeSub, #dashExpenses, #dashExpenseCount');
-  if (!cardElements || cardElements.length === 0) {
-    if (typeof callback === "function") callback();
-    return;
+  const recentEl = document.getElementById('recentTransactions');
+
+  // Phase 1: Card numbers wipe left, Recent Transactions slide down
+  if (cardElements && cardElements.length > 0) {
+    cardElements.forEach(el => {
+      el.classList.remove('num-slide-enter-active', 'num-slide-enter-prep');
+      el.classList.add('num-slide-exit');
+    });
   }
 
-  // Phase 1: Wipe to Left
-  cardElements.forEach(el => {
-    el.classList.remove('num-slide-enter-active', 'num-slide-enter-prep');
-    el.classList.add('num-slide-exit');
-  });
+  if (recentEl) {
+    recentEl.classList.remove('tx-slide-up-active', 'tx-slide-up-prep');
+    recentEl.classList.add('tx-slide-down-exit');
+  }
 
-  // After exit completes (200ms), update data, prep at left, then smoothly slide into place
+  // After exit completes (200ms), update data, prep at bottom, then smoothly slide up into place
   setTimeout(() => {
     if (typeof callback === "function") callback();
 
-    // Prep: position at left while transparent
-    cardElements.forEach(el => {
-      el.classList.remove('num-slide-exit');
-      el.classList.add('num-slide-enter-prep');
-    });
+    // Prep: card numbers at left, recent transactions at bottom
+    if (cardElements && cardElements.length > 0) {
+      cardElements.forEach(el => {
+        el.classList.remove('num-slide-exit');
+        el.classList.add('num-slide-enter-prep');
+      });
+    }
 
-    // Next frame: animate to 0 (Left-to-Right entrance)
+    if (recentEl) {
+      recentEl.classList.remove('tx-slide-down-exit');
+      recentEl.classList.add('tx-slide-up-prep');
+    }
+
+    // Next frame: animate to 0
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        cardElements.forEach(el => {
-          el.classList.remove('num-slide-enter-prep');
-          el.classList.add('num-slide-enter-active');
-        });
+        if (cardElements && cardElements.length > 0) {
+          cardElements.forEach(el => {
+            el.classList.remove('num-slide-enter-prep');
+            el.classList.add('num-slide-enter-active');
+          });
+        }
+
+        if (recentEl) {
+          recentEl.classList.remove('tx-slide-up-prep');
+          recentEl.classList.add('tx-slide-up-active');
+        }
 
         // Clean up classes after animation finishes
         setTimeout(() => {
-          cardElements.forEach(el => {
-            el.classList.remove('num-slide-enter-active');
-          });
+          if (cardElements && cardElements.length > 0) {
+            cardElements.forEach(el => {
+              el.classList.remove('num-slide-enter-active');
+            });
+          }
+          if (recentEl) {
+            recentEl.classList.remove('tx-slide-up-active');
+          }
         }, 400);
       });
     });
@@ -1357,7 +1381,7 @@ function setDashboardFilter(mode) {
   });
   updateDashPillIndicator(true);
 
-  const otherAnimEls = document.querySelectorAll("#dashFilterActiveLabel, #recentTransactions, #donutChart, #chartLegend");
+  const otherAnimEls = document.querySelectorAll("#dashFilterActiveLabel, #donutChart, #chartLegend");
   otherAnimEls.forEach((el) => el.classList.add("ios-content-fade"));
 
   const customInputs = document.getElementById("dashCustomRangeInputs");
