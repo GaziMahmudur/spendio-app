@@ -371,6 +371,7 @@ class CustomSelect {
   setValue(val) {
     this.select.value = val;
     this._syncTrigger();
+    this.select.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
   getValue() {
@@ -609,6 +610,7 @@ let state = {
 // ── DEFAULT CATEGORIES ─────────────────────────────────
 const DEFAULT_CATEGORIES = [
   { id: "cat_food", name: "Food & Dining", icon: "🍔", color: "#f59e0b" },
+  { id: "cat_savings", name: "Savings", icon: "💰", color: "#10b981", name: "Food & Dining", icon: "🍔", color: "#f59e0b" },
   { id: "cat_trans", name: "Transport", icon: "🚗", color: "#06b6d4" },
   { id: "cat_shop", name: "Shopping", icon: "🛍️", color: "#ec4899" },
   { id: "cat_health", name: "Health", icon: "💊", color: "#10b981" },
@@ -698,6 +700,24 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load currency setting into input
   const cu = document.getElementById("currencyUnit");
   if (cu) cu.value = state.currency || "taka";
+
+  // Watch expCategory change to toggle Savings Unique Code input
+  const expCatEl = document.getElementById("expCategory");
+  if (expCatEl) {
+    expCatEl.addEventListener("change", () => {
+      const selectedId = expCatEl.value;
+      const cat = state.categories.find((c) => c.id === selectedId);
+      const isSavings = cat && (cat.id === "cat_savings" || cat.name.toLowerCase() === "savings");
+      const codeGroup = document.getElementById("savingsCodeGroup");
+      if (codeGroup) {
+        codeGroup.style.display = isSavings ? "block" : "none";
+        const codeInput = document.getElementById("expSavingsCode");
+        if (codeInput && isSavings && !codeInput.value) {
+          setTimeout(() => codeInput.focus(), 50);
+        }
+      }
+    });
+  }
 
   // Global Enter-key support for all forms and modals
   document.addEventListener("keydown", (e) => {
@@ -926,6 +946,8 @@ function loadState() {
   state.expenses = state.expenses || [];
   if (!state.categories || state.categories.length === 0) {
     state.categories = DEFAULT_CATEGORIES.map((c) => ({ ...c }));
+  } else if (!state.categories.find(c => c.id === "cat_savings" || c.name.toLowerCase() === "savings")) {
+    state.categories.push({ id: "cat_savings", name: "Savings", icon: "💰", color: "#10b981" });
   }
   state.balanceRecords = state.balanceRecords || [];
   if (!state.savingsVaults) {
@@ -1289,9 +1311,14 @@ function txItemHTML(expense) {
     name: "Uncategorized",
     color: "#7c3aed",
   };
+  const isSavings = cat.id === "cat_savings" || cat.name.toLowerCase() === "savings" || !!expense.savingsCode;
+  const savingsBadge = expense.savingsCode
+    ? `<span style="display:inline-block; margin-left:6px; padding: 2px 6px; border-radius: 4px; background: rgba(16,185,129,0.15); color: #10b981; font-size: 10px; font-weight: 800; letter-spacing:0.5px;">${escHtml(expense.savingsCode)}</span>`
+    : "";
+
   return `<tr>
     <td style="white-space: nowrap;">${fmtDate(expense.date)}</td>
-    <td style="font-weight: 600;">${escHtml(expense.desc)}</td>
+    <td style="font-weight: 600;">${escHtml(expense.desc)}${savingsBadge}</td>
     <td style="white-space: nowrap;"><span style="display:inline-block; padding: 4px 8px; border-radius: 4px; background: ${
       cat.color
     }22; color: ${cat.color}; font-size: 11px; font-weight: 700;">${
@@ -1655,10 +1682,14 @@ function populateCategoryFilter() {
 }
 
 // ── ADD EXPENSE MODAL ──────────────────────────────────
-function openAddExpenseModal(editId = null) {
+function openAddExpenseModal(editId = null, defaultCatId = null) {
   const modal = document.getElementById("addExpenseModal");
   const form = document.getElementById("expenseForm");
   const today = new Date().toISOString().split("T")[0];
+
+  const catGroup = document.getElementById("expenseCategoryGroup");
+  const codeGroup = document.getElementById("savingsCodeGroup");
+  const codeInput = document.getElementById("expSavingsCode");
 
   if (editId) {
     const exp = state.expenses.find((e) => e.id === editId);
@@ -1669,15 +1700,32 @@ function openAddExpenseModal(editId = null) {
     dpSetValue("expDate", exp.date);
     csSetValue("expCategory", exp.categoryId);
     document.getElementById("expNote").value = exp.note || "";
-    document.getElementById("expenseModalTitle").textContent = "Edit Expense";
+    if (codeInput) codeInput.value = exp.savingsCode || "";
+
+    const cat = state.categories.find(c => c.id === exp.categoryId);
+    const isSavings = cat && (cat.id === "cat_savings" || cat.name.toLowerCase() === "savings");
+    if (codeGroup) codeGroup.style.display = isSavings ? "block" : "none";
+    if (catGroup) catGroup.style.display = isSavings ? "none" : "block";
+
+    document.getElementById("expenseModalTitle").textContent = isSavings ? "Edit Savings" : "Edit Expense";
     document.getElementById("expenseSubmitBtn").textContent = "Save Changes";
   } else {
     form.reset();
     document.getElementById("expenseEditId").value = "";
     dpSetValue("expDate", today);
-    csSetValue("expCategory", "");
-    document.getElementById("expenseModalTitle").textContent = "Add Expense";
-    document.getElementById("expenseSubmitBtn").textContent = "Add Expense";
+    if (codeInput) codeInput.value = "";
+
+    const targetCat = defaultCatId || "";
+    csSetValue("expCategory", targetCat);
+
+    const cat = state.categories.find(c => c.id === targetCat);
+    const isSavings = cat && (cat.id === "cat_savings" || cat.name.toLowerCase() === "savings");
+    if (codeGroup) codeGroup.style.display = isSavings ? "block" : "none";
+    // If opened specifically for Savings, hide category dropdown completely!
+    if (catGroup) catGroup.style.display = isSavings ? "none" : "block";
+
+    document.getElementById("expenseModalTitle").textContent = isSavings ? "Add Savings Deposit" : "Add Expense";
+    document.getElementById("expenseSubmitBtn").textContent = isSavings ? "+ Save Money" : "Add Expense";
   }
   // Re-populate category dropdown (reset() clears it)
   populateCategoryDropdowns();
@@ -1685,6 +1733,11 @@ function openAddExpenseModal(editId = null) {
   document.body.style.overflow = "hidden";
   const pc = document.querySelector(".pages-container");
   if (pc) pc.style.overflow = "hidden";
+}
+
+function openAddExpenseModalForSavings() {
+  const savingsCat = state.categories.find(c => c.id === "cat_savings" || c.name.toLowerCase() === "savings");
+  openAddExpenseModal(null, savingsCat ? savingsCat.id : "cat_savings");
 }
 function closeAddExpenseModal() {
   document.getElementById("addExpenseModal").classList.remove("open");
@@ -1709,15 +1762,47 @@ function saveExpense(event) {
   event.preventDefault();
   const editId = document.getElementById("expenseEditId").value;
   const desc = document.getElementById("expDesc").value.trim();
-  const amount = parseFloat(document.getElementById("expAmount").value);
+  const amountVal = document.getElementById("expAmount").value;
+  const amount = parseFloat(amountVal);
   const date = document.getElementById("expDate").value;
-  const catId = csGetValue("expCategory");
+  let catId = csGetValue("expCategory");
   const note = document.getElementById("expNote").value.trim();
 
-  if (!desc || !amount || !date || !catId) {
-    if (!catId) showToast("Please select a category.", "error");
+  // If opened in savings mode, automatically ensure savings category is set
+  const catGroup = document.getElementById("expenseCategoryGroup");
+  const isSavingsMode = catGroup && catGroup.style.display === "none";
+  if (isSavingsMode && !catId) {
+    const savingsCat = state.categories.find(c => c.id === "cat_savings" || c.name.toLowerCase() === "savings");
+    if (savingsCat) catId = savingsCat.id;
+  }
+
+  if (!desc) {
+    showToast("Please enter a description or goal name.", "error");
+    document.getElementById("expDesc")?.focus();
     return;
   }
+  if (!amountVal || isNaN(amount) || amount <= 0) {
+    showToast("Please enter a valid amount.", "error");
+    document.getElementById("expAmount")?.focus();
+    return;
+  }
+  if (!date) {
+    showToast("Please pick a date.", "error");
+    return;
+  }
+  if (!catId) {
+    showToast("Please select a category.", "error");
+    return;
+  }
+
+  const cat = state.categories.find(c => c.id === catId);
+  const isSavings = cat && (cat.id === "cat_savings" || cat.name.toLowerCase() === "savings");
+  let savingsCode = "";
+  if (isSavings) {
+    const codeEl = document.getElementById("expSavingsCode");
+    savingsCode = ((codeEl ? codeEl.value : "") || desc || "GENERAL").trim().toUpperCase();
+  }
+
   if (editId) {
     const idx = state.expenses.findIndex((e) => e.id === editId);
     if (idx >= 0) {
@@ -1728,8 +1813,9 @@ function saveExpense(event) {
         date,
         categoryId: catId,
         note,
+        savingsCode: isSavings ? savingsCode : undefined,
       };
-      showToast("Expense updated!", "success");
+      showToast(isSavings ? "Savings record updated!" : "Expense updated!", "success");
     }
   } else {
     state.expenses.push({
@@ -1739,9 +1825,10 @@ function saveExpense(event) {
       date,
       categoryId: catId,
       note,
+      savingsCode: isSavings ? savingsCode : undefined,
       createdAt: new Date().toISOString(),
     });
-    showToast("Expense added!", "success");
+    showToast(isSavings ? `Saved ${fmtAmount(amount)} to "${savingsCode}"!` : "Expense added!", "success");
   }
   saveState();
   renderAll();
@@ -2848,249 +2935,110 @@ function saveWalletName(e) {
   showToast(`Wallet renamed to "${newName}"`, "success");
 }
 
-// ── SAVINGS VAULTS LOGIC ────────────────────────────────
-function openCreateSavingsModal() {
-  document.getElementById("vaultInputName").value = "";
-  document.getElementById("vaultInputTarget").value = "";
-  document.getElementById("vaultInputInitial").value = "";
-  const modal = document.getElementById("savingsVaultModal");
-  if (modal) modal.classList.add("open");
-  setTimeout(() => document.getElementById("vaultInputName").focus(), 100);
-}
+// ── SAVINGS VAULTS / CARDS LOGIC ───────────────────────
+function getSavingsCardsData() {
+  const cardsMap = {};
 
-function closeCreateSavingsModal() {
-  const modal = document.getElementById("savingsVaultModal");
-  if (modal) modal.classList.remove("open");
-}
+  // Group all expenses with category 'cat_savings' or with a savingsCode
+  (state.expenses || []).forEach(e => {
+    const cat = state.categories.find(c => c.id === e.categoryId);
+    const isSavingsCat = cat && (cat.id === "cat_savings" || cat.name.toLowerCase() === "savings");
+    if (!isSavingsCat && !e.savingsCode) return;
 
-function handleSavingsVaultBackdrop(e) {
-  if (e.target === document.getElementById("savingsVaultModal")) closeCreateSavingsModal();
-}
-
-function saveNewSavingsVault(e) {
-  e.preventDefault();
-  const name = document.getElementById("vaultInputName").value.trim();
-  const target = parseFloat(document.getElementById("vaultInputTarget").value) || 0;
-  const initial = parseFloat(document.getElementById("vaultInputInitial").value) || 0;
-
-  if (!name) {
-    showToast("Please enter a goal name.", "error");
-    return;
-  }
-
-  if (!state.savingsVaults) state.savingsVaults = [];
-
-  const vault = {
-    id: "vault_" + Date.now(),
-    name: name,
-    targetAmount: target,
-    currentAmount: 0,
-    createdAt: new Date().toISOString(),
-    records: []
-  };
-
-  if (initial > 0) {
-    vault.currentAmount = initial;
-    vault.records.push({
-      id: uid(),
-      amount: initial,
-      type: "deposit",
-      note: "Initial savings deposit",
-      date: today()
-    });
-
-    // Deduct from wallet expenses as savings transfer
-    state.expenses.push({
-      id: uid(),
-      desc: `Transferred to Savings: ${name}`,
-      amount: initial,
-      date: today(),
-      categoryId: "cat_shop",
-      note: "Moved to dedicated savings vault",
-      createdAt: new Date().toISOString()
-    });
-  }
-
-  state.savingsVaults.push(vault);
-  saveState();
-  renderAll();
-  closeCreateSavingsModal();
-  showToast(`Savings vault "${name}" created!`, "success");
-}
-
-function handleSavingsDeposit(e) {
-  e.preventDefault();
-  const vaultId = document.getElementById("savingsVaultSelect").value;
-  const amount = parseFloat(document.getElementById("savingsActionAmount").value);
-  const note = document.getElementById("savingsActionNote").value.trim();
-  const actionType = document.querySelector('input[name="savingsType"]:checked').value;
-
-  if (!vaultId || !amount || amount <= 0) {
-    showToast("Please enter a valid amount.", "error");
-    return;
-  }
-
-  const vault = (state.savingsVaults || []).find(v => v.id === vaultId);
-  if (!vault) {
-    showToast("Vault not found.", "error");
-    return;
-  }
-
-  if (actionType === "deposit") {
-    // Save money: add to vault, record expense in daily wallet
-    vault.currentAmount = (vault.currentAmount || 0) + amount;
-    vault.records.push({
-      id: uid(),
-      amount,
-      type: "deposit",
-      note: note || "Savings deposit",
-      date: today()
-    });
-
-    state.expenses.push({
-      id: uid(),
-      desc: `Saved to: ${vault.name}`,
-      amount: amount,
-      date: today(),
-      categoryId: "cat_shop",
-      note: note || "Moved from daily wallet to savings",
-      createdAt: new Date().toISOString()
-    });
-
-    showToast(`Deposited ${fmtAmount(amount)} to ${vault.name}`, "success");
-  } else {
-    // Withdraw money: check balance, deduct from vault, add to wallet balance
-    if (vault.currentAmount < amount) {
-      showToast(`Insufficient vault balance. Available: ${fmtAmount(vault.currentAmount)}`, "error");
-      return;
+    // Determine unique code: user entered code, or description, or 'GENERAL'
+    const code = (e.savingsCode || e.desc || "GENERAL").trim().toUpperCase();
+    if (!cardsMap[code]) {
+      cardsMap[code] = {
+        code: code,
+        name: e.desc || code,
+        totalSaved: 0,
+        entriesCount: 0,
+        lastDate: e.date,
+        transactions: []
+      };
     }
-    vault.currentAmount -= amount;
-    vault.records.push({
-      id: uid(),
-      amount,
-      type: "withdraw",
-      note: note || "Withdrawn to wallet",
-      date: today()
-    });
 
-    state.balanceRecords.push({
-      id: uid(),
-      amount: amount,
-      date: today(),
-      note: `Withdrawn from ${vault.name}`,
-      type: "add",
-      createdAt: new Date().toISOString()
-    });
+    cardsMap[code].totalSaved += Number(e.amount);
+    cardsMap[code].entriesCount += 1;
+    if (e.date > cardsMap[code].lastDate) {
+      cardsMap[code].lastDate = e.date;
+    }
+    cardsMap[code].transactions.push(e);
+  });
 
-    showToast(`Withdrew ${fmtAmount(amount)} back to wallet balance!`, "info");
-  }
-
-  saveState();
-  renderAll();
-  document.getElementById("savingsActionAmount").value = "";
-  document.getElementById("savingsActionNote").value = "";
-}
-
-function deleteSavingsVault(id) {
-  const vault = (state.savingsVaults || []).find(v => v.id === id);
-  if (!vault) return;
-
-  if (!confirm(`Delete savings vault "${vault.name}"? If it has an active balance of ${fmtAmount(vault.currentAmount)}, it will be refunded back into your main wallet.`)) return;
-
-  if (vault.currentAmount > 0) {
-    state.balanceRecords.push({
-      id: uid(),
-      amount: vault.currentAmount,
-      date: today(),
-      note: `Refund from deleted vault: ${vault.name}`,
-      type: "add",
-      createdAt: new Date().toISOString()
-    });
-  }
-
-  state.savingsVaults = state.savingsVaults.filter(v => v.id !== id);
-  saveState();
-  renderAll();
-  showToast(`Vault "${vault.name}" deleted and refunded.`, "info");
+  return Object.values(cardsMap);
 }
 
 function renderSavingsPage() {
-  const select = document.getElementById("savingsVaultSelect");
   const grid = document.getElementById("savingsVaultsGrid");
   const totalBadge = document.getElementById("savingsTotalBadge");
 
-  if (!state.savingsVaults) state.savingsVaults = [];
+  const cards = getSavingsCardsData();
+  const totalSavedAll = cards.reduce((s, c) => s + c.totalSaved, 0);
 
-  // Default initial vault if none
-  if (state.savingsVaults.length === 0) {
-    state.savingsVaults.push({
-      id: "vault_emergency",
-      name: "Emergency Fund",
-      targetAmount: 50000,
-      currentAmount: 0,
-      createdAt: new Date().toISOString(),
-      records: []
-    });
+  if (totalBadge) {
+    totalBadge.textContent = `Total Saved: ${fmtAmount(totalSavedAll)}`;
   }
 
-  const vaults = state.savingsVaults;
-  const totalSaved = vaults.reduce((s, v) => s + (v.currentAmount || 0), 0);
+  if (!grid) return;
 
-  if (totalBadge) totalBadge.textContent = `Total Saved: ${fmtAmount(totalSaved)}`;
-
-  if (select) {
-    select.innerHTML = vaults.map(v => `<option value="${v.id}">${escHtml(v.name)} (${fmtAmount(v.currentAmount)})</option>`).join("");
+  if (cards.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state" style="grid-column: 1 / -1; padding: 48px 24px;">
+        <div class="empty-icon" style="font-size: 48px; margin-bottom: 12px;">💰</div>
+        <h3 style="font-size: 18px; font-weight: 700; margin: 0 0 6px 0; color: var(--text-primary);">No savings cards yet</h3>
+        <p style="font-size: 13px; color: var(--text-muted); max-width: 360px; margin: 0 auto 18px auto;">
+          Add an expense with category <b>"Savings"</b> and enter a unique code (e.g. <code>EMERGENCY</code>, <code>CAR</code>) to create your first card!
+        </p>
+        <button type="button" class="btn btn-primary" onclick="openAddExpenseModalForSavings()" style="width:auto; padding: 9px 20px; font-size:13px; font-weight:600; border-radius: var(--radius-pill); background:#10b981 !important;">
+          + Add First Savings
+        </button>
+      </div>`;
+    return;
   }
 
-  if (grid) {
-    if (vaults.length === 0) {
-      grid.innerHTML = `<div class="empty-state"><div class="empty-icon">💰</div><p>No savings vaults yet.<br/>Create one to start saving!</p></div>`;
-      return;
-    }
-
-    grid.innerHTML = vaults.map(v => {
-      const cur = v.currentAmount || 0;
-      const target = v.targetAmount || 0;
-      const pct = target > 0 ? Math.min(100, Math.round((cur / target) * 100)) : 100;
-
-      return `
-        <div class="savings-card">
+  grid.innerHTML = cards.map(c => {
+    return `
+      <div class="savings-card" style="position:relative; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-sm); transition: all 0.2s ease;">
+        <div class="savings-card-top" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 14px;">
           <div>
-            <div class="savings-card-top">
-              <div style="min-width:0; flex:1;">
-                <h4 class="savings-card-title" title="${escHtml(v.name)}">${escHtml(v.name)}</h4>
-                <p class="savings-card-desc">${target > 0 ? 'Target: ' + fmtAmount(target) : 'Flexible Savings Goal'}</p>
-              </div>
-              <span class="savings-card-badge">${target > 0 ? pct + '% Saved' : 'Active'}</span>
-            </div>
-
-            <div style="font-size:22px; font-weight:800; color:var(--text-primary); letter-spacing:-0.4px; margin-bottom:8px;">
-              ${fmtAmount(cur)}
-            </div>
-
-            ${target > 0 ? `
-              <div class="savings-progress-wrap">
-                <div class="savings-progress-bar">
-                  <div class="savings-progress-fill" style="width:${pct}%;"></div>
-                </div>
-                <div class="savings-progress-text">
-                  <span>${fmtAmount(cur)}</span>
-                  <span>${fmtAmount(target)}</span>
-                </div>
-              </div>
-            ` : ''}
-          </div>
-
-          <div class="savings-card-actions">
-            <span style="font-size:11px; color:var(--text-muted); flex:1;">
-              Created: ${fmtDate(v.createdAt.split('T')[0])}
+            <span style="display:inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.8px; padding: 3px 8px; border-radius: 4px; background: rgba(16,185,129,0.12); color: var(--green); margin-bottom: 6px;">
+              CODE: ${escHtml(c.code)}
             </span>
-            <button type="button" class="btn btn-secondary" onclick="deleteSavingsVault('${v.id}')" style="width:auto; padding:5px 9px; font-size:12px; color:var(--red);" title="Delete Vault">
-              🗑️
-            </button>
+            <h4 class="savings-card-title" style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin:0;" title="${escHtml(c.name)}">${escHtml(c.name)}</h4>
           </div>
+          <span class="savings-card-badge" style="font-size: 11px; font-weight: 700; color: var(--green); background: rgba(16,185,129,0.1); padding: 4px 8px; border-radius: var(--radius-pill);">
+            ${c.entriesCount} deposit${c.entriesCount !== 1 ? 's' : ''}
+          </span>
         </div>
-      `;
-    }).join("");
-  }
+
+        <div style="font-size: 26px; font-weight: 800; color: #10b981; letter-spacing: -0.5px; margin-bottom: 16px;">
+          ${fmtAmount(c.totalSaved)}
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; border-top: 1px solid var(--border); padding-top: 12px; margin-top: auto;">
+          <span style="font-size: 12px; color: var(--text-muted);">
+            Last saved: ${fmtDate(c.lastDate)}
+          </span>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="addMoreToSavings('${escHtml(c.code)}', '${escHtml(c.name)}')"
+            style="width:auto; padding: 5px 12px; font-size: 12px; font-weight: 600; border-radius: var(--radius-pill); background: rgba(16,185,129,0.08); color: var(--green); border-color: rgba(16,185,129,0.3);"
+          >
+            ＋ Add More
+          </button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function addMoreToSavings(code, name) {
+  const savingsCat = state.categories.find(c => c.id === "cat_savings" || c.name.toLowerCase() === "savings");
+  openAddExpenseModal(null, savingsCat ? savingsCat.id : "cat_savings");
+  const descEl = document.getElementById("expDesc");
+  const codeEl = document.getElementById("expSavingsCode");
+  if (descEl) descEl.value = name || code;
+  if (codeEl) codeEl.value = code;
 }
