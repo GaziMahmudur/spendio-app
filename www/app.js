@@ -72,13 +72,21 @@ class DatePicker {
     this.trigger.classList.add("open");
     if (this.wrap) this.wrap.classList.add("open-level");
 
-    // adjust position to prevent horizontal overflow
+    // adjust position to prevent horizontal overflow and screen edge clipping
     this.cal.style.left = "0";
     this.cal.style.right = "auto";
     let rect = this.cal.getBoundingClientRect();
-    if (rect.right > window.innerWidth) {
+    const margin = 12;
+    if (rect.right > window.innerWidth - margin) {
       this.cal.style.left = "auto";
       this.cal.style.right = "0";
+      rect = this.cal.getBoundingClientRect();
+    }
+    if (rect.left < margin) {
+      // If right-aligning or left-aligning causes left side to be cut off, shift it into view
+      const shift = margin - rect.left;
+      this.cal.style.left = `${shift}px`;
+      this.cal.style.right = "auto";
     }
 
     document.addEventListener("click", this._closeOnOutside);

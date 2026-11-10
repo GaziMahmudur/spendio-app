@@ -4,7 +4,7 @@
    Auto-updates: new SW activates immediately and notifies clients
 ===================================================== */
 
-const CACHE_NAME = "spendwise-v46";
+const CACHE_NAME = "spendwise-v47";
 const OFFLINE_PAGE = "./index.html";
 
 // Core files to precache on install

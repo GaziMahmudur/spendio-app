@@ -1624,6 +1624,8 @@ select.form-input option {
   border-radius: var(--radius);
   padding: 16px;
   min-width: 288px;
+  max-width: calc(100vw - 24px);
+  box-sizing: border-box;
   box-shadow: var(--shadow-lg);
   opacity: 0;
   visibility: hidden;
