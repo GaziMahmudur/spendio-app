@@ -63,9 +63,14 @@ class DatePicker {
     document
       .querySelectorAll(".dp-trigger.open")
       .forEach((t) => t.classList.remove("open"));
+    document
+      .querySelectorAll(".dp-wrap.open-level")
+      .forEach((w) => w.classList.remove("open-level"));
+
     this._renderCal();
     this.cal.classList.add("open");
     this.trigger.classList.add("open");
+    if (this.wrap) this.wrap.classList.add("open-level");
 
     // adjust position to prevent horizontal overflow
     this.cal.style.left = "0";
@@ -81,6 +86,7 @@ class DatePicker {
   _close() {
     this.cal.classList.remove("open");
     this.trigger.classList.remove("open");
+    if (this.wrap) this.wrap.classList.remove("open-level");
     document.removeEventListener("click", this._closeOnOutside);
   }
   _closeOnOutside(e) {
@@ -317,9 +323,14 @@ class CustomSelect {
     document
       .querySelectorAll(".cs-trigger.open")
       .forEach((t) => t.classList.remove("open"));
+    document
+      .querySelectorAll(".cs-wrap.open-level")
+      .forEach((w) => w.classList.remove("open-level"));
+
     this._renderOptions();
     this.dropdown.classList.add("open");
     this.trigger.classList.add("open");
+    if (this.wrap) this.wrap.classList.add("open-level");
 
     this.dropdown.style.left = "0";
     this.dropdown.style.right = "auto";
@@ -334,6 +345,7 @@ class CustomSelect {
   _close() {
     this.dropdown.classList.remove("open");
     this.trigger.classList.remove("open");
+    if (this.wrap) this.wrap.classList.remove("open-level");
     document.removeEventListener("click", this._closeOnOutside);
   }
   _closeOnOutside(e) {
@@ -493,9 +505,14 @@ class GenericCustomSelect {
     document
       .querySelectorAll(".gcs-trigger.open,.cs-trigger.open")
       .forEach((t) => t.classList.remove("open"));
+    document
+      .querySelectorAll(".gcs-wrap.open-level,.cs-wrap.open-level")
+      .forEach((w) => w.classList.remove("open-level"));
+
     this._renderOptions();
     this.dropdown.classList.add("open");
     this.trigger.classList.add("open");
+    if (this.wrap) this.wrap.classList.add("open-level");
 
     // Default to right-align to perfectly match floating filter buttons
     this.dropdown.style.right = "0";
@@ -511,6 +528,7 @@ class GenericCustomSelect {
   _close() {
     this.dropdown.classList.remove("open");
     this.trigger.classList.remove("open");
+    if (this.wrap) this.wrap.classList.remove("open-level");
     document.removeEventListener("click", this._closeOnOutside);
   }
   _closeOnOutside(e) {

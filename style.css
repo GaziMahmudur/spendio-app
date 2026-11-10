@@ -390,6 +390,8 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
+  position: relative;
+  z-index: 1;
 }
 
 .stat-card {
@@ -3656,6 +3658,8 @@ button:active,
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
+  position: relative;
+  z-index: 20;
 }
 
 .dash-filter-pills {
@@ -3754,9 +3758,34 @@ button:active,
   display: none;
   align-items: center;
   gap: 8px;
+  position: relative;
+  z-index: 50;
 }
 .dash-range-inputs.show {
   display: inline-flex;
+}
+
+.dash-range-inputs .dp-wrap {
+  position: relative;
+}
+
+.dash-range-inputs .dp-wrap.open-level {
+  z-index: 1000 !important;
+}
+
+.dash-range-inputs .dp-trigger {
+  min-height: 32px;
+  padding: 5px 28px 5px 10px;
+  font-size: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+}
+
+.dash-range-inputs .dp-trigger::after {
+  right: 8px;
+  width: 12px;
+  height: 12px;
 }
 
 .dash-date-field {
@@ -3972,7 +4001,9 @@ html.is-windows #sidebarWalletBox .win-icon {
     margin-bottom: 0 !important;
     padding: 8px 10px !important;
     gap: 8px !important;
-    overflow: hidden !important;
+    overflow: visible !important;
+    position: relative !important;
+    z-index: 20 !important;
   }
   .dash-filter-pills {
     width: 100% !important;
