@@ -379,7 +379,7 @@
                 <span>💰</span> Savings Cards
               </div>
               <h1 style="font-size:24px; font-weight:700; color:var(--text-primary); letter-spacing:-0.5px; margin:0;">Savings & Goals</h1>
-              <p style="font-size:13px; color:var(--text-muted); margin:4px 0 0 0;">মেইন ওয়ালেট (Current Balance) থেকে টাকা আলাদা করে নির্দিষ্ট উদ্দেশ্যে সেভিংস কার্ডে জমান।</p>
+              <p style="font-size:13px; color:var(--text-muted); margin:4px 0 0 0;">Separate money from your Current Balance into goal-specific savings cards.</p>
             </div>
             <div style="display:flex; align-items:center; gap:12px;">
               <span id="savingsTotalBadge" style="font-size:14px; font-weight:700; color:var(--green); background:rgba(16,185,129,0.1); padding:8px 16px; border-radius:var(--radius-pill); border:1px solid rgba(16,185,129,0.25);">Total Saved: 0.00 taka</span>
@@ -391,6 +391,15 @@
               >
                 <span>＋</span> Add Savings
               </button>
+            </div>
+          </div>
+
+          <!-- Savings Info Banner -->
+          <div style="margin-bottom:20px; padding:12px 16px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.22); border-radius:var(--radius-sm); font-size:12.5px; color:var(--text-secondary); line-height:1.55; display:flex; align-items:flex-start; gap:10px;">
+            <span style="font-size:16px; line-height:1; flex-shrink:0;">💡</span>
+            <div>
+              <b>Note:</b> Saved amounts are deducted from your wallet's <b>Current Balance</b> and kept in dedicated goal funds.<br/>
+              <b>Tip:</b> Using the <b>same code</b> deposits into an existing savings card, while a <b>new code</b> automatically creates a new card.
             </div>
           </div>
 
@@ -968,10 +977,6 @@
                 maxlength="30"
                 style="text-transform: uppercase; font-weight: 700; letter-spacing: 1px;"
               />
-              <div style="margin-top:6px; padding:8px 10px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); border-radius:6px; font-size:11.5px; color:var(--text-secondary); line-height:1.45;">
-                ℹ️ <b>নোট:</b> এই টাকাটি আপনার মেইন ওয়ালেটের <b>Current Balance</b> থেকে কেটে আলাদা হয়ে সেভিংস ফান্ডে জমা হবে।<br/>
-                💡 <b>Same code</b> দিলে ওই কার্ডে সেভিংস যোগ হবে, <b>নতুন code</b> দিলে নতুন সেভিংস কার্ড তৈরি হবে।
-              </div>
             </div>
 
             <div class="form-group">
