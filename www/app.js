@@ -610,9 +610,9 @@ let state = {
 // ── DEFAULT CATEGORIES ─────────────────────────────────
 const DEFAULT_CATEGORIES = [
   { id: "cat_food", name: "Food & Dining", icon: "🍔", color: "#f59e0b" },
-  { id: "cat_savings", name: "Savings", icon: "💰", color: "#10b981", name: "Food & Dining", icon: "🍔", color: "#f59e0b" },
   { id: "cat_trans", name: "Transport", icon: "🚗", color: "#06b6d4" },
   { id: "cat_shop", name: "Shopping", icon: "🛍️", color: "#ec4899" },
+  { id: "cat_savings", name: "Savings", icon: "💰", color: "#10b981" },
   { id: "cat_health", name: "Health", icon: "💊", color: "#10b981" },
   { id: "cat_entertain", name: "Entertainment", icon: "🎬", color: "#8b5cf6" },
   { id: "cat_util", name: "Utilities", icon: "💡", color: "#f97316" },
