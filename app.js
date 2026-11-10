@@ -1044,7 +1044,11 @@ function saveState() {
 
   const activeKey = getActiveStateKey();
   localStorage.setItem(activeKey, JSON.stringify(state));
-  if (typeof pushToCloud === "function" && _currentUser && !_isApplyingCloudChange) {
+  
+  // Real-time automatic cloud backup whenever state is saved
+  if (typeof window.triggerAutoCloudBackup === "function") {
+    window.triggerAutoCloudBackup(state);
+  } else if (typeof pushToCloud === "function" && typeof isCloudUserSignedIn === "function" && isCloudUserSignedIn() && !isCloudSyncActive()) {
     clearTimeout(_autoBackupTimer);
     _autoBackupTimer = setTimeout(() => {
       pushToCloud(state, true);

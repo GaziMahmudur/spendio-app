@@ -35,6 +35,7 @@ let _db = null;
 let _auth = null;
 let _currentUser = null;
 let _syncInProgress = false;
+let _syncQueued = false;
 let _cloudInitialized = false;
 let _realtimeUnsubscribe = null;
 let _isApplyingCloudChange = false;
@@ -463,7 +464,10 @@ async function pushToCloud(dataObj, silent = false, requestSessionId = null, tar
     return false;
   }
 
-  if (_syncInProgress) return false;
+  if (_syncInProgress) {
+    _syncQueued = true;
+    return false;
+  }
   _syncInProgress = true;
   if (!silent) updateCloudStatus("syncing", "Uploading to cloud…");
 
@@ -514,6 +518,15 @@ async function pushToCloud(dataObj, silent = false, requestSessionId = null, tar
     return false;
   } finally {
     _syncInProgress = false;
+    if (_syncQueued) {
+      _syncQueued = false;
+      setTimeout(() => {
+        if (_currentUser) {
+          const latestLocal = getLocalState(_currentUser.uid);
+          pushToCloud(latestLocal, true);
+        }
+      }, 500);
+    }
   }
 }
 
@@ -925,3 +938,27 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 });
+
+
+// ─────────────────────────────────────────────────────
+// GLOBAL EXPORTS FOR REAL-TIME AUTO BACKUP
+// ─────────────────────────────────────────────────────
+window.pushToCloud = pushToCloud;
+window.isCloudUserSignedIn = function() { return !!_currentUser; };
+window.isCloudSyncActive = function() { return _syncInProgress || _isApplyingCloudChange; };
+
+let _cloudDebounceTimer = null;
+window.triggerAutoCloudBackup = function(stateObj) {
+  if (!_currentUser || !_db || _isApplyingCloudChange) return;
+  clearTimeout(_cloudDebounceTimer);
+  _cloudDebounceTimer = setTimeout(async () => {
+    try {
+      const activeUid = _currentUser ? _currentUser.uid : null;
+      if (!activeUid) return;
+      console.log('[Spendio Cloud] Triggering automatic cloud sync...');
+      await pushToCloud(stateObj || getLocalState(activeUid), true);
+    } catch (e) {
+      console.warn('[Spendio Cloud] Auto cloud backup failed:', e);
+    }
+  }, 1000);
+};
