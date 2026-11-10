@@ -1658,7 +1658,7 @@ function renderChart() {
     });
   }
 
-  drawDonutCore(canvas, entries, total, -1);
+  animateDonutEntrance(canvas);
 
   const colors = entries.map(([id]) => {
     const cat = state.categories.find((c) => c.id === id);
@@ -1680,6 +1680,34 @@ function renderChart() {
     </div>`;
     })
     .join("");
+}
+
+
+function animateDonutEntrance(canvas) {
+  const duration = 750; // ms
+  const startTime = performance.now();
+
+  function step(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(1, elapsed / duration);
+    // Apple-style easeOutCubic: 1 - Math.pow(1 - progress, 3)
+    const eased = 1 - Math.pow(1 - progress, 3);
+
+    canvas._circleProgress = eased;
+    drawDonutCore(canvas, canvas._entries, canvas._total, canvas._hoverIdx !== undefined ? canvas._hoverIdx : -1);
+
+    if (progress < 1) {
+      canvas._entranceRaf = requestAnimationFrame(step);
+    } else {
+      canvas._circleProgress = 1;
+      drawDonutCore(canvas, canvas._entries, canvas._total, canvas._hoverIdx !== undefined ? canvas._hoverIdx : -1);
+      canvas._entranceRaf = null;
+    }
+  }
+
+  if (canvas._entranceRaf) cancelAnimationFrame(canvas._entranceRaf);
+  canvas._circleProgress = 0;
+  canvas._entranceRaf = requestAnimationFrame(step);
 }
 
 function animateDonut(canvas) {
@@ -1739,8 +1767,19 @@ function drawDonutCore(canvas, entries, total, hoverIdx) {
     return cat ? cat.color : "#7c3aed";
   });
 
+  // Circular entrance progression (0 to 1)
+  const circleProgress = canvas._circleProgress !== undefined ? canvas._circleProgress : 1;
+  const maxTotalAngle = circleProgress * Math.PI * 2;
+  let accumulatedAngle = 0;
+
   entries.forEach(([id, val], i) => {
-    const sweep = (val / total) * Math.PI * 2;
+    const fullSweep = (val / total) * Math.PI * 2;
+    if (accumulatedAngle >= maxTotalAngle) return;
+
+    // Clip sweep to remaining visible angular span
+    const sweep = Math.min(fullSweep, maxTotalAngle - accumulatedAngle);
+    if (sweep <= 0) return;
+    accumulatedAngle += fullSweep;
 
     // Smooth interpolation states
     const popScale = canvas._animStates
