@@ -4044,16 +4044,92 @@ body.modal-open {
   filter: blur(1px);
 }
 
-/* Phase 2: Enter from Left to Right (shathe shathe abar left theke right er dike new number smoothly chole ashbe) */
-.num-slide-enter-prep {
-  opacity: 0 !important;
-  transform: translateX(-24px) !important;
-  transition: none !important;
+/* ═══════════════════════════════════════════
+   ACCESSIBLE TOUCH TARGETS (MINIMUM 48x48px)
+   ═══════════════════════════════════════════ */
+.hamburger {
+  min-width: 48px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.num-slide-enter-active {
-  opacity: 1 !important;
-  transform: translateX(0) !important;
-  filter: blur(0);
-  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.48s ease, filter 0.48s ease !important;
+.modal-close,
+.import-clear-btn {
+  min-width: 48px;
+  min-height: 48px;
+  position: relative;
+}
+
+.modal-close::before,
+.import-clear-btn::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 48px;
+  min-height: 48px;
+}
+
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-add-topbar {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dash-filter-pill {
+  min-height: 44px;
+  padding: 10px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dp-nav-btn {
+  min-width: 48px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dp-day {
+  min-width: 42px;
+  min-height: 42px;
+}
+
+.dp-footer-btn {
+  min-height: 44px;
+  padding: 8px 16px;
+}
+
+.preview-table .cell-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cell-actions button,
+.tx-action-btn,
+.cat-delete,
+.cat-edit {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 4px;
+  border-radius: var(--radius-xs);
+}
+
+.sidebar-nav .nav-item {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
 }
