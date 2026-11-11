@@ -759,6 +759,8 @@ document.addEventListener("DOMContentLoaded", () => {
   buildQcatPickers();
   updateSidebarDate();
   renderAll();
+  const initialCards = document.querySelectorAll('.cards-row .stat-card');
+  initialCards.forEach(c => c.classList.add('card-animate'));
   initCustomSelects();
   initGenericCustomSelects();
   initImportDropzone();
@@ -1158,7 +1160,16 @@ function navigateTo(page) {
   };
   document.getElementById("topbarTitle").textContent = titles[page] || "";
   closeSidebar();
-  if (page === "dashboard") setTimeout(() => updateDashPillIndicator(false), 50);
+  if (page === "dashboard") {
+    setTimeout(() => updateDashPillIndicator(false), 50);
+    const cards = document.querySelectorAll('.cards-row .stat-card');
+    cards.forEach(c => {
+      c.classList.remove('card-animate');
+    });
+    requestAnimationFrame(() => {
+      cards.forEach(c => c.classList.add('card-animate'));
+    });
+  }
   if (page === "savings") renderSavingsPage();
   if (page === "export") renderExportPreview();
   if (page === "transactions") populateCategoryFilter();
@@ -1311,6 +1322,46 @@ function updateDashPillIndicator(animate = true) {
 }
 
 
+// Animate top 3 cards number transition: Exit to Left, then Enter from Left to Right
+function animateCardNumbersUpdate(callback) {
+  const cardElements = document.querySelectorAll(
+    '#dashBalance, #dashBalanceDate, #dashIncome, #dashIncomeSub, #dashExpenses, #dashExpenseCount'
+  );
+
+  // Phase 1: Card numbers wipe left (right theke left er dike muche jabe)
+  if (cardElements && cardElements.length > 0) {
+    cardElements.forEach((el) => {
+      el.classList.remove('num-slide-enter-active', 'num-slide-enter-prep');
+      el.classList.add('num-slide-exit');
+    });
+  }
+
+  // After exit completes smoothly (380ms), update data, prep at left, then smoothly slide in from left to right
+  setTimeout(() => {
+    if (typeof callback === "function") callback();
+
+    // Prep: numbers positioned to left, invisible
+    if (cardElements && cardElements.length > 0) {
+      cardElements.forEach((el) => {
+        el.classList.remove('num-slide-exit');
+        el.classList.add('num-slide-enter-prep');
+      });
+    }
+
+    // Next animation frame: smoothly enter to 0 with fluid Apple easing
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (cardElements && cardElements.length > 0) {
+          cardElements.forEach((el) => {
+            el.classList.remove('num-slide-enter-prep');
+            el.classList.add('num-slide-enter-active');
+          });
+        }
+      });
+    });
+  }, 380);
+}
+
 function setDashboardFilter(mode) {
   dashFilterMode = mode;
   try {
@@ -1321,13 +1372,12 @@ function setDashboardFilter(mode) {
   });
   updateDashPillIndicator(true);
 
-  // Trigger Apple-style subtle transition on dashboard data elements
-  const animEls = document.querySelectorAll(
-    "#dashIncome, #dashExpenses, #dashExpenseCount, #dashIncomeSub, #dashFilterActiveLabel, #recentTransactions, #donutChart, #chartLegend"
-  );
-  animEls.forEach((el) => {
-    el.classList.add(el.id === "dashFilterActiveLabel" ? "ios-badge-shift" : (el.classList.contains("card-amount") ? "ios-val-shift" : "ios-content-fade"));
-  });
+  // Apple-style subtle transition on badge and non-card elements
+  const badgeEl = document.getElementById("dashFilterActiveLabel");
+  if (badgeEl) badgeEl.classList.add("ios-badge-shift");
+
+  const otherAnimEls = document.querySelectorAll("#recentTransactions, #donutChart, #chartLegend");
+  otherAnimEls.forEach((el) => el.classList.add("ios-content-fade"));
 
   const customInputs = document.getElementById("dashCustomRangeInputs");
   if (customInputs) customInputs.classList.toggle("show", mode === "custom");
@@ -1341,14 +1391,13 @@ function setDashboardFilter(mode) {
     if (eEl) eEl.value = dashCustomEnd;
   }
 
-  setTimeout(() => {
+  animateCardNumbersUpdate(() => {
     renderDashboard();
+    if (badgeEl) badgeEl.classList.remove("ios-badge-shift");
     requestAnimationFrame(() => {
-      animEls.forEach((el) => {
-        el.classList.remove("ios-badge-shift", "ios-val-shift", "ios-content-fade");
-      });
+      otherAnimEls.forEach((el) => el.classList.remove("ios-content-fade"));
     });
-  }, 90);
+  });
 }
 
 function onCustomDateRangeChange() {
@@ -1356,7 +1405,9 @@ function onCustomDateRangeChange() {
   const eEl = document.getElementById("dashEndDate");
   if (sEl && sEl.value) dashCustomStart = sEl.value;
   if (eEl && eEl.value) dashCustomEnd = eEl.value;
-  renderDashboard();
+  animateCardNumbersUpdate(() => {
+    renderDashboard();
+  });
 }
 
 function getFilteredDataForDashboard() {
