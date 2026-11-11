@@ -1323,7 +1323,7 @@ function animateCardNumbersUpdate(callback) {
     recentEl.classList.add('tx-slide-down-exit');
   }
 
-  // After exit completes (250ms), update data, prep at bottom under border, then smoothly slide up into place
+  // After exit completes smoothly (440ms), update data, prep at bottom under border, then smoothly slide up into place
   setTimeout(() => {
     if (typeof callback === "function") callback();
 
@@ -1340,7 +1340,7 @@ function animateCardNumbersUpdate(callback) {
       recentEl.classList.add('tx-slide-up-prep');
     }
 
-    // Next frame: animate to 0
+    // Next frame: animate to 0 with luxury fluid spring
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         if (cardElements && cardElements.length > 0) {
@@ -1365,10 +1365,10 @@ function animateCardNumbersUpdate(callback) {
           if (recentEl) {
             recentEl.classList.remove('tx-slide-up-active');
           }
-        }, 400);
+        }, 650);
       });
     });
-  }, 250);
+  }, 440);
 }
 
 function setDashboardFilter(mode) {
@@ -1729,15 +1729,15 @@ function animateDonutTransition(canvas, newEntries, newTotal) {
   }
 
   // Phase 1: 360 Reverse animation (1 -> 0) using previous slice data
-  const reverseDuration = 360; // ms
+  const reverseDuration = 550; // ms - smoother unwind
   const reverseStart = performance.now();
   const startProgress = canvas._circleProgress !== undefined ? canvas._circleProgress : 1;
 
   function reverseStep(now) {
     const elapsed = now - reverseStart;
     const p = Math.min(1, elapsed / reverseDuration);
-    // Smooth ease-in-cubic for unwind: p * p * p
-    const eased = startProgress * (1 - p * p);
+    // iOS smooth cubic curve for unwind
+    const eased = startProgress * (1 - Math.pow(p, 2.4));
     canvas._circleProgress = Math.max(0, eased);
 
     drawDonutCore(canvas, prevEntries, prevTotal, -1);
@@ -1759,14 +1759,14 @@ function animateDonutTransition(canvas, newEntries, newTotal) {
 }
 
 function animateDonutForward(canvas) {
-  const duration = 650; // ms
+  const duration = 900; // ms - silky smooth Apple sweep
   const startTime = performance.now();
 
   function step(now) {
     const elapsed = now - startTime;
     const progress = Math.min(1, elapsed / duration);
-    // Apple-style easeOutCubic: 1 - Math.pow(1 - progress, 3)
-    const eased = 1 - Math.pow(1 - progress, 3);
+    // Apple-style easeOutQuartic / smooth deceleration
+    const eased = 1 - Math.pow(1 - progress, 3.8);
 
     canvas._circleProgress = eased;
     drawDonutCore(canvas, canvas._entries, canvas._total, canvas._hoverIdx !== undefined ? canvas._hoverIdx : -1);

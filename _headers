@@ -1,0 +1,16 @@
+# Cache static assets (CSS, JS, images, fonts) for 1 year (31536000 seconds)
+/*.(css|js|ico|png|jpg|jpeg|gif|svg|webp|woff|woff2|ttf|eot)
+  Cache-Control: public, max-age=31536000, immutable
+
+/icons/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Always check index.html and service worker for updates
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate

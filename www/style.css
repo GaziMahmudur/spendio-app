@@ -3762,11 +3762,11 @@ button:active,
   overflow: hidden;
 }
 
-/* Recent Transactions slide-down exit and slide-up enter */
+/* Recent Transactions slide-down exit and slide-up enter - Apple iOS Spring Curve */
 .tx-slide-down-exit {
   opacity: 1 !important;
   transform: translateY(115%) !important;
-  transition: transform 0.26s cubic-bezier(0.4, 0, 1, 1), opacity 0.26s ease !important;
+  transition: transform 0.48s cubic-bezier(0.32, 0, 0.67, 0) !important;
 }
 
 .tx-slide-up-prep {
@@ -3778,7 +3778,7 @@ button:active,
 .tx-slide-up-active {
   opacity: 1 !important;
   transform: translateY(0) !important;
-  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: transform 0.62s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .ios-content-fade {
@@ -4131,24 +4131,24 @@ body.modal-open {
   }
 }
 
-/* Smooth Right-to-Left Exit and Left-to-Right Enter for Amount Numbers */
+/* Smooth Right-to-Left Exit and Left-to-Right Enter for Amount Numbers - Apple fluid easing */
 .card-amount,
 .card-sub {
   will-change: transform, opacity;
-  transition: transform 0.22s cubic-bezier(0.4, 0, 1, 1), opacity 0.22s ease;
+  transition: transform 0.4s cubic-bezier(0.32, 0, 0.67, 0), opacity 0.38s ease;
 }
 
 /* Phase 1: Exit to Left (right theke left er dike muche jabe) */
 .num-slide-exit {
   opacity: 0 !important;
-  transform: translateX(-32px) !important;
-  filter: blur(2px);
+  transform: translateX(-24px) !important;
+  filter: blur(1px);
 }
 
 /* Phase 2: Enter from Left to Right (shathe shathe abar left theke right er dike new number smoothly chole ashbe) */
 .num-slide-enter-prep {
   opacity: 0 !important;
-  transform: translateX(-32px) !important;
+  transform: translateX(-24px) !important;
   transition: none !important;
 }
 
@@ -4156,5 +4156,5 @@ body.modal-open {
   opacity: 1 !important;
   transform: translateX(0) !important;
   filter: blur(0);
-  transition: transform 0.36s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.32s ease, filter 0.32s ease !important;
+  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.48s ease, filter 0.48s ease !important;
 }
