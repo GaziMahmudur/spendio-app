@@ -1873,16 +1873,13 @@ function animateDonut(canvas) {
 function drawDonutCore(canvas, entries, total, hoverIdx) {
   const dpr = window.devicePixelRatio || 1;
   const SIZE = 220;
-  if (canvas.width !== SIZE * dpr || canvas.height !== SIZE * dpr) {
-    canvas.width = SIZE * dpr;
-    canvas.height = SIZE * dpr;
-    canvas.style.width = SIZE + "px";
-    canvas.style.height = SIZE + "px";
-  }
+  // Setting width/height resets the 2D context transformation matrix
+  canvas.width = SIZE * dpr;
+  canvas.height = SIZE * dpr;
+  canvas.style.width = SIZE + "px";
+  canvas.style.height = SIZE + "px";
 
   const ctx = canvas.getContext("2d");
-  ctx.save();
-  ctx.clearRect(0, 0, SIZE * dpr, SIZE * dpr);
   ctx.scale(dpr, dpr);
 
   const cx = 110,
@@ -1971,7 +1968,6 @@ function drawDonutCore(canvas, entries, total, hoverIdx) {
     ctx.font = `11px 'Hind Siliguri', Inter, sans-serif`;
     ctx.fillText("Total Spent", cx, cy + 12);
   }
-  ctx.restore();
 }
 
 // ── BAR CHART ──────────────────────────────────────────
