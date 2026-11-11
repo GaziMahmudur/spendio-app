@@ -4104,23 +4104,7 @@ body.modal-open {
   justify-content: center;
 }
 
-.modal-close,
-.import-clear-btn {
-  min-width: 48px;
-  min-height: 48px;
-  position: relative;
-}
 
-.modal-close::before,
-.import-clear-btn::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  min-width: 48px;
-  min-height: 48px;
-}
 
 .btn,
 .btn-primary,
