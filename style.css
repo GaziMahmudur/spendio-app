@@ -481,10 +481,7 @@ body {
   will-change: transform, opacity;
 }
 
-.card-amount.ios-val-shift {
-  opacity: 0.25;
-  transform: translateY(3px) scale(0.97);
-}
+
 
 .card-sub {
   font-size: 12px;
@@ -765,68 +762,7 @@ body {
   max-height: none;
 }
 
-.tx-item {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 11px 10px;
-  border-radius: var(--radius-xs);
-  transition: background var(--transition);
-  cursor: pointer;
-}
 
-.tx-item:hover {
-  background: var(--primary-xlight);
-}
-
-.tx-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
-.tx-details {
-  flex: 1;
-  min-width: 0;
-}
-
-.tx-desc {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.tx-meta {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
-
-.tx-amount {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--red);
-  white-space: nowrap;
-}
-
-.tx-actions {
-  display: flex;
-  gap: 6px;
-  opacity: 0;
-  transition: opacity var(--transition);
-}
-
-.tx-item:hover .tx-actions {
-  opacity: 1;
-}
 
 .tx-action-btn {
   background: none;
@@ -3158,47 +3094,7 @@ input[type="number"]::-webkit-inner-spin-button {
   margin-top: 2px;
 }
 
-/* Cloud Setup Card */
-.cloud-setup-steps {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 20px;
-}
 
-.setup-step {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-}
-
-.setup-num {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #0ea5e9, #0284c7);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 4px 10px rgba(14, 165, 233, 0.35);
-}
-
-.setup-text strong {
-  font-size: 13px;
-  color: var(--text-primary);
-  display: block;
-  margin-bottom: 3px;
-}
-
-.setup-text p {
-  font-size: 12px;
-  color: var(--text-muted);
-  line-height: 1.5;
-}
 
 .setup-text code {
   background: var(--bg-surface-2);
