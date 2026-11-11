@@ -634,6 +634,13 @@ function initGenericCustomSelects() {
 function gcsRefresh(selectId) {
   if (_gSelects[selectId]) _gSelects[selectId].refresh();
 }
+function gcsSetValue(selectId, val) {
+  if (_gSelects[selectId]) _gSelects[selectId].setValue(val);
+  else {
+    const el = document.getElementById(selectId);
+    if (el) el.value = val;
+  }
+}
 
 // ── USER-STORAGE UID INITIALIZATION ───────────────────────
 // Pre-load the last active logged-in UID from localStorage so the initial loadState()
@@ -1265,9 +1272,9 @@ function renderAll() {
 // ── DASHBOARD FILTER STATE & HELPERS ───────────────────
 let dashFilterMode = (() => {
   try {
-    return localStorage.getItem("spendwise_dash_filter") || "all";
+    return localStorage.getItem("spendwise_dash_filter") || "month";
   } catch (e) {
-    return "all";
+    return "month";
   }
 })();
 let dashCustomStart = "";
@@ -1384,6 +1391,11 @@ function setDashboardFilter(mode) {
     btn.classList.toggle("active", btn.getAttribute("data-filter") === mode);
   });
   updateDashPillIndicator(true);
+
+  // Sync category chart period dropdown to match filter mode
+  if (mode === "month" || mode === "week" || mode === "all") {
+    gcsSetValue("chartPeriodFilter", mode);
+  }
 
   // Trigger chart 360 reverse unwind animation IMMEDIATELY on click (0ms delay)
   renderChart();
@@ -1610,8 +1622,9 @@ function txItemHTML(expense) {
 // ── DONUT CHART ────────────────────────────────────────
 function renderChart() {
   const periodEl = document.getElementById("chartPeriodFilter");
-  const period = periodEl ? periodEl.value : "all";
-  const baseExpenses = (typeof getFilteredExpensesForDashboard === "function" && dashFilterMode !== "all" && period === "all")
+  // Default to dashFilterMode (e.g. "month") if available, else period dropdown or month
+  const period = periodEl ? periodEl.value : (dashFilterMode || "month");
+  const baseExpenses = (typeof getFilteredExpensesForDashboard === "function" && dashFilterMode !== "all" && (period === "all" || period === dashFilterMode))
     ? getFilteredExpensesForDashboard()
     : state.expenses;
   const filtered = filterByPeriod(baseExpenses, period);
@@ -1791,6 +1804,10 @@ function animateDonutTransition(canvas, newEntries, newTotal) {
 }
 
 function animateDonutForward(canvas) {
+  if (canvas._entranceRaf) {
+    cancelAnimationFrame(canvas._entranceRaf);
+    canvas._entranceRaf = null;
+  }
   const duration = 540; // ms - silky smooth high-FPS Apple sweep
   const startTime = performance.now();
 
@@ -1856,12 +1873,16 @@ function animateDonut(canvas) {
 function drawDonutCore(canvas, entries, total, hoverIdx) {
   const dpr = window.devicePixelRatio || 1;
   const SIZE = 220;
-  canvas.width = SIZE * dpr;
-  canvas.height = SIZE * dpr;
-  canvas.style.width = SIZE + "px";
-  canvas.style.height = SIZE + "px";
+  if (canvas.width !== SIZE * dpr || canvas.height !== SIZE * dpr) {
+    canvas.width = SIZE * dpr;
+    canvas.height = SIZE * dpr;
+    canvas.style.width = SIZE + "px";
+    canvas.style.height = SIZE + "px";
+  }
 
   const ctx = canvas.getContext("2d");
+  ctx.save();
+  ctx.clearRect(0, 0, SIZE * dpr, SIZE * dpr);
   ctx.scale(dpr, dpr);
 
   const cx = 110,
@@ -1950,6 +1971,7 @@ function drawDonutCore(canvas, entries, total, hoverIdx) {
     ctx.font = `11px 'Hind Siliguri', Inter, sans-serif`;
     ctx.fillText("Total Spent", cx, cy + 12);
   }
+  ctx.restore();
 }
 
 // ── BAR CHART ──────────────────────────────────────────

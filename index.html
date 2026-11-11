@@ -159,8 +159,8 @@
                 <div class="dash-pill-indicator" id="dashPillIndicator"></div>
                 <button type="button" class="dash-filter-pill" data-filter="today" onclick="setDashboardFilter('today')">Today</button>
                 <button type="button" class="dash-filter-pill" data-filter="week" onclick="setDashboardFilter('week')">This Week</button>
-                <button type="button" class="dash-filter-pill" data-filter="month" onclick="setDashboardFilter('month')">This Month</button>
-                <button type="button" class="dash-filter-pill active" data-filter="all" onclick="setDashboardFilter('all')">All Time</button>
+                <button type="button" class="dash-filter-pill active" data-filter="month" onclick="setDashboardFilter('month')">This Month</button>
+                <button type="button" class="dash-filter-pill" data-filter="all" onclick="setDashboardFilter('all')">All Time</button>
                 <button type="button" class="dash-filter-pill" data-filter="custom" onclick="setDashboardFilter('custom')">Custom</button>
               </div>
 
@@ -206,8 +206,8 @@
                     class="period-select"
                     onchange="renderChart()"
                   >
+                    <option value="month" selected>This Month</option>
                     <option value="all">All Time</option>
-                    <option value="month">This Month</option>
                     <option value="week">This Week</option>
                   </select>
                 </div>
@@ -1105,7 +1105,7 @@
       </div>
     </div>
 
-    <script src="app.js?v=1794348000000" defer></script>
-    <script src="cloud-sync.js?v=1794348000000" defer></script>
+    <script src="app.js?v=1794350000000" defer></script>
+    <script src="cloud-sync.js?v=1794350000000" defer></script>
   </body>
 </html>
