@@ -139,7 +139,7 @@
     <main class="main-content">
       <!-- Top Bar -->
       <header class="topbar">
-        <button class="hamburger" id="hamburger" onclick="toggleSidebar()">
+        <button class="hamburger" id="hamburger" aria-label="Toggle navigation menu" onclick="toggleSidebar()">
           <span></span><span></span><span></span>
         </button>
         <h1 class="topbar-title" id="topbarTitle">Dashboard</h1>
@@ -608,6 +608,7 @@
                     >
                     <button
                       class="import-clear-btn"
+                      aria-label="Clear imported file"
                       onclick="clearImportPreview()"
                     >
                       ✕
@@ -837,7 +838,7 @@
               <h2 class="modal-title">Edit Income Record</h2>
               <p style="font-size: 13px; color: var(--text-muted); margin: 4px 0 0 0;">Review or change details, then click Save.</p>
             </div>
-            <button class="modal-close" onclick="closeEditIncomeModal()">✕</button>
+            <button class="modal-close" aria-label="Close edit income modal" onclick="closeEditIncomeModal()">✕</button>
           </div>
           <form id="editIncomeForm" onsubmit="saveEditedIncome(event)">
             <input type="hidden" id="modalIncomeEditId" />
@@ -888,7 +889,7 @@
       <div class="modal-box" id="expenseModalBox">
         <div class="modal-header">
           <h2 class="modal-title" id="expenseModalTitle">Add Expense</h2>
-          <button class="modal-close" onclick="closeAddExpenseModal()">
+          <button class="modal-close" aria-label="Close expense modal" onclick="closeAddExpenseModal()">
             ✕
           </button>
         </div>
@@ -1052,7 +1053,7 @@
       <div class="modal-box confirm-box">
         <div class="modal-header">
           <h2 class="modal-title">Confirm Delete</h2>
-          <button class="modal-close" onclick="closeConfirmModal()">✕</button>
+          <button class="modal-close" aria-label="Close confirmation dialog" onclick="closeConfirmModal()">✕</button>
         </div>
         <p id="confirmMessage" class="confirm-msg">
           Are you sure you want to delete this item?
@@ -1081,7 +1082,7 @@
       <div class="copy-preview-box">
         <div class="modal-header">
           <h2 class="modal-title">📋 Copy as Text</h2>
-          <button class="modal-close" onclick="closeCopyModal()">✕</button>
+          <button class="modal-close" aria-label="Close copy text modal" onclick="closeCopyModal()">✕</button>
         </div>
         <p
           style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px"

@@ -157,11 +157,11 @@ class DatePicker {
 
     this.cal.innerHTML = `
       <div class="dp-header">
-        <button type="button" class="dp-nav-btn" id="dpPrev">&#8249;</button>
+        <button type="button" class="dp-nav-btn" id="dpPrev" aria-label="Previous month">&#8249;</button>
         <div class="dp-header-text-container">
           <span class="dp-month-label" id="dpMonthText">${MONTHS[m]} ${y}</span>
         </div>
-        <button type="button" class="dp-nav-btn" id="dpNext">&#8250;</button>
+        <button type="button" class="dp-nav-btn" id="dpNext" aria-label="Next month">&#8250;</button>
       </div>
       <div class="dp-weekdays">${DAYS.map(
         (d) => `<span class="dp-wd">${d}</span>`,
@@ -1605,10 +1605,10 @@ function txItemHTML(expense) {
     <td>${expense.note ? escHtml(expense.note) : "—"}</td>
     <td class="cell-amount">−${fmtAmount(expense.amount)}</td>
     <td class="cell-actions">
-      <button style="background:none;border:none;cursor:pointer;font-size:15px;margin:0 3px;padding:3px;border-radius:4px;" title="Edit" onclick="editExpense('${
+      <button style="background:none;border:none;cursor:pointer;font-size:15px;margin:0 3px;padding:3px;border-radius:4px;" title="Edit" aria-label="Edit expense: ${escHtml(expense.desc)}" onclick="editExpense('${
         expense.id
       }')">✏️</button>
-      <button style="background:none;border:none;cursor:pointer;font-size:15px;margin:0 3px;padding:3px;border-radius:4px;" title="Delete" onclick="promptDeleteExpense('${
+      <button style="background:none;border:none;cursor:pointer;font-size:15px;margin:0 3px;padding:3px;border-radius:4px;" title="Delete" aria-label="Delete expense: ${escHtml(expense.desc)}" onclick="promptDeleteExpense('${
         expense.id
       }')">🗑️</button>
     </td>
@@ -2399,10 +2399,10 @@ function renderCategories() {
       return `<div class="cat-card" style="background:${
         cat.color
       }18; border-color:${cat.color}44; position:relative;">
-      <button class="cat-delete" onclick="promptDeleteCategory('${
+      <button class="cat-delete" aria-label="Delete category: ${escHtml(cat.name)}" onclick="promptDeleteCategory('${
         cat.id
       }')" title="Delete" style="position:absolute; top:8px; right:8px;">🗑️</button>
-      <button class="cat-edit" onclick="editCategory('${
+      <button class="cat-edit" aria-label="Edit category: ${escHtml(cat.name)}" onclick="editCategory('${
         cat.id
       }')" title="Edit" style="position:absolute; top:8px; right:36px; background:none; border:none; cursor:pointer; font-size:16px;">✏️</button>
       <div class="cat-icon">${cat.icon}</div>
@@ -2553,10 +2553,10 @@ function renderBalanceHistory() {
       </div>
       <div class="bal-badge add">Income</div>
       <div class="bal-actions">
-        <button class="tx-action-btn" onclick="editBalance('${
+        <button class="tx-action-btn" aria-label="Edit income: ${escHtml(b.source || 'Income')}" onclick="editBalance('${
           b.id
         }')" title="Edit Income">✏️</button>
-        <button class="tx-action-btn" onclick="promptDeleteBalance('${
+        <button class="tx-action-btn" aria-label="Delete income: ${escHtml(b.source || 'Income')}" onclick="promptDeleteBalance('${
           b.id
         }')" title="Delete">🗑️</button>
       </div>
