@@ -1718,6 +1718,11 @@ function animateDonutTransition(canvas, newEntries, newTotal) {
   const prevTotal = canvas._currentTotal || canvas._total;
   const hasPrevData = prevEntries && prevEntries.length > 0 && prevTotal > 0 && (canvas._circleProgress === undefined || canvas._circleProgress > 0);
 
+  // If new data is identical to previous data and chart is already fully drawn, skip redundant re-animation
+  if (hasPrevData && canvas._circleProgress === 1 && prevTotal === newTotal && JSON.stringify(prevEntries) === JSON.stringify(newEntries)) {
+    return;
+  }
+
   // If no previous drawn chart (first load), directly do forward 360 entrance
   if (!hasPrevData) {
     canvas._currentEntries = newEntries;

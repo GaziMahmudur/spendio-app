@@ -191,8 +191,10 @@ async function initFirebase() {
 
       if (typeof loadState === "function") {
         const curScrollY = window.scrollY;
+        const prevJson = typeof state !== "undefined" ? JSON.stringify(state) : null;
         loadState();
-        if (typeof renderAll === "function") {
+        const nextJson = typeof state !== "undefined" ? JSON.stringify(state) : null;
+        if (prevJson !== nextJson && typeof renderAll === "function") {
           renderAll();
         }
         if (window.scrollY !== curScrollY) {
@@ -616,8 +618,10 @@ async function restoreFromCloud(silent = false, requestSessionId = null, targetU
 
     if (typeof loadState === "function") {
       const curScrollY = window.scrollY;
+      const prevJson = typeof state !== "undefined" ? JSON.stringify(state) : null;
       loadState();
-      if (typeof renderAll === "function") {
+      const nextJson = typeof state !== "undefined" ? JSON.stringify(state) : null;
+      if (prevJson !== nextJson && typeof renderAll === "function") {
         renderAll();
       }
       if (window.scrollY !== curScrollY) {
@@ -745,8 +749,10 @@ function setupRealtimeSync(uid) {
 
         if (typeof loadState === "function") {
           const curScrollY = window.scrollY;
+          const prevJson = typeof state !== "undefined" ? JSON.stringify(state) : null;
           loadState();
-          if (typeof renderAll === "function") {
+          const nextJson = typeof state !== "undefined" ? JSON.stringify(state) : null;
+          if (prevJson !== nextJson && typeof renderAll === "function") {
             renderAll();
           }
           if (window.scrollY !== curScrollY) {
