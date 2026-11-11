@@ -77,20 +77,25 @@ class DatePicker {
     this.trigger.classList.add("open");
     if (this.wrap) this.wrap.classList.add("open-level");
 
-    // adjust position to prevent horizontal overflow and screen edge clipping
-    this.cal.style.left = "0";
-    this.cal.style.right = "auto";
-    let rect = this.cal.getBoundingClientRect();
+    // Adjust position to prevent horizontal overflow and screen edge clipping
+    // Read dimensions once to prevent repeated layout thrashing
+    const rect = this.cal.getBoundingClientRect();
     const margin = 12;
-    if (rect.right > window.innerWidth - margin) {
-      this.cal.style.left = "auto";
-      this.cal.style.right = "0";
-      rect = this.cal.getBoundingClientRect();
-    }
-    if (rect.left < margin) {
-      // If right-aligning or left-aligning causes left side to be cut off, shift it into view
-      const shift = margin - rect.left;
-      this.cal.style.left = `${shift}px`;
+    const winWidth = window.innerWidth;
+    const calWidth = rect.width;
+    const triggerRect = this.trigger.getBoundingClientRect();
+
+    if (triggerRect.left + calWidth > winWidth - margin) {
+      if (triggerRect.right - calWidth >= margin) {
+        this.cal.style.left = "auto";
+        this.cal.style.right = "0";
+      } else {
+        const offset = Math.max(margin, winWidth - margin - calWidth) - triggerRect.left;
+        this.cal.style.left = `${offset}px`;
+        this.cal.style.right = "auto";
+      }
+    } else {
+      this.cal.style.left = "0";
       this.cal.style.right = "auto";
     }
 
@@ -345,12 +350,15 @@ class CustomSelect {
     this.trigger.classList.add("open");
     if (this.wrap) this.wrap.classList.add("open-level");
 
-    this.dropdown.style.left = "0";
-    this.dropdown.style.right = "auto";
-    let rect = this.dropdown.getBoundingClientRect();
-    if (rect.right > window.innerWidth) {
+    // Read geometry before applying inline styles
+    const rect = this.dropdown.getBoundingClientRect();
+    const triggerRect = this.trigger.getBoundingClientRect();
+    if (triggerRect.left + rect.width > window.innerWidth) {
       this.dropdown.style.left = "auto";
       this.dropdown.style.right = "0";
+    } else {
+      this.dropdown.style.left = "0";
+      this.dropdown.style.right = "auto";
     }
 
     document.addEventListener("click", this._closeOnOutside);
@@ -527,13 +535,15 @@ class GenericCustomSelect {
     this.trigger.classList.add("open");
     if (this.wrap) this.wrap.classList.add("open-level");
 
-    // Default to right-align to perfectly match floating filter buttons
-    this.dropdown.style.right = "0";
-    this.dropdown.style.left = "auto";
-    let rect = this.dropdown.getBoundingClientRect();
-    if (rect.left < 0) {
+    // Read geometry before applying styles
+    const rect = this.dropdown.getBoundingClientRect();
+    const triggerRect = this.trigger.getBoundingClientRect();
+    if (triggerRect.right - rect.width < 0) {
       this.dropdown.style.right = "auto";
       this.dropdown.style.left = "0";
+    } else {
+      this.dropdown.style.right = "0";
+      this.dropdown.style.left = "auto";
     }
 
     document.addEventListener("click", this._closeOnOutside);
@@ -749,6 +759,8 @@ document.addEventListener("DOMContentLoaded", () => {
   buildQcatPickers();
   updateSidebarDate();
   renderAll();
+  const initialCards = document.querySelectorAll('.cards-row .stat-card');
+  initialCards.forEach(c => c.classList.add('card-animate'));
   initCustomSelects();
   initGenericCustomSelects();
   initImportDropzone();
@@ -1152,9 +1164,10 @@ function navigateTo(page) {
     setTimeout(() => updateDashPillIndicator(false), 50);
     const cards = document.querySelectorAll('.cards-row .stat-card');
     cards.forEach(c => {
-      c.style.animation = 'none';
-      c.offsetHeight; // trigger reflow
-      c.style.animation = '';
+      c.classList.remove('card-animate');
+    });
+    requestAnimationFrame(() => {
+      cards.forEach(c => c.classList.add('card-animate'));
     });
   }
   if (page === "savings") renderSavingsPage();
@@ -1281,26 +1294,31 @@ function updateDashPillIndicator(animate = true) {
   const activeBtn = container.querySelector(`.dash-filter-pill[data-filter="${dashFilterMode}"]`);
   if (!activeBtn) return;
 
-  const cRect = container.getBoundingClientRect();
-  const bRect = activeBtn.getBoundingClientRect();
+    // Batch-read before layout update
+    const cRect = container.getBoundingClientRect();
+    const bRect = activeBtn.getBoundingClientRect();
+    const containerScrollLeft = container.scrollLeft;
+    const containerScrollWidth = container.scrollWidth;
+    const containerClientWidth = container.clientWidth;
 
-  const left = bRect.left - cRect.left + container.scrollLeft;
-  const width = bRect.width;
+    const left = bRect.left - cRect.left + containerScrollLeft;
+    const width = bRect.width;
 
-  if (!animate) {
-    indicator.style.transition = "none";
-  } else {
-    indicator.style.transition = "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), width 0.35s cubic-bezier(0.16, 1, 0.3, 1)";
-  }
+    // Batch-write styles
+    if (!animate) {
+      indicator.style.transition = "none";
+    } else {
+      indicator.style.transition = "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), width 0.35s cubic-bezier(0.16, 1, 0.3, 1)";
+    }
 
-  indicator.style.transform = `translateX(${left}px)`;
-  indicator.style.width = `${width}px`;
+    indicator.style.transform = `translateX(${left}px)`;
+    indicator.style.width = `${width}px`;
 
-  // On mobile, smoothly scroll active pill into visible container if partially hidden
-  if (animate && container.scrollWidth > container.clientWidth) {
-    const scrollTarget = left - (container.clientWidth - width) / 2;
-    container.scrollTo({ left: Math.max(0, scrollTarget), behavior: "smooth" });
-  }
+    // On mobile, smoothly scroll active pill into visible container if partially hidden
+    if (animate && containerScrollWidth > containerClientWidth) {
+      const scrollTarget = left - (containerClientWidth - width) / 2;
+      container.scrollTo({ left: Math.max(0, scrollTarget), behavior: "smooth" });
+    }
 }
 
 

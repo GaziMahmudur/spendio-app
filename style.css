@@ -4106,8 +4106,11 @@ body.modal-open {
 .cards-row .stat-card {
   opacity: 0;
   transform: translateY(22px) scale(0.96);
-  animation: cardEntryFadeUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   will-change: transform, opacity;
+}
+
+.cards-row .stat-card.card-animate {
+  animation: cardEntryFadeUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .cards-row .stat-card:nth-child(1) {
