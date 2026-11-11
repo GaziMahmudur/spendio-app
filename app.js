@@ -1310,7 +1310,7 @@ function animateCardNumbersUpdate(callback) {
   const cardElements = document.querySelectorAll('#dashBalance, #dashBalanceDate, #dashIncome, #dashIncomeSub, #dashExpenses, #dashExpenseCount');
   const recentEl = document.getElementById('recentTransactions');
 
-  // Phase 1: Card numbers wipe left, Recent Transactions slide down
+  // Phase 1: Card numbers wipe left, Recent Transactions slide down through bottom border
   if (cardElements && cardElements.length > 0) {
     cardElements.forEach(el => {
       el.classList.remove('num-slide-enter-active', 'num-slide-enter-prep');
@@ -1323,7 +1323,7 @@ function animateCardNumbersUpdate(callback) {
     recentEl.classList.add('tx-slide-down-exit');
   }
 
-  // After exit completes (200ms), update data, prep at bottom, then smoothly slide up into place
+  // After exit completes (250ms), update data, prep at bottom under border, then smoothly slide up into place
   setTimeout(() => {
     if (typeof callback === "function") callback();
 
@@ -1368,7 +1368,7 @@ function animateCardNumbersUpdate(callback) {
         }, 400);
       });
     });
-  }, 200);
+  }, 250);
 }
 
 function setDashboardFilter(mode) {

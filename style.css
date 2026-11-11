@@ -3751,6 +3751,11 @@ button:active,
   transform: translateY(-2px);
 }
 
+.recent-card {
+  overflow: hidden;
+  position: relative;
+}
+
 .preview-table-wrap,
 .transaction-list {
   transition: opacity 0.25s ease;
@@ -3759,24 +3764,21 @@ button:active,
 
 /* Recent Transactions slide-down exit and slide-up enter */
 .tx-slide-down-exit {
-  opacity: 0 !important;
-  transform: translateY(28px) !important;
-  filter: blur(1.5px);
-  transition: transform 0.22s cubic-bezier(0.4, 0, 1, 1), opacity 0.22s ease, filter 0.22s ease !important;
+  opacity: 1 !important;
+  transform: translateY(115%) !important;
+  transition: transform 0.26s cubic-bezier(0.4, 0, 1, 1), opacity 0.26s ease !important;
 }
 
 .tx-slide-up-prep {
-  opacity: 0 !important;
-  transform: translateY(28px) !important;
-  filter: blur(1.5px);
+  opacity: 1 !important;
+  transform: translateY(115%) !important;
   transition: none !important;
 }
 
 .tx-slide-up-active {
   opacity: 1 !important;
   transform: translateY(0) !important;
-  filter: blur(0);
-  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.32s ease, filter 0.32s ease !important;
+  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .ios-content-fade {
