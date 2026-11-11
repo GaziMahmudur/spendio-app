@@ -778,10 +778,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const codeGroup = document.getElementById("savingsCodeGroup");
       if (codeGroup) {
         codeGroup.style.display = isSavings ? "block" : "none";
-        const codeInput = document.getElementById("expSavingsCode");
-        if (codeInput && isSavings && !codeInput.value) {
-          setTimeout(() => codeInput.focus(), 50);
-        }
       }
     });
   }
