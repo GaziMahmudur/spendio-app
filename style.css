@@ -481,6 +481,11 @@ body {
   will-change: transform, opacity;
 }
 
+.card-amount.ios-val-shift {
+  opacity: 0.25;
+  transform: translateY(3px) scale(0.97);
+}
+
 
 
 .card-sub {
@@ -3647,34 +3652,9 @@ button:active,
   transform: translateY(-2px);
 }
 
-.recent-card {
-  overflow: hidden;
-  position: relative;
-}
-
 .preview-table-wrap,
 .transaction-list {
   transition: opacity 0.25s ease;
-  overflow: hidden;
-}
-
-/* Recent Transactions slide-down exit and slide-up enter - Apple iOS Spring Curve */
-.tx-slide-down-exit {
-  opacity: 1 !important;
-  transform: translateY(115%) !important;
-  transition: transform 0.48s cubic-bezier(0.32, 0, 0.67, 0) !important;
-}
-
-.tx-slide-up-prep {
-  opacity: 1 !important;
-  transform: translateY(115%) !important;
-  transition: none !important;
-}
-
-.tx-slide-up-active {
-  opacity: 1 !important;
-  transform: translateY(0) !important;
-  transition: transform 0.62s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .ios-content-fade {
@@ -3995,54 +3975,6 @@ body.modal-open {
   }
 }
 
-
-/* ═══════════════════════════════════════════
-   TOP 3 CARDS ENTRY & NUMERIC TRANSITIONS
-   ═══════════════════════════════════════════ */
-.cards-row .stat-card {
-  opacity: 0;
-  transform: translateY(22px) scale(0.96);
-  will-change: transform, opacity;
-}
-
-.cards-row .stat-card.card-animate {
-  animation: cardEntryFadeUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.cards-row .stat-card:nth-child(1) {
-  animation-delay: 0.05s;
-}
-.cards-row .stat-card:nth-child(2) {
-  animation-delay: 0.15s;
-}
-.cards-row .stat-card:nth-child(3) {
-  animation-delay: 0.25s;
-}
-
-@keyframes cardEntryFadeUp {
-  0% {
-    opacity: 0;
-    transform: translateY(22px) scale(0.96);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* Smooth Right-to-Left Exit and Left-to-Right Enter for Amount Numbers - Apple fluid easing */
-.card-amount,
-.card-sub {
-  will-change: transform, opacity;
-  transition: transform 0.4s cubic-bezier(0.32, 0, 0.67, 0), opacity 0.38s ease;
-}
-
-/* Phase 1: Exit to Left (right theke left er dike muche jabe) */
-.num-slide-exit {
-  opacity: 0 !important;
-  transform: translateX(-24px) !important;
-  filter: blur(1px);
-}
 
 /* ═══════════════════════════════════════════
    ACCESSIBLE TOUCH TARGETS (MINIMUM 48x48px)

@@ -759,8 +759,6 @@ document.addEventListener("DOMContentLoaded", () => {
   buildQcatPickers();
   updateSidebarDate();
   renderAll();
-  const initialCards = document.querySelectorAll('.cards-row .stat-card');
-  initialCards.forEach(c => c.classList.add('card-animate'));
   initCustomSelects();
   initGenericCustomSelects();
   initImportDropzone();
@@ -1160,16 +1158,7 @@ function navigateTo(page) {
   };
   document.getElementById("topbarTitle").textContent = titles[page] || "";
   closeSidebar();
-  if (page === "dashboard") {
-    setTimeout(() => updateDashPillIndicator(false), 50);
-    const cards = document.querySelectorAll('.cards-row .stat-card');
-    cards.forEach(c => {
-      c.classList.remove('card-animate');
-    });
-    requestAnimationFrame(() => {
-      cards.forEach(c => c.classList.add('card-animate'));
-    });
-  }
+  if (page === "dashboard") setTimeout(() => updateDashPillIndicator(false), 50);
   if (page === "savings") renderSavingsPage();
   if (page === "export") renderExportPreview();
   if (page === "transactions") populateCategoryFilter();
@@ -1322,73 +1311,6 @@ function updateDashPillIndicator(animate = true) {
 }
 
 
-// Animate top 3 cards number transition: Exit to Left, then Enter from Left to Right
-// Also animates Recent Transactions: Slide down to exit, then slide up to enter
-function animateCardNumbersUpdate(callback) {
-  const cardElements = document.querySelectorAll('#dashBalance, #dashBalanceDate, #dashIncome, #dashIncomeSub, #dashExpenses, #dashExpenseCount');
-  const recentEl = document.getElementById('recentTransactions');
-
-  // Phase 1: Card numbers wipe left, Recent Transactions slide down through bottom border
-  if (cardElements && cardElements.length > 0) {
-    cardElements.forEach(el => {
-      el.classList.remove('num-slide-enter-active', 'num-slide-enter-prep');
-      el.classList.add('num-slide-exit');
-    });
-  }
-
-  if (recentEl) {
-    recentEl.classList.remove('tx-slide-up-active', 'tx-slide-up-prep');
-    recentEl.classList.add('tx-slide-down-exit');
-  }
-
-  // After exit completes smoothly (440ms), update data, prep at bottom under border, then smoothly slide up into place
-  setTimeout(() => {
-    if (typeof callback === "function") callback();
-
-    // Prep: card numbers at left, recent transactions at bottom
-    if (cardElements && cardElements.length > 0) {
-      cardElements.forEach(el => {
-        el.classList.remove('num-slide-exit');
-        el.classList.add('num-slide-enter-prep');
-      });
-    }
-
-    if (recentEl) {
-      recentEl.classList.remove('tx-slide-down-exit');
-      recentEl.classList.add('tx-slide-up-prep');
-    }
-
-    // Next frame: animate to 0 with luxury fluid spring
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (cardElements && cardElements.length > 0) {
-          cardElements.forEach(el => {
-            el.classList.remove('num-slide-enter-prep');
-            el.classList.add('num-slide-enter-active');
-          });
-        }
-
-        if (recentEl) {
-          recentEl.classList.remove('tx-slide-up-prep');
-          recentEl.classList.add('tx-slide-up-active');
-        }
-
-        // Clean up classes after animation finishes
-        setTimeout(() => {
-          if (cardElements && cardElements.length > 0) {
-            cardElements.forEach(el => {
-              el.classList.remove('num-slide-enter-active');
-            });
-          }
-          if (recentEl) {
-            recentEl.classList.remove('tx-slide-up-active');
-          }
-        }, 650);
-      });
-    });
-  }, 440);
-}
-
 function setDashboardFilter(mode) {
   dashFilterMode = mode;
   try {
@@ -1399,8 +1321,13 @@ function setDashboardFilter(mode) {
   });
   updateDashPillIndicator(true);
 
-  const otherAnimEls = document.querySelectorAll("#dashFilterActiveLabel");
-  otherAnimEls.forEach((el) => el.classList.add("ios-content-fade"));
+  // Trigger Apple-style subtle transition on dashboard data elements
+  const animEls = document.querySelectorAll(
+    "#dashIncome, #dashExpenses, #dashExpenseCount, #dashIncomeSub, #dashFilterActiveLabel, #recentTransactions, #donutChart, #chartLegend"
+  );
+  animEls.forEach((el) => {
+    el.classList.add(el.id === "dashFilterActiveLabel" ? "ios-badge-shift" : (el.classList.contains("card-amount") ? "ios-val-shift" : "ios-content-fade"));
+  });
 
   const customInputs = document.getElementById("dashCustomRangeInputs");
   if (customInputs) customInputs.classList.toggle("show", mode === "custom");
@@ -1414,12 +1341,14 @@ function setDashboardFilter(mode) {
     if (eEl) eEl.value = dashCustomEnd;
   }
 
-  animateCardNumbersUpdate(() => {
+  setTimeout(() => {
     renderDashboard();
     requestAnimationFrame(() => {
-      otherAnimEls.forEach((el) => el.classList.remove("ios-content-fade"));
+      animEls.forEach((el) => {
+        el.classList.remove("ios-badge-shift", "ios-val-shift", "ios-content-fade");
+      });
     });
-  });
+  }, 90);
 }
 
 function onCustomDateRangeChange() {
@@ -1427,9 +1356,7 @@ function onCustomDateRangeChange() {
   const eEl = document.getElementById("dashEndDate");
   if (sEl && sEl.value) dashCustomStart = sEl.value;
   if (eEl && eEl.value) dashCustomEnd = eEl.value;
-  animateCardNumbersUpdate(() => {
-    renderDashboard();
-  });
+  renderDashboard();
 }
 
 function getFilteredDataForDashboard() {
@@ -1700,7 +1627,7 @@ function renderChart() {
     });
   }
 
-  animateDonutTransition(canvas, entries, total);
+  drawDonutCore(canvas, entries, total, -1);
 
   const colors = entries.map(([id]) => {
     const cat = state.categories.find((c) => c.id === id);
@@ -1724,88 +1651,6 @@ function renderChart() {
     .join("");
 }
 
-
-// Animate Donut: First 360 reverse unwind of previous data, then 360 forward sweep with new data
-function animateDonutTransition(canvas, newEntries, newTotal) {
-  if (canvas._entranceRaf) {
-    cancelAnimationFrame(canvas._entranceRaf);
-    canvas._entranceRaf = null;
-  }
-
-  const prevEntries = canvas._currentEntries || canvas._entries;
-  const prevTotal = canvas._currentTotal || canvas._total;
-  const hasPrevData = prevEntries && prevEntries.length > 0 && prevTotal > 0 && (canvas._circleProgress === undefined || canvas._circleProgress > 0);
-
-  // If new data is identical to previous data and chart is already fully drawn, skip redundant re-animation
-  if (hasPrevData && canvas._circleProgress === 1 && prevTotal === newTotal && JSON.stringify(prevEntries) === JSON.stringify(newEntries)) {
-    return;
-  }
-
-  // If no previous drawn chart (first load), directly do forward 360 entrance
-  if (!hasPrevData) {
-    canvas._currentEntries = newEntries;
-    canvas._currentTotal = newTotal;
-    canvas._entries = newEntries;
-    canvas._total = newTotal;
-    animateDonutForward(canvas);
-    return;
-  }
-
-  // Phase 1: 360 Reverse animation (1 -> 0) using previous slice data
-  const reverseDuration = 550; // ms - smoother unwind
-  const reverseStart = performance.now();
-  const startProgress = canvas._circleProgress !== undefined ? canvas._circleProgress : 1;
-
-  function reverseStep(now) {
-    const elapsed = now - reverseStart;
-    const p = Math.min(1, elapsed / reverseDuration);
-    // iOS smooth cubic curve for unwind
-    const eased = startProgress * (1 - Math.pow(p, 2.4));
-    canvas._circleProgress = Math.max(0, eased);
-
-    drawDonutCore(canvas, prevEntries, prevTotal, -1);
-
-    if (p < 1) {
-      canvas._entranceRaf = requestAnimationFrame(reverseStep);
-    } else {
-      // Phase 1 complete: switch to new data and launch Phase 2 forward 360 sweep
-      canvas._circleProgress = 0;
-      canvas._currentEntries = newEntries;
-      canvas._currentTotal = newTotal;
-      canvas._entries = newEntries;
-      canvas._total = newTotal;
-      animateDonutForward(canvas);
-    }
-  }
-
-  canvas._entranceRaf = requestAnimationFrame(reverseStep);
-}
-
-function animateDonutForward(canvas) {
-  const duration = 900; // ms - silky smooth Apple sweep
-  const startTime = performance.now();
-
-  function step(now) {
-    const elapsed = now - startTime;
-    const progress = Math.min(1, elapsed / duration);
-    // Apple-style easeOutQuartic / smooth deceleration
-    const eased = 1 - Math.pow(1 - progress, 3.8);
-
-    canvas._circleProgress = eased;
-    drawDonutCore(canvas, canvas._entries, canvas._total, canvas._hoverIdx !== undefined ? canvas._hoverIdx : -1);
-
-    if (progress < 1) {
-      canvas._entranceRaf = requestAnimationFrame(step);
-    } else {
-      canvas._circleProgress = 1;
-      drawDonutCore(canvas, canvas._entries, canvas._total, canvas._hoverIdx !== undefined ? canvas._hoverIdx : -1);
-      canvas._entranceRaf = null;
-    }
-  }
-
-  canvas._circleProgress = 0;
-  canvas._entranceRaf = requestAnimationFrame(step);
-}
 
 function animateDonut(canvas) {
   let needsUpdate = false;
@@ -1864,19 +1709,8 @@ function drawDonutCore(canvas, entries, total, hoverIdx) {
     return cat ? cat.color : "#7c3aed";
   });
 
-  // Circular entrance progression (0 to 1)
-  const circleProgress = canvas._circleProgress !== undefined ? canvas._circleProgress : 1;
-  const maxTotalAngle = circleProgress * Math.PI * 2;
-  let accumulatedAngle = 0;
-
   entries.forEach(([id, val], i) => {
-    const fullSweep = (val / total) * Math.PI * 2;
-    if (accumulatedAngle >= maxTotalAngle) return;
-
-    // Clip sweep to remaining visible angular span
-    const sweep = Math.min(fullSweep, maxTotalAngle - accumulatedAngle);
-    if (sweep <= 0) return;
-    accumulatedAngle += fullSweep;
+    const sweep = (val / total) * Math.PI * 2;
 
     // Smooth interpolation states
     const popScale = canvas._animStates
