@@ -3691,7 +3691,7 @@ button:active,
   -webkit-overflow-scrolling: touch;
 }
 
-.transaction-list {
+.recent-card .transaction-list {
   transition: opacity 0.25s ease;
   overflow-x: hidden;
   overflow-y: auto;
