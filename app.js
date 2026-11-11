@@ -1397,9 +1397,6 @@ function setDashboardFilter(mode) {
     gcsSetValue("chartPeriodFilter", mode);
   }
 
-  // Trigger chart 360 reverse unwind animation IMMEDIATELY on click (0ms delay)
-  renderChart();
-
   // Apple-style subtle transition on badge only (not chart or recent transactions)
   const badgeEl = document.getElementById("dashFilterActiveLabel");
   if (badgeEl) badgeEl.classList.add("ios-badge-shift");
@@ -1428,9 +1425,6 @@ function onCustomDateRangeChange() {
   if (sEl && sEl.value) dashCustomStart = sEl.value;
   if (eEl && eEl.value) dashCustomEnd = eEl.value;
   
-  // Trigger chart 360 reverse unwind animation immediately
-  renderChart();
-
   animateCardNumbersUpdate(() => {
     renderDashboard();
   });
@@ -1769,9 +1763,9 @@ function animateDonutTransition(canvas, newEntries, newTotal) {
   canvas._targetTotal = newTotal;
 
   // Phase 1: 360 Reverse animation (1 -> 0) using previous slice data
-  const reverseDuration = 280; // ms - instantaneous snappy 60fps unwind
+  const reverseDuration = 220; // ms - snappy unwind
   const reverseStart = performance.now();
-  const startProgress = canvas._circleProgress !== undefined ? canvas._circleProgress : 1;
+  const startProgress = (canvas._circleProgress !== undefined && canvas._circleProgress > 0) ? canvas._circleProgress : 1;
 
   function reverseStep(now) {
     const elapsed = now - reverseStart;
@@ -1785,7 +1779,7 @@ function animateDonutTransition(canvas, newEntries, newTotal) {
     if (p < 1) {
       canvas._entranceRaf = requestAnimationFrame(reverseStep);
     } else {
-      // Phase 1 complete: reset progress and add a subtle resting pause (~150ms) before forward 360 sweep
+      // Phase 1 complete: switch data and launch Phase 2 forward 360 sweep
       canvas._circleProgress = 0;
       canvas._currentEntries = newEntries;
       canvas._currentTotal = newTotal;
@@ -1796,7 +1790,7 @@ function animateDonutTransition(canvas, newEntries, newTotal) {
       if (canvas._pauseTimeout) clearTimeout(canvas._pauseTimeout);
       canvas._pauseTimeout = setTimeout(() => {
         animateDonutForward(canvas);
-      }, 150);
+      }, 60);
     }
   }
 
@@ -1808,7 +1802,7 @@ function animateDonutForward(canvas) {
     cancelAnimationFrame(canvas._entranceRaf);
     canvas._entranceRaf = null;
   }
-  const duration = 540; // ms - silky smooth high-FPS Apple sweep
+  const duration = 460; // ms - silky smooth high-FPS Apple sweep
   const startTime = performance.now();
 
   function step(now) {
