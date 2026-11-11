@@ -507,6 +507,12 @@ body {
   font-size: 16px;
   font-weight: 700;
   color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.card-header .card-title,
+.cloud-card-header .card-title {
+  margin-bottom: 0;
 }
 
 /* ─────────────────────────────────────────────────
