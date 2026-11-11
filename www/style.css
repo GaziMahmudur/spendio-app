@@ -4007,8 +4007,7 @@ body.modal-open {
 
 .btn,
 .btn-primary,
-.btn-secondary,
-.btn-add-topbar {
+.btn-secondary {
   min-height: 48px;
   display: inline-flex;
   align-items: center;
