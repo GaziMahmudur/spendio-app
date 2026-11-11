@@ -1381,7 +1381,7 @@ function setDashboardFilter(mode) {
   });
   updateDashPillIndicator(true);
 
-  const otherAnimEls = document.querySelectorAll("#dashFilterActiveLabel, #donutChart, #chartLegend");
+  const otherAnimEls = document.querySelectorAll("#dashFilterActiveLabel");
   otherAnimEls.forEach((el) => el.classList.add("ios-content-fade"));
 
   const customInputs = document.getElementById("dashCustomRangeInputs");
@@ -1682,7 +1682,7 @@ function renderChart() {
     });
   }
 
-  animateDonutEntrance(canvas);
+  animateDonutTransition(canvas, entries, total);
 
   const colors = entries.map(([id]) => {
     const cat = state.categories.find((c) => c.id === id);
@@ -1707,8 +1707,59 @@ function renderChart() {
 }
 
 
-function animateDonutEntrance(canvas) {
-  const duration = 750; // ms
+// Animate Donut: First 360 reverse unwind of previous data, then 360 forward sweep with new data
+function animateDonutTransition(canvas, newEntries, newTotal) {
+  if (canvas._entranceRaf) {
+    cancelAnimationFrame(canvas._entranceRaf);
+    canvas._entranceRaf = null;
+  }
+
+  const prevEntries = canvas._currentEntries || canvas._entries;
+  const prevTotal = canvas._currentTotal || canvas._total;
+  const hasPrevData = prevEntries && prevEntries.length > 0 && prevTotal > 0 && (canvas._circleProgress === undefined || canvas._circleProgress > 0);
+
+  // If no previous drawn chart (first load), directly do forward 360 entrance
+  if (!hasPrevData) {
+    canvas._currentEntries = newEntries;
+    canvas._currentTotal = newTotal;
+    canvas._entries = newEntries;
+    canvas._total = newTotal;
+    animateDonutForward(canvas);
+    return;
+  }
+
+  // Phase 1: 360 Reverse animation (1 -> 0) using previous slice data
+  const reverseDuration = 360; // ms
+  const reverseStart = performance.now();
+  const startProgress = canvas._circleProgress !== undefined ? canvas._circleProgress : 1;
+
+  function reverseStep(now) {
+    const elapsed = now - reverseStart;
+    const p = Math.min(1, elapsed / reverseDuration);
+    // Smooth ease-in-cubic for unwind: p * p * p
+    const eased = startProgress * (1 - p * p);
+    canvas._circleProgress = Math.max(0, eased);
+
+    drawDonutCore(canvas, prevEntries, prevTotal, -1);
+
+    if (p < 1) {
+      canvas._entranceRaf = requestAnimationFrame(reverseStep);
+    } else {
+      // Phase 1 complete: switch to new data and launch Phase 2 forward 360 sweep
+      canvas._circleProgress = 0;
+      canvas._currentEntries = newEntries;
+      canvas._currentTotal = newTotal;
+      canvas._entries = newEntries;
+      canvas._total = newTotal;
+      animateDonutForward(canvas);
+    }
+  }
+
+  canvas._entranceRaf = requestAnimationFrame(reverseStep);
+}
+
+function animateDonutForward(canvas) {
+  const duration = 650; // ms
   const startTime = performance.now();
 
   function step(now) {
@@ -1729,7 +1780,6 @@ function animateDonutEntrance(canvas) {
     }
   }
 
-  if (canvas._entranceRaf) cancelAnimationFrame(canvas._entranceRaf);
   canvas._circleProgress = 0;
   canvas._entranceRaf = requestAnimationFrame(step);
 }
