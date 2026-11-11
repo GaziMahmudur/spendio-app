@@ -2749,6 +2749,16 @@ async function exportPNG() {
 
   showToast("Generating image…", "info");
   try {
+    if (typeof html2canvas === "undefined") {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+
     const canvas = await html2canvas(card, {
       backgroundColor: "#13162b",
       scale: 2,
