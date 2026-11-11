@@ -4096,12 +4096,14 @@ body.modal-open {
 /* ═══════════════════════════════════════════
    ACCESSIBLE TOUCH TARGETS (MINIMUM 48x48px)
    ═══════════════════════════════════════════ */
-.hamburger {
-  min-width: 48px;
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+@media (max-width: 900px) {
+  .hamburger {
+    min-width: 48px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 
