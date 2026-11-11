@@ -1574,7 +1574,7 @@ function renderRecentTransactions(listOverride) {
       const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       return tB - tA;
     })
-    .slice(0, 8);
+    .slice(0, 15);
   if (!sorted.length) {
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">🧾</div><p>No transactions found for this period.<br/>Add an expense or switch filter!</p></div>`;
     return;

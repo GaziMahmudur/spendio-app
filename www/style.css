@@ -3679,10 +3679,19 @@ button:active,
   position: relative;
 }
 
-.preview-table-wrap,
+.preview-table-wrap {
+  overflow-x: auto;
+  overflow-y: visible;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
 .transaction-list {
   transition: opacity 0.25s ease;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: 380px;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Recent Transactions slide-down exit and slide-up enter - Apple iOS Spring Curve */
