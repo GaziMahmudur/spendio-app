@@ -2137,9 +2137,14 @@ input[type="number"]::-webkit-inner-spin-button {
   white-space: nowrap;
 }
 
-.preview-table th.col-amount,
+.preview-table th.col-amount {
+  text-align: right;
+}
+
 .preview-table th.col-actions {
   text-align: right;
+  width: 90px;
+  min-width: 90px;
 }
 
 .preview-table td {
@@ -4147,18 +4152,38 @@ body.modal-open {
 .preview-table .cell-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: flex-end;
+  gap: 6px;
+  width: auto;
+  white-space: nowrap;
 }
 
 .cell-actions button,
 .tx-action-btn {
-  min-width: 32px;
-  min-height: 32px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin: 0 2px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
   border-radius: var(--radius-xs);
+  font-size: 14px;
+  transition: all var(--transition);
+}
+
+.tx-action-btn:hover {
+  background: rgba(109, 40, 217, 0.1);
+  transform: scale(1.08);
+}
+
+.tx-delete-btn:hover {
+  background: var(--red-light);
 }
 
 .sidebar-nav .nav-item {
