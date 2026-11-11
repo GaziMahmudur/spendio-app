@@ -944,9 +944,9 @@ function getDeviceId() {
 
 // ─────────────────────────────────────────────────────
 // INIT on page load — attempt to silently restore session
+// Defers initialization until browser is idle or after first paint
 // ─────────────────────────────────────────────────────
-document.addEventListener("DOMContentLoaded", () => {
-  // Only init Firebase if configured
+function scheduleFirebaseInit() {
   if (FIREBASE_CONFIG.apiKey !== "YOUR_FIREBASE_WEB_API_KEY") {
     initFirebase().then(() => updateCloudUI());
   } else {
@@ -955,7 +955,15 @@ document.addEventListener("DOMContentLoaded", () => {
       "⚙️ Configure Firebase in cloud-sync.js to enable cloud backup.",
     );
   }
-});
+}
+
+if ("requestIdleCallback" in window) {
+  window.requestIdleCallback(scheduleFirebaseInit, { timeout: 1500 });
+} else {
+  window.addEventListener("load", () => {
+    setTimeout(scheduleFirebaseInit, 100);
+  });
+}
 
 
 // ─────────────────────────────────────────────────────
