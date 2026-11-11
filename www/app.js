@@ -1601,10 +1601,10 @@ function txItemHTML(expense) {
     <td>${expense.note ? escHtml(expense.note) : "—"}</td>
     <td class="cell-amount">−${fmtAmount(expense.amount)}</td>
     <td class="cell-actions">
-      <button style="background:none;border:none;cursor:pointer;font-size:15px;margin:0 3px;padding:3px;border-radius:4px;" title="Edit" aria-label="Edit expense: ${escHtml(expense.desc)}" onclick="editExpense('${
+      <button class="tx-action-btn" title="Edit" aria-label="Edit expense: ${escHtml(expense.desc)}" onclick="editExpense('${
         expense.id
       }')">✏️</button>
-      <button style="background:none;border:none;cursor:pointer;font-size:15px;margin:0 3px;padding:3px;border-radius:4px;" title="Delete" aria-label="Delete expense: ${escHtml(expense.desc)}" onclick="promptDeleteExpense('${
+      <button class="tx-action-btn tx-delete-btn" title="Delete" aria-label="Delete expense: ${escHtml(expense.desc)}" onclick="promptDeleteExpense('${
         expense.id
       }')">🗑️</button>
     </td>
@@ -2412,19 +2412,23 @@ function renderCategories() {
         .reduce((s, e) => s + Number(e.amount), 0);
       return `<div class="cat-card" style="background:${
         cat.color
-      }18; border-color:${cat.color}44; position:relative;">
-      <button class="cat-delete" aria-label="Delete category: ${escHtml(cat.name)}" onclick="promptDeleteCategory('${
-        cat.id
-      }')" title="Delete" style="position:absolute; top:8px; right:8px;">🗑️</button>
-      <button class="cat-edit" aria-label="Edit category: ${escHtml(cat.name)}" onclick="editCategory('${
-        cat.id
-      }')" title="Edit" style="position:absolute; top:8px; right:36px; background:none; border:none; cursor:pointer; font-size:16px;">✏️</button>
-      <div class="cat-icon">${cat.icon}</div>
+      }18; border-color:${cat.color}44;">
+      <div class="cat-card-header">
+        <div class="cat-icon">${cat.icon}</div>
+        <div class="cat-actions">
+          <button class="cat-btn cat-btn-edit" aria-label="Edit category: ${escHtml(cat.name)}" onclick="editCategory('${
+            cat.id
+          }')" title="Edit">✏️</button>
+          <button class="cat-btn cat-btn-delete" aria-label="Delete category: ${escHtml(cat.name)}" onclick="promptDeleteCategory('${
+            cat.id
+          }')" title="Delete">🗑️</button>
+        </div>
+      </div>
       <div class="cat-name" style="color:${cat.color}">${escHtml(
         cat.name,
       )}</div>
       <div class="cat-count">${count} expense${count !== 1 ? "s" : ""}</div>
-      ${total > 0 ? `<div class="cat-count">${fmtAmount(total)}</div>` : ""}
+      ${total > 0 ? `<div class="cat-count" style="font-weight:600; color:var(--text-primary); margin-top:2px;">${fmtAmount(total)}</div>` : ""}
     </div>`;
     })
     .join("");
