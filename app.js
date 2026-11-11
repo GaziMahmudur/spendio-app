@@ -1389,6 +1389,9 @@ function setDashboardFilter(mode) {
   });
   updateDashPillIndicator(true);
 
+  // Trigger chart 360 reverse unwind animation IMMEDIATELY on click (0ms delay)
+  renderChart();
+
   // Apple-style subtle transition on badge only (not chart or recent transactions)
   const badgeEl = document.getElementById("dashFilterActiveLabel");
   if (badgeEl) badgeEl.classList.add("ios-badge-shift");
@@ -1416,6 +1419,10 @@ function onCustomDateRangeChange() {
   const eEl = document.getElementById("dashEndDate");
   if (sEl && sEl.value) dashCustomStart = sEl.value;
   if (eEl && eEl.value) dashCustomEnd = eEl.value;
+  
+  // Trigger chart 360 reverse unwind animation immediately
+  renderChart();
+
   animateCardNumbersUpdate(() => {
     renderDashboard();
   });
@@ -1744,8 +1751,16 @@ function animateDonutTransition(canvas, newEntries, newTotal) {
     return;
   }
 
+  // If an animation is already running towards this identical target, avoid re-triggering reverse
+  if (canvas._inTransition && JSON.stringify(canvas._targetEntries) === JSON.stringify(newEntries) && canvas._targetTotal === newTotal) {
+    return;
+  }
+  canvas._inTransition = true;
+  canvas._targetEntries = newEntries;
+  canvas._targetTotal = newTotal;
+
   // Phase 1: 360 Reverse animation (1 -> 0) using previous slice data
-  const reverseDuration = 320; // ms - snappy 60fps unwind
+  const reverseDuration = 280; // ms - instantaneous snappy 60fps unwind
   const reverseStart = performance.now();
   const startProgress = canvas._circleProgress !== undefined ? canvas._circleProgress : 1;
 
@@ -1761,7 +1776,7 @@ function animateDonutTransition(canvas, newEntries, newTotal) {
     if (p < 1) {
       canvas._entranceRaf = requestAnimationFrame(reverseStep);
     } else {
-      // Phase 1 complete: reset progress and add a subtle resting pause (~140ms) before forward 360 sweep
+      // Phase 1 complete: reset progress and add a subtle resting pause (~150ms) before forward 360 sweep
       canvas._circleProgress = 0;
       canvas._currentEntries = newEntries;
       canvas._currentTotal = newTotal;
@@ -1772,7 +1787,7 @@ function animateDonutTransition(canvas, newEntries, newTotal) {
       if (canvas._pauseTimeout) clearTimeout(canvas._pauseTimeout);
       canvas._pauseTimeout = setTimeout(() => {
         animateDonutForward(canvas);
-      }, 140);
+      }, 150);
     }
   }
 
@@ -1780,7 +1795,7 @@ function animateDonutTransition(canvas, newEntries, newTotal) {
 }
 
 function animateDonutForward(canvas) {
-  const duration = 580; // ms - silky smooth high-FPS Apple sweep
+  const duration = 540; // ms - silky smooth high-FPS Apple sweep
   const startTime = performance.now();
 
   function step(now) {
@@ -1796,6 +1811,7 @@ function animateDonutForward(canvas) {
       canvas._entranceRaf = requestAnimationFrame(step);
     } else {
       canvas._circleProgress = 1;
+      canvas._inTransition = false;
       drawDonutCore(canvas, canvas._entries, canvas._total, canvas._hoverIdx !== undefined ? canvas._hoverIdx : -1);
       canvas._entranceRaf = null;
     }
@@ -2950,10 +2966,13 @@ function buildFullBackupPayload() {
     _version: "2.0",
     _exportedAt: new Date().toISOString(),
     _appName: "SpendWise",
-    expenses: state.expenses,
-    categories: state.categories,
-    balanceRecords: state.balanceRecords,
+    expenses: state.expenses || [],
+    categories: state.categories || [],
+    balanceRecords: state.balanceRecords || [],
     currency: state.currency || "taka",
+    savingsVaults: state.savingsVaults || [],
+    accounts: state.accounts || null,
+    activeAccountId: state.activeAccountId || null,
   };
 }
 
@@ -3037,6 +3056,7 @@ function showImportPreview(fileName, data) {
   const balances = Array.isArray(data.balanceRecords)
     ? data.balanceRecords
     : [];
+  const vaults = Array.isArray(data.savingsVaults) ? data.savingsVaults : [];
   const currency = data.currency || "taka";
   const exportDate = data._exportedAt
     ? new Date(data._exportedAt).toLocaleString()
@@ -3045,6 +3065,7 @@ function showImportPreview(fileName, data) {
     <div class="import-stat"><span class="import-stat-val">${expenses.length}</span><span class="import-stat-label">Expenses</span></div>
     <div class="import-stat"><span class="import-stat-val">${categories.length}</span><span class="import-stat-label">Categories</span></div>
     <div class="import-stat"><span class="import-stat-val">${balances.length}</span><span class="import-stat-label">Balance Records</span></div>
+    ${vaults.length > 0 ? `<div class="import-stat"><span class="import-stat-val">${vaults.length}</span><span class="import-stat-label">Savings Vaults</span></div>` : ""}
     <div class="import-stat"><span class="import-stat-val">${currency}</span><span class="import-stat-label">Currency</span></div>
     <div class="import-stat-date">📅 Exported: ${exportDate}</div>
   `;
@@ -3076,6 +3097,11 @@ function executeImport() {
       ? _importData.balanceRecords
       : [],
     currency: _importData.currency || state.currency || "taka",
+    savingsVaults: Array.isArray(_importData.savingsVaults)
+      ? _importData.savingsVaults
+      : [],
+    accounts: _importData.accounts || null,
+    activeAccountId: _importData.activeAccountId || null,
   };
 
   let finalState;
@@ -3111,11 +3137,16 @@ function executeImport() {
       state.balanceRecords,
       incoming.balanceRecords,
     );
+    const mergedVaults = mergeArr(state.savingsVaults, incoming.savingsVaults);
+
     finalState = {
       expenses: mergedExpenses,
       categories: Object.values(catMap),
       balanceRecords: mergedBalances,
       currency: incoming.currency || state.currency || "taka",
+      savingsVaults: mergedVaults,
+      accounts: incoming.accounts || state.accounts || null,
+      activeAccountId: incoming.activeAccountId || state.activeAccountId || null,
     };
     const newExpenses = mergedExpenses.length - state.expenses.length;
     const newBalances = mergedBalances.length - state.balanceRecords.length;
@@ -3131,6 +3162,8 @@ function executeImport() {
   // Save and reload
   localStorage.setItem(getActiveStateKey(), JSON.stringify(finalState));
   loadState();
+  if (typeof initWalletSelector === "function") initWalletSelector();
+  saveState(); // Triggers real-time cloud backup sync with merged data
   renderAll();
   clearImportPreview();
 
