@@ -477,7 +477,7 @@ body {
   font-size: 30px;
   font-weight: 800;
   line-height: 1.1;
-  transition: transform 0.4s cubic-bezier(0.32, 0, 0.67, 0), opacity 0.38s ease, filter 0.38s ease;
+  transition: transform 0.24s cubic-bezier(0.32, 0, 0.67, 0), opacity 0.22s ease, filter 0.22s ease;
   will-change: transform, opacity, filter;
 }
 
@@ -485,7 +485,7 @@ body {
   font-size: 12px;
   margin-top: 6px;
   opacity: 0.8;
-  transition: transform 0.4s cubic-bezier(0.32, 0, 0.67, 0), opacity 0.38s ease, filter 0.38s ease;
+  transition: transform 0.24s cubic-bezier(0.32, 0, 0.67, 0), opacity 0.22s ease, filter 0.22s ease;
   will-change: transform, opacity, filter;
 }
 
@@ -3646,9 +3646,34 @@ button:active,
   transform: translateY(-2px);
 }
 
+.recent-card {
+  overflow: hidden;
+  position: relative;
+}
+
 .preview-table-wrap,
 .transaction-list {
   transition: opacity 0.25s ease;
+  overflow: hidden;
+}
+
+/* Recent Transactions slide-down exit and slide-up enter - Apple iOS Spring Curve */
+.tx-slide-down-exit {
+  opacity: 1 !important;
+  transform: translateY(115%) !important;
+  transition: transform 0.24s cubic-bezier(0.32, 0, 0.67, 0) !important;
+}
+
+.tx-slide-up-prep {
+  opacity: 1 !important;
+  transform: translateY(115%) !important;
+  transition: none !important;
+}
+
+.tx-slide-up-active {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .ios-content-fade {
@@ -4007,14 +4032,14 @@ body.modal-open {
 /* Phase 1: Exit to Left (right theke left er dike muche jabe) */
 .num-slide-exit {
   opacity: 0 !important;
-  transform: translateX(-24px) !important;
+  transform: translateX(-20px) !important;
   filter: blur(1px);
 }
 
 /* Phase 2: Enter from Left to Right (shathe shathe abar left theke right er dike new number smoothly chole ashbe) */
 .num-slide-enter-prep {
   opacity: 0 !important;
-  transform: translateX(-24px) !important;
+  transform: translateX(-20px) !important;
   filter: blur(1px);
   transition: none !important;
 }
@@ -4023,7 +4048,7 @@ body.modal-open {
   opacity: 1 !important;
   transform: translateX(0) !important;
   filter: blur(0);
-  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.48s ease, filter 0.48s ease !important;
+  transition: transform 0.36s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.30s ease, filter 0.30s ease !important;
 }
 
 /* ═══════════════════════════════════════════
@@ -4068,14 +4093,6 @@ body.modal-open {
   min-height: 44px;
   padding: 10px 16px;
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.dp-nav-btn {
-  min-width: 48px;
-  min-height: 48px;
-  display: flex;
   align-items: center;
   justify-content: center;
 }

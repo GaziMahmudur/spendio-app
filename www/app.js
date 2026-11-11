@@ -1323,12 +1323,14 @@ function updateDashPillIndicator(animate = true) {
 
 
 // Animate top 3 cards number transition: Exit to Left, then Enter from Left to Right
+// Also animates Recent Transactions: Slide down to exit, then slide up to enter
 function animateCardNumbersUpdate(callback) {
   const cardElements = document.querySelectorAll(
     '#dashBalance, #dashBalanceDate, #dashIncome, #dashIncomeSub, #dashExpenses, #dashExpenseCount'
   );
+  const recentEl = document.getElementById('recentTransactions');
 
-  // Phase 1: Card numbers wipe left (right theke left er dike muche jabe)
+  // Phase 1: Card numbers wipe left, Recent Transactions slide down through bottom border immediately (0ms delay)
   if (cardElements && cardElements.length > 0) {
     cardElements.forEach((el) => {
       el.classList.remove('num-slide-enter-active', 'num-slide-enter-prep');
@@ -1336,16 +1338,26 @@ function animateCardNumbersUpdate(callback) {
     });
   }
 
-  // After exit completes smoothly (380ms), update data, prep at left, then smoothly slide in from left to right
+  if (recentEl) {
+    recentEl.classList.remove('tx-slide-up-active', 'tx-slide-up-prep');
+    recentEl.classList.add('tx-slide-down-exit');
+  }
+
+  // After exit completes smoothly (240ms), update data, prep at start position, then smoothly enter
   setTimeout(() => {
     if (typeof callback === "function") callback();
 
-    // Prep: numbers positioned to left, invisible
+    // Prep: numbers positioned to left, recent transactions positioned below
     if (cardElements && cardElements.length > 0) {
       cardElements.forEach((el) => {
         el.classList.remove('num-slide-exit');
         el.classList.add('num-slide-enter-prep');
       });
+    }
+
+    if (recentEl) {
+      recentEl.classList.remove('tx-slide-down-exit');
+      recentEl.classList.add('tx-slide-up-prep');
     }
 
     // Next animation frame: smoothly enter to 0 with fluid Apple easing
@@ -1357,9 +1369,14 @@ function animateCardNumbersUpdate(callback) {
             el.classList.add('num-slide-enter-active');
           });
         }
+
+        if (recentEl) {
+          recentEl.classList.remove('tx-slide-up-prep');
+          recentEl.classList.add('tx-slide-up-active');
+        }
       });
     });
-  }, 380);
+  }, 240);
 }
 
 function setDashboardFilter(mode) {
@@ -1372,12 +1389,9 @@ function setDashboardFilter(mode) {
   });
   updateDashPillIndicator(true);
 
-  // Apple-style subtle transition on badge and non-card elements
+  // Apple-style subtle transition on badge only (not chart or recent transactions)
   const badgeEl = document.getElementById("dashFilterActiveLabel");
   if (badgeEl) badgeEl.classList.add("ios-badge-shift");
-
-  const otherAnimEls = document.querySelectorAll("#recentTransactions, #donutChart, #chartLegend");
-  otherAnimEls.forEach((el) => el.classList.add("ios-content-fade"));
 
   const customInputs = document.getElementById("dashCustomRangeInputs");
   if (customInputs) customInputs.classList.toggle("show", mode === "custom");
@@ -1394,9 +1408,6 @@ function setDashboardFilter(mode) {
   animateCardNumbersUpdate(() => {
     renderDashboard();
     if (badgeEl) badgeEl.classList.remove("ios-badge-shift");
-    requestAnimationFrame(() => {
-      otherAnimEls.forEach((el) => el.classList.remove("ios-content-fade"));
-    });
   });
 }
 
@@ -1678,7 +1689,7 @@ function renderChart() {
     });
   }
 
-  drawDonutCore(canvas, entries, total, -1);
+  animateDonutTransition(canvas, entries, total);
 
   const colors = entries.map(([id]) => {
     const cat = state.categories.find((c) => c.id === id);
@@ -1702,6 +1713,97 @@ function renderChart() {
     .join("");
 }
 
+
+// Animate Donut: First 360 reverse unwind of previous data, then 360 forward sweep with new data
+function animateDonutTransition(canvas, newEntries, newTotal) {
+  if (canvas._entranceRaf) {
+    cancelAnimationFrame(canvas._entranceRaf);
+    canvas._entranceRaf = null;
+  }
+  if (canvas._pauseTimeout) {
+    clearTimeout(canvas._pauseTimeout);
+    canvas._pauseTimeout = null;
+  }
+
+  const prevEntries = canvas._currentEntries || canvas._entries;
+  const prevTotal = canvas._currentTotal || canvas._total;
+  const hasPrevData = prevEntries && prevEntries.length > 0 && prevTotal > 0 && (canvas._circleProgress === undefined || canvas._circleProgress > 0);
+
+  // If new data is identical to previous data and chart is already fully drawn, skip redundant re-animation
+  if (hasPrevData && canvas._circleProgress === 1 && prevTotal === newTotal && JSON.stringify(prevEntries) === JSON.stringify(newEntries)) {
+    return;
+  }
+
+  // If no previous drawn chart (first load), directly do forward 360 entrance
+  if (!hasPrevData) {
+    canvas._currentEntries = newEntries;
+    canvas._currentTotal = newTotal;
+    canvas._entries = newEntries;
+    canvas._total = newTotal;
+    animateDonutForward(canvas);
+    return;
+  }
+
+  // Phase 1: 360 Reverse animation (1 -> 0) using previous slice data
+  const reverseDuration = 320; // ms - snappy 60fps unwind
+  const reverseStart = performance.now();
+  const startProgress = canvas._circleProgress !== undefined ? canvas._circleProgress : 1;
+
+  function reverseStep(now) {
+    const elapsed = now - reverseStart;
+    const p = Math.min(1, elapsed / reverseDuration);
+    // Smooth deceleration curve for unwind
+    const eased = startProgress * (1 - Math.pow(p, 2.2));
+    canvas._circleProgress = Math.max(0, eased);
+
+    drawDonutCore(canvas, prevEntries, prevTotal, -1);
+
+    if (p < 1) {
+      canvas._entranceRaf = requestAnimationFrame(reverseStep);
+    } else {
+      // Phase 1 complete: reset progress and add a subtle resting pause (~140ms) before forward 360 sweep
+      canvas._circleProgress = 0;
+      canvas._currentEntries = newEntries;
+      canvas._currentTotal = newTotal;
+      canvas._entries = newEntries;
+      canvas._total = newTotal;
+      drawDonutCore(canvas, newEntries, newTotal, -1);
+
+      if (canvas._pauseTimeout) clearTimeout(canvas._pauseTimeout);
+      canvas._pauseTimeout = setTimeout(() => {
+        animateDonutForward(canvas);
+      }, 140);
+    }
+  }
+
+  canvas._entranceRaf = requestAnimationFrame(reverseStep);
+}
+
+function animateDonutForward(canvas) {
+  const duration = 580; // ms - silky smooth high-FPS Apple sweep
+  const startTime = performance.now();
+
+  function step(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(1, elapsed / duration);
+    // Apple-style easeOutQuartic / fluid deceleration
+    const eased = 1 - Math.pow(1 - progress, 3.4);
+
+    canvas._circleProgress = eased;
+    drawDonutCore(canvas, canvas._entries, canvas._total, canvas._hoverIdx !== undefined ? canvas._hoverIdx : -1);
+
+    if (progress < 1) {
+      canvas._entranceRaf = requestAnimationFrame(step);
+    } else {
+      canvas._circleProgress = 1;
+      drawDonutCore(canvas, canvas._entries, canvas._total, canvas._hoverIdx !== undefined ? canvas._hoverIdx : -1);
+      canvas._entranceRaf = null;
+    }
+  }
+
+  canvas._circleProgress = 0;
+  canvas._entranceRaf = requestAnimationFrame(step);
+}
 
 function animateDonut(canvas) {
   let needsUpdate = false;
@@ -1760,8 +1862,19 @@ function drawDonutCore(canvas, entries, total, hoverIdx) {
     return cat ? cat.color : "#7c3aed";
   });
 
+  // Circular entrance progression (0 to 1)
+  const circleProgress = canvas._circleProgress !== undefined ? canvas._circleProgress : 1;
+  const maxTotalAngle = circleProgress * Math.PI * 2;
+  let accumulatedAngle = 0;
+
   entries.forEach(([id, val], i) => {
-    const sweep = (val / total) * Math.PI * 2;
+    const fullSweep = (val / total) * Math.PI * 2;
+    if (accumulatedAngle >= maxTotalAngle) return;
+
+    // Clip sweep to remaining visible angular span
+    const sweep = Math.min(fullSweep, maxTotalAngle - accumulatedAngle);
+    if (sweep <= 0) return;
+    accumulatedAngle += fullSweep;
 
     // Smooth interpolation states
     const popScale = canvas._animStates
