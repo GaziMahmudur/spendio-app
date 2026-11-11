@@ -4,6 +4,7 @@
   "description": "SpendWise is a clean, modern, and completely local-first expense tracking application designed with a beautiful EdTech aesthetics (inspired by Shikho.com).",
   "main": "app.js",
   "scripts": {
+    "build:js": "node build-js.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
