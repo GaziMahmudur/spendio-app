@@ -1697,6 +1697,14 @@ function renderChart() {
         }
       }
     });
+
+    // On user click: immediately trigger fresh -360 unwind -> pause -> +360 sweep animation
+    canvas.addEventListener("click", () => {
+      if (canvas._entries && canvas._entries.length > 0 && canvas._total > 0) {
+        canvas._inTransition = false;
+        animateDonutTransition(canvas, canvas._entries, canvas._total, true);
+      }
+    });
   }
 
   animateDonutTransition(canvas, entries, total);
@@ -1725,7 +1733,7 @@ function renderChart() {
 
 
 // Animate Donut: First 360 reverse unwind of previous data, then 360 forward sweep with new data
-function animateDonutTransition(canvas, newEntries, newTotal) {
+function animateDonutTransition(canvas, newEntries, newTotal, force = false) {
   if (canvas._entranceRaf) {
     cancelAnimationFrame(canvas._entranceRaf);
     canvas._entranceRaf = null;
@@ -1739,8 +1747,8 @@ function animateDonutTransition(canvas, newEntries, newTotal) {
   const prevTotal = canvas._currentTotal || canvas._total;
   const hasPrevData = prevEntries && prevEntries.length > 0 && prevTotal > 0 && (canvas._circleProgress === undefined || canvas._circleProgress > 0);
 
-  // If new data is identical to previous data and chart is already fully drawn, skip redundant re-animation
-  if (hasPrevData && canvas._circleProgress === 1 && prevTotal === newTotal && JSON.stringify(prevEntries) === JSON.stringify(newEntries)) {
+  // If new data is identical to previous data and chart is already fully drawn, skip redundant re-animation unless forced
+  if (!force && hasPrevData && canvas._circleProgress === 1 && prevTotal === newTotal && JSON.stringify(prevEntries) === JSON.stringify(newEntries)) {
     return;
   }
 
@@ -1754,8 +1762,8 @@ function animateDonutTransition(canvas, newEntries, newTotal) {
     return;
   }
 
-  // If an animation is already running towards this identical target, avoid re-triggering reverse
-  if (canvas._inTransition && JSON.stringify(canvas._targetEntries) === JSON.stringify(newEntries) && canvas._targetTotal === newTotal) {
+  // If an animation is already running towards this identical target, avoid re-triggering reverse unless forced
+  if (!force && canvas._inTransition && JSON.stringify(canvas._targetEntries) === JSON.stringify(newEntries) && canvas._targetTotal === newTotal) {
     return;
   }
   canvas._inTransition = true;
@@ -1763,15 +1771,16 @@ function animateDonutTransition(canvas, newEntries, newTotal) {
   canvas._targetTotal = newTotal;
 
   // Phase 1: 360 Reverse animation (1 -> 0) using previous slice data
-  const reverseDuration = 220; // ms - snappy unwind
+  const reverseDuration = 380; // ms - elegant smooth unwind
   const reverseStart = performance.now();
   const startProgress = (canvas._circleProgress !== undefined && canvas._circleProgress > 0) ? canvas._circleProgress : 1;
 
   function reverseStep(now) {
     const elapsed = now - reverseStart;
     const p = Math.min(1, elapsed / reverseDuration);
-    // Smooth deceleration curve for unwind
-    const eased = startProgress * (1 - Math.pow(p, 2.2));
+    // Smooth easeInOutCubic curve for graceful deceleration
+    const easeOut = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+    const eased = startProgress * (1 - easeOut);
     canvas._circleProgress = Math.max(0, eased);
 
     drawDonutCore(canvas, prevEntries, prevTotal, -1);
@@ -1790,7 +1799,7 @@ function animateDonutTransition(canvas, newEntries, newTotal) {
       if (canvas._pauseTimeout) clearTimeout(canvas._pauseTimeout);
       canvas._pauseTimeout = setTimeout(() => {
         animateDonutForward(canvas);
-      }, 60);
+      }, 140);
     }
   }
 
@@ -1802,14 +1811,14 @@ function animateDonutForward(canvas) {
     cancelAnimationFrame(canvas._entranceRaf);
     canvas._entranceRaf = null;
   }
-  const duration = 460; // ms - silky smooth high-FPS Apple sweep
+  const duration = 720; // ms - beautiful cinematic smooth 360 sweep
   const startTime = performance.now();
 
   function step(now) {
     const elapsed = now - startTime;
     const progress = Math.min(1, elapsed / duration);
-    // Apple-style easeOutQuartic / fluid deceleration
-    const eased = 1 - Math.pow(1 - progress, 3.4);
+    // Apple-style easeOutCubic / fluid silky curve
+    const eased = 1 - Math.pow(1 - progress, 3);
 
     canvas._circleProgress = eased;
     drawDonutCore(canvas, canvas._entries, canvas._total, canvas._hoverIdx !== undefined ? canvas._hoverIdx : -1);
