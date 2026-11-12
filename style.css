@@ -5049,6 +5049,61 @@ body.modal-open {
    MOBILE SLIDE-UP BOTTOM SHEET (APPLE iOS HIG STYLE)
 ══════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
+  .acc-hero-card {
+    padding: 20px 18px;
+    border-radius: 24px;
+  }
+
+  .acc-hero-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .acc-hero-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .acc-avatar-box {
+    width: 58px;
+    height: 58px;
+    min-width: 58px;
+  }
+
+  .acc-hero-name {
+    font-size: 19px;
+  }
+
+  .acc-hero-email {
+    font-size: 13px;
+    word-break: break-all;
+  }
+
+  /* Full-width clean iOS styled Sign Out button on phone */
+  .btn-acc-signout {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 18px;
+    font-size: 14px;
+    border-radius: 14px;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+  }
+
+  .account-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .account-card {
+    padding: 18px 16px;
+    border-radius: 20px;
+  }
+
   .auth-modal-backdrop {
     align-items: flex-end;
     padding: 0;

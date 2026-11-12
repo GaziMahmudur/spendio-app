@@ -550,9 +550,10 @@ async function pushToCloud(dataObj, silent = false, requestSessionId = null, tar
 
   // RACE CONDITION GUARD
   if (
-    _currentSessionId !== activeSessionId ||
-    !_currentUser ||
-    _currentUser.uid !== activeUid
+    requestSessionId !== null &&
+    (_currentSessionId !== activeSessionId ||
+      !_currentUser ||
+      _currentUser.uid !== activeUid)
   ) {
     console.warn("[SpendWise Cloud] Push discarded due to session/UID mismatch.");
     return false;
@@ -583,9 +584,10 @@ async function pushToCloud(dataObj, silent = false, requestSessionId = null, tar
 
     // RE-VERIFY SESSION BEFORE CONFIRMING
     if (
-      _currentSessionId !== activeSessionId ||
-      !_currentUser ||
-      _currentUser.uid !== activeUid
+      requestSessionId !== null &&
+      (_currentSessionId !== activeSessionId ||
+        !_currentUser ||
+        _currentUser.uid !== activeUid)
     ) {
       console.warn("[SpendWise Cloud] Session changed after cloud push completion.");
       return false;
@@ -1164,9 +1166,10 @@ window.triggerAutoCloudBackup = function(stateObj) {
       const activeUid = _currentUser ? _currentUser.uid : null;
       if (!activeUid) return;
       console.log('[Spendio Cloud] Triggering automatic cloud sync...');
-      await pushToCloud(stateObj || getLocalState(activeUid), true);
+      const data = stateObj || getLocalState(activeUid);
+      await pushToCloud(data, true, null, activeUid);
     } catch (e) {
       console.warn('[Spendio Cloud] Auto cloud backup failed:', e);
     }
-  }, 1000);
+  }, 400);
 };

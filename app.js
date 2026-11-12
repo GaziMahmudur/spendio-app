@@ -2214,6 +2214,7 @@ function saveExpense(event) {
     savingsCode = ((codeEl ? codeEl.value : "") || desc || "GENERAL").trim().toUpperCase();
   }
 
+  const nowIso = new Date().toISOString();
   if (editId) {
     const idx = state.expenses.findIndex((e) => e.id === editId);
     if (idx >= 0) {
@@ -2225,6 +2226,7 @@ function saveExpense(event) {
         categoryId: catId,
         note,
         savingsCode: isSavings ? savingsCode : undefined,
+        updatedAt: nowIso,
       };
       showToast(isSavings ? "Savings record updated!" : "Expense updated!", "success");
     }
@@ -2237,7 +2239,8 @@ function saveExpense(event) {
       categoryId: catId,
       note,
       savingsCode: isSavings ? savingsCode : undefined,
-      createdAt: new Date().toISOString(),
+      createdAt: nowIso,
+      updatedAt: nowIso,
     });
     showToast(isSavings ? `Saved ${fmtAmount(amount)} to "${savingsCode}"!` : "Expense added!", "success");
   }
