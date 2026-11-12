@@ -4107,8 +4107,11 @@ body.modal-open {
     min-width: 48px;
     min-height: 48px;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
     justify-content: center;
+    padding: 0;
+    margin-left: 0;
   }
 }
 
