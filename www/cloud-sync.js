@@ -962,18 +962,24 @@ function updateCloudUI() {
         ? `<img src="${photoURL}" alt="${displayName}" class="acc-hero-avatar-img" />`
         : `<div class="acc-hero-avatar-initial">${displayName.charAt(0).toUpperCase()}</div>`;
       accountHeader.innerHTML = `
-        <div class="acc-hero-left">
-          ${avatarHtml}
-          <div class="acc-hero-info">
-            <h2 class="acc-hero-name">${displayName}</h2>
-            <p class="acc-hero-email">${email}</p>
-            <span class="acc-badge-cloud"><span class="pulse-dot"></span> Cloud Sync Active</span>
+        <div class="acc-hero-wrapper">
+          <div class="acc-hero-left">
+            <div class="acc-avatar-box">
+              ${avatarHtml}
+            </div>
+            <div class="acc-hero-info">
+              <h2 class="acc-hero-name">${displayName}</h2>
+              <p class="acc-hero-email">${email}</p>
+              <div class="acc-hero-meta">
+                <span class="acc-badge-cloud"><span class="pulse-dot"></span> Cloud Sync Active</span>
+              </div>
+            </div>
           </div>
+          <button class="btn btn-danger-soft btn-acc-signout" onclick="cloudSignOut()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            Sign Out
+          </button>
         </div>
-        <button class="btn btn-danger-soft btn-acc-signout" onclick="cloudSignOut()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-          Sign Out
-        </button>
       `;
     } else {
       accountHeader.innerHTML = `
