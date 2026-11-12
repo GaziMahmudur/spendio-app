@@ -361,10 +361,21 @@ class CustomSelect {
       this.dropdown.style.right = "auto";
     }
 
+    // Auto dropup if opening downwards overflows the visible viewport
+    const spaceBelow = window.innerHeight - triggerRect.bottom;
+    const spaceAbove = triggerRect.top;
+    const neededHeight = Math.min(rect.height || 220, 250);
+    if (spaceBelow < neededHeight && spaceAbove > spaceBelow) {
+      this.dropdown.classList.add("dropup");
+    } else {
+      this.dropdown.classList.remove("dropup");
+    }
+
     document.addEventListener("click", this._closeOnOutside);
   }
   _close() {
     this.dropdown.classList.remove("open");
+    this.dropdown.classList.remove("dropup");
     this.trigger.classList.remove("open");
     if (this.wrap) this.wrap.classList.remove("open-level");
     document.removeEventListener("click", this._closeOnOutside);
@@ -546,10 +557,20 @@ class GenericCustomSelect {
       this.dropdown.style.left = "auto";
     }
 
+    const spaceBelow = window.innerHeight - triggerRect.bottom;
+    const spaceAbove = triggerRect.top;
+    const neededHeight = Math.min(rect.height || 220, 250);
+    if (spaceBelow < neededHeight && spaceAbove > spaceBelow) {
+      this.dropdown.classList.add("dropup");
+    } else {
+      this.dropdown.classList.remove("dropup");
+    }
+
     document.addEventListener("click", this._closeOnOutside);
   }
   _close() {
     this.dropdown.classList.remove("open");
+    this.dropdown.classList.remove("dropup");
     this.trigger.classList.remove("open");
     if (this.wrap) this.wrap.classList.remove("open-level");
     document.removeEventListener("click", this._closeOnOutside);

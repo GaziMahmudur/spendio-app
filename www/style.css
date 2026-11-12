@@ -3247,7 +3247,8 @@ body.dropdown-open::before {
 }
 .gcs-wrap.open-level,
 .cs-wrap.open-level {
-  z-index: 101 !important;
+  z-index: 1000 !important;
+  position: relative;
 }
 
 .gcs-dropdown,
@@ -3255,6 +3256,18 @@ body.dropdown-open::before {
   max-height: 250px;
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+.cs-dropdown.dropup,
+.gcs-dropdown.dropup {
+  top: auto !important;
+  bottom: calc(100% + 5px) !important;
+  transform: translateY(6px) scale(0.98);
+}
+
+.cs-dropdown.open.dropup,
+.gcs-dropdown.open.dropup {
+  transform: translateY(0) scale(1) !important;
 }
 
 /* ── DATEPICKER VIEWPORT OVERFLOW FIXES ── */
@@ -5171,8 +5184,7 @@ body.modal-open {
   }
   .modal-box {
     max-height: calc(100dvh - 32px);
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible;
   }
 }
 
