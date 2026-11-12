@@ -900,10 +900,8 @@ async function restoreCloudBackup() {
 function updateCloudUI() {
   const signedIn = !!_currentUser;
   const signInBtn = document.getElementById("cloudSignInBtn");
-  const signOutBtn = document.getElementById("cloudSignOutBtn");
   const backupBtn = document.getElementById("cloudBackupBtn");
   const restoreBtn = document.getElementById("cloudRestoreBtn");
-  const userInfo = document.getElementById("cloudUserInfo");
   const cloudSection = document.getElementById("cloudSyncSection");
 
   // Update Topbar and Sidebar Profile Elements
@@ -1007,10 +1005,8 @@ function updateCloudUI() {
   if (signedIn) {
     if (authWrap) authWrap.style.display = "none";
     if (signInBtn) signInBtn.style.display = "none";
-    if (signOutBtn) signOutBtn.style.display = "none";
     if (backupBtn) backupBtn.disabled = false;
     if (restoreBtn) restoreBtn.disabled = false;
-    if (userInfo) userInfo.style.display = "none";
     const meta = getMeta();
     if (meta && meta.lastBackup) {
       updateCloudStatus(
@@ -1023,10 +1019,8 @@ function updateCloudUI() {
   } else {
     if (authWrap) authWrap.style.display = "block";
     if (signInBtn) signInBtn.style.display = "inline-flex";
-    if (signOutBtn) signOutBtn.style.display = "none";
     if (backupBtn) backupBtn.disabled = true;
     if (restoreBtn) restoreBtn.disabled = true;
-    if (userInfo) userInfo.style.display = "none";
     updateCloudStatus("idle", "Sign in to enable cloud backup.");
   }
 }
