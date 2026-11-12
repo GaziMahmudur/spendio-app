@@ -4,7 +4,7 @@ if ('scrollRestoration' in history) {
 }
 
 /* =====================================================
-   SpendWise – app.js
+   Spendio – app.js
    Full expense tracker logic: state, rendering, export
 ===================================================== */
 
@@ -2740,7 +2740,7 @@ function exportCSV() {
     csv += `\nCurrent Balance,"","${computeCurrentBalance().toFixed(2)}"\n`;
   }
 
-  downloadFile(`SpendWise_Export_${today()}.csv`, csv, "text/csv");
+  downloadFile(`Spendio_Export_${today()}.csv`, csv, "text/csv");
   showToast("CSV exported successfully!", "success");
 }
 
@@ -2783,7 +2783,7 @@ function exportJSON() {
   }
 
   downloadFile(
-    `SpendWise_Export_${today()}.json`,
+    `Spendio_Export_${today()}.json`,
     JSON.stringify(data, null, 2),
     "application/json",
   );
@@ -2824,7 +2824,7 @@ async function exportPNG() {
       useCORS: true,
       logging: false,
     });
-    const filename = `SpendWise_Preview_${today()}.png`;
+    const filename = `Spendio_Preview_${today()}.png`;
     const b64Full = canvas.toDataURL("image/png");
 
     if (window.Capacitor && window.Capacitor.isNativePlatform()) {
@@ -2881,7 +2881,7 @@ function exportCopyText() {
   });
 
   let lines = [];
-  lines.push("=== SpendWise Expense Report ===");
+  lines.push("=== Spendio Expense Report ===");
   lines.push(
     `Generated: ${new Date().toLocaleDateString("en-US", {
       weekday: "long",
@@ -3007,10 +3007,10 @@ function switchExportTab(tab) {
 // ── FULL BACKUP EXPORT ─────────────────────────────────
 function buildFullBackupPayload() {
   return {
-    _format: "spendwise_backup",
+    _format: "spendio_backup",
     _version: "2.0",
     _exportedAt: new Date().toISOString(),
-    _appName: "SpendWise",
+    _appName: "Spendio",
     expenses: state.expenses || [],
     categories: state.categories || [],
     balanceRecords: state.balanceRecords || [],
@@ -3025,7 +3025,7 @@ function exportFullBackup() {
   const payload = buildFullBackupPayload();
   const json = JSON.stringify(payload, null, 2);
   downloadFile(
-    `SpendWise_FullBackup_${today()}.spendwise`,
+    `Spendio_FullBackup_${today()}.spendio`,
     json,
     "application/json",
   );
@@ -3039,7 +3039,7 @@ function exportFullBackupJSON() {
   const payload = buildFullBackupPayload();
   const json = JSON.stringify(payload, null, 2);
   downloadFile(
-    `SpendWise_FullBackup_${today()}.json`,
+    `Spendio_FullBackup_${today()}.json`,
     json,
     "application/json",
   );
@@ -3076,10 +3076,10 @@ function processImportFile(file) {
   reader.onload = (e) => {
     try {
       const parsed = JSON.parse(e.target.result);
-      // Validate it's a SpendWise backup
+      // Validate it's a Spendio backup
       if (!parsed.expenses && !parsed.categories && !parsed.balanceRecords) {
         showToast(
-          "Invalid backup file. Please use a .spendwise or full JSON backup.",
+          "Invalid backup file. Please use a .spendio, .spendwise or full JSON backup.",
           "error",
         );
         return;
@@ -3289,7 +3289,7 @@ function installPWA() {
 
 window.addEventListener("appinstalled", (evt) => {
   // Log install success
-  console.log("SpendWise was installed.", evt);
+  console.log("Spendio was installed.", evt);
 });
 
 // Register Service Worker for offline capability & caching

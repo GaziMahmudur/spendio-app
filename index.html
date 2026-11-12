@@ -101,7 +101,7 @@
           ><span class="nav-label">Export / Import</span>
         </a>
         <a
-          href="https://github.com/GaziMahmudur/spendwise-app/releases/download/v1.3/SpendWise-v1.3.apk"
+          href="https://github.com/GaziMahmudur/spendwise-app/releases/download/v1.3/Spendio-v1.3.apk"
           target="_blank"
           class="nav-item"
           id="nav-download-apk"
@@ -536,7 +536,7 @@
                     class="btn btn-export btn-backup"
                     onclick="exportFullBackup()"
                   >
-                    <span>🔒</span> Full Backup (.spendwise)
+                    <span>🔒</span> Full Backup (.spendio)
                   </button>
                   <button
                     class="btn btn-export btn-backup-json"
@@ -572,8 +572,8 @@
               <div class="glass-card import-card">
                 <h2 class="card-title">📥 Import & Restore Data</h2>
                 <p class="export-desc" style="margin-bottom: 20px">
-                  Restore data from a previously exported SpendWise backup file
-                  (.spendwise or .json). Your existing data will be
+                  Restore data from a previously exported Spendio backup file
+                  (.spendio, .spendwise, or .json). Your existing data will be
                   intelligently merged — no duplicates.
                 </p>
 
@@ -587,13 +587,13 @@
                   <div class="dropzone-title">Drop your backup file here</div>
                   <div class="dropzone-sub">or click to browse</div>
                   <div class="dropzone-hint">
-                    Supports .spendwise, .json backup files
+                    Supports .spendio, .spendwise, .json backup files
                   </div>
                 </div>
                 <input
                   type="file"
                   id="importFileInput"
-                  accept=".spendwise,.json"
+                  accept=".spendio,.spendwise,.json"
                   style="display: none"
                   onchange="handleImportFile(event)"
                 />
@@ -605,7 +605,7 @@
                 >
                   <div class="import-preview-header">
                     <span class="import-file-name" id="importFileName"
-                      >backup.spendwise</span
+                      >backup.spendio</span
                     >
                     <button
                       class="import-clear-btn"
@@ -668,7 +668,7 @@
                       <strong>Export a Full Backup</strong>
                       <p>
                         Go to the Export tab and click "Full Backup
-                        (.spendwise)" to create a complete backup of all your
+                        (.spendio)" to create a complete backup of all your
                         data.
                       </p>
                     </div>

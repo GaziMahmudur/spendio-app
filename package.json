@@ -1,7 +1,7 @@
 {
   "name": "expenses",
   "version": "1.0.0",
-  "description": "SpendWise is a clean, modern, and completely local-first expense tracking application designed with a beautiful EdTech aesthetics (inspired by Shikho.com).",
+  "description": "Spendio is a clean, modern, and completely local-first expense tracking application designed with a beautiful Apple iOS aesthetics.",
   "main": "app.js",
   "scripts": {
     "build:js": "node build-js.js",

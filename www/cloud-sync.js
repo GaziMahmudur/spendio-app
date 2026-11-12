@@ -1,5 +1,5 @@
 /* =====================================================
-   SpendWise – cloud-sync.js
+   Spendio – cloud-sync.js
    Firebase Firestore Cloud Backup & Sync
    
    Features:
@@ -93,7 +93,7 @@ async function getNativeFirebaseAuthentication() {
     return mod.FirebaseAuthentication || null;
   } catch (err) {
     console.error(
-      "[SpendWise Cloud] Could not load native Firebase Authentication plugin:",
+      "[Spendio Cloud] Could not load native Firebase Authentication plugin:",
       err,
     );
     return null;
@@ -112,7 +112,7 @@ async function initFirebase() {
     FIREBASE_CONFIG.appId === "YOUR_APP_ID"
   ) {
     console.warn(
-      "[SpendWise Cloud] Firebase Web App config is incomplete. Add the config from Firebase Console.",
+      "[Spendio Cloud] Firebase Web App config is incomplete. Add the config from Firebase Console.",
     );
     return false;
   }
@@ -180,7 +180,7 @@ async function initFirebase() {
         // Success
       }
     } catch (err) {
-      console.error("[SpendWise Cloud] Redirect sign-in error:", err);
+      console.error("[Spendio Cloud] Redirect sign-in error:", err);
       const errMsg = err.message || "Unknown redirect error";
       showToast("Redirect login failed: " + errMsg, "error");
       updateCloudStatus("error", "Redirect login failed: " + errMsg);
@@ -216,7 +216,7 @@ async function initFirebase() {
         try {
           await checkAndRunMigration(thisSessionId, activeUid);
         } catch (err) {
-          console.error("[SpendWise Cloud] Post-login migration error:", err);
+          console.error("[Spendio Cloud] Post-login migration error:", err);
         }
         // Start real-time cross-device sync listener
         setupRealtimeSync(activeUid);
@@ -227,7 +227,7 @@ async function initFirebase() {
 
     return true;
   } catch (err) {
-    console.error("[SpendWise Cloud] Firebase init error:", err);
+    console.error("[Spendio Cloud] Firebase init error:", err);
     updateCloudStatus("error", "Firebase initialization failed.");
     return false;
   }
@@ -264,7 +264,7 @@ async function cloudSignIn() {
         useCredentialManager: false,
       });
 
-      console.log("[SpendWise Cloud] Native Google sign-in result:", result);
+      console.log("[Spendio Cloud] Native Google sign-in result:", result);
 
       if (
         result &&
@@ -290,7 +290,7 @@ async function cloudSignIn() {
     // it will properly open the Google sign-in mini-tab without losing app state!
     await signInWithPopup(_auth, provider);
   } catch (err) {
-    console.error("[SpendWise Cloud] Google sign-in error:", err);
+    console.error("[Spendio Cloud] Google sign-in error:", err);
 
     let errorMsg = err.message || err;
     if (
@@ -325,7 +325,7 @@ async function cloudSignInWithEmail(email, password) {
     showToast("Signed in successfully!", "success");
     return userCredential.user;
   } catch (err) {
-    console.error("[SpendWise Cloud] Email sign-in error:", err);
+    console.error("[Spendio Cloud] Email sign-in error:", err);
     let msg = err.message || "Failed to sign in";
     if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found") {
       msg = "Invalid email or password.";
@@ -354,13 +354,13 @@ async function cloudSignUpWithEmail(name, email, password) {
       try {
         await updateProfile(userCredential.user, { displayName: name.trim() });
       } catch (profileErr) {
-        console.warn("[SpendWise Cloud] Update profile error:", profileErr);
+        console.warn("[Spendio Cloud] Update profile error:", profileErr);
       }
     }
     showToast("Account created successfully!", "success");
     return userCredential.user;
   } catch (err) {
-    console.error("[SpendWise Cloud] Sign-up error:", err);
+    console.error("[Spendio Cloud] Sign-up error:", err);
     let msg = err.message || "Failed to sign up";
     if (err.code === "auth/email-already-in-use") {
       msg = "This email is already registered. Please sign in.";
@@ -388,7 +388,7 @@ async function cloudResetPassword(email) {
     showToast("Password reset email sent! Check your inbox.", "success");
     return true;
   } catch (err) {
-    console.error("[SpendWise Cloud] Password reset error:", err);
+    console.error("[Spendio Cloud] Password reset error:", err);
     let msg = err.message || "Failed to send reset email";
     if (err.code === "auth/user-not-found") {
       msg = "No account found with this email.";
@@ -415,14 +415,14 @@ async function cloudSignOut() {
           try {
             await FirebaseAuthentication.signOut();
           } catch (nativeErr) {
-            console.warn("[SpendWise Cloud] Native sign-out warning:", nativeErr);
+            console.warn("[Spendio Cloud] Native sign-out warning:", nativeErr);
           }
         }
       }
 
       await signOut(_auth);
     } catch (err) {
-      console.error("[SpendWise Cloud] Sign-out error:", err);
+      console.error("[Spendio Cloud] Sign-out error:", err);
     }
   }
 
@@ -466,7 +466,7 @@ async function checkAndRunMigration(requestSessionId = null, targetUid = null) {
     !_currentUser ||
     _currentUser.uid !== activeUid
   ) {
-    console.warn("[SpendWise Cloud] Stale migration fetch discarded for UID:", activeUid);
+    console.warn("[Spendio Cloud] Stale migration fetch discarded for UID:", activeUid);
     return;
   }
 
@@ -555,7 +555,7 @@ async function pushToCloud(dataObj, silent = false, requestSessionId = null, tar
       !_currentUser ||
       _currentUser.uid !== activeUid)
   ) {
-    console.warn("[SpendWise Cloud] Push discarded due to session/UID mismatch.");
+    console.warn("[Spendio Cloud] Push discarded due to session/UID mismatch.");
     return false;
   }
 
@@ -589,7 +589,7 @@ async function pushToCloud(dataObj, silent = false, requestSessionId = null, tar
         !_currentUser ||
         _currentUser.uid !== activeUid)
     ) {
-      console.warn("[SpendWise Cloud] Session changed after cloud push completion.");
+      console.warn("[Spendio Cloud] Session changed after cloud push completion.");
       return false;
     }
 
@@ -606,7 +606,7 @@ async function pushToCloud(dataObj, silent = false, requestSessionId = null, tar
     }
     return true;
   } catch (err) {
-    console.error("[SpendWise Cloud] Push error:", err);
+    console.error("[Spendio Cloud] Push error:", err);
     if (!silent) {
       updateCloudStatus("error", "Upload failed: " + err.message);
       showToast("Cloud backup failed: " + err.message, "error");
@@ -634,7 +634,7 @@ async function fetchCloudData(targetUid = null) {
     const snap = await getDoc(doc(_db, "spendwise_backups", activeUid));
     return snap.exists() ? snap.data() : null;
   } catch (err) {
-    console.error("[SpendWise Cloud] Fetch error:", err);
+    console.error("[Spendio Cloud] Fetch error:", err);
     return null;
   }
 }
@@ -658,7 +658,7 @@ async function restoreFromCloud(silent = false, requestSessionId = null, targetU
       !_currentUser ||
       _currentUser.uid !== activeUid
     ) {
-      console.warn("[SpendWise Cloud] Late cloud restore response discarded.");
+      console.warn("[Spendio Cloud] Late cloud restore response discarded.");
       return;
     }
 
@@ -695,7 +695,7 @@ async function restoreFromCloud(silent = false, requestSessionId = null, targetU
       !_currentUser ||
       _currentUser.uid !== activeUid
     ) {
-      console.warn("[SpendWise Cloud] Discarding state merge due to session change.");
+      console.warn("[Spendio Cloud] Discarding state merge due to session change.");
       return;
     }
 
@@ -726,7 +726,7 @@ async function restoreFromCloud(silent = false, requestSessionId = null, targetU
       showToast(`☁️ Restored ${total} records from cloud!`, "success");
     }
   } catch (err) {
-    console.error("[SpendWise Cloud] Restore error:", err);
+    console.error("[Spendio Cloud] Restore error:", err);
     if (!silent) {
       updateCloudStatus("error", "Restore failed: " + err.message);
       showToast("Cloud restore failed: " + err.message, "error");
@@ -826,7 +826,7 @@ function setupRealtimeSync(uid) {
         const incomingJson = JSON.stringify(incomingState);
         if (localJson === incomingJson) return;
 
-        console.log("[SpendWise Cloud] Real-time sync update received from device:", incomingDeviceId);
+        console.log("[Spendio Cloud] Real-time sync update received from device:", incomingDeviceId);
         _isApplyingCloudChange = true;
 
         const merged = mergeStates(currentLocal, incomingState);
@@ -861,11 +861,11 @@ function setupRealtimeSync(uid) {
         }, 300);
       },
       (error) => {
-        console.warn("[SpendWise Cloud] Real-time sync listener error:", error);
+        console.warn("[Spendio Cloud] Real-time sync listener error:", error);
       }
     );
   } catch (err) {
-    console.warn("[SpendWise Cloud] Could not initialize real-time listener:", err);
+    console.warn("[Spendio Cloud] Could not initialize real-time listener:", err);
   }
 }
 

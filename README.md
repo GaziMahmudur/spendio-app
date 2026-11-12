@@ -1,19 +1,19 @@
-# SpendWise – Expense Tracker
+# Spendio – Expense Tracker
 
-SpendWise is a clean, modern, and completely local-first expense tracking application designed with a beautiful EdTech aesthetics (inspired by Shikho.com).
+Spendio is a clean, modern, and completely local-first expense tracking application designed with a beautiful Apple iOS & EdTech aesthetics.
 
 ## 🚀 Features
 
 - **Dynamic Dashboard:** Visualize your money with donut and bar charts.
-- **Offline First:** All data is strictly saved on your device (using `localStorage`). No server sign-ups required.
-- **Progressive Web App (PWA):** Installable as a native app on Android, iOS, or Desktop without an App Store!
-- **Zero-setup Auto Updates:** When installed, updates made to the remote code are automatically fetched and applied to your installed app.
-- **Data Exporting:** Export summaries as JSON, CSV, or High-Res Images.
+- **Offline First & Cloud Sync:** All data is saved on your device first with seamless Google Firestore cloud backup.
+- **Progressive Web App (PWA) & Native Android App:** Available both as installable PWA and native Android APK.
+- **Zero-setup Auto Updates:** When installed, updates made to the remote code are automatically fetched and applied.
+- **Data Exporting:** Export summaries as JSON, CSV, High-Res Images, or Full Backup (.spendio).
 - **Currency Support:** Defaults to `Taka` but fully configurable.
 
 ## 📲 How to Install the App (Android / iOS)
 
-You don't need Android Studio or the Play Store. SpendWise is a true **PWA (Progressive Web App)**, meaning it packages itself into an app directly from the browser!
+You don't need Android Studio or the Play Store. Spendio is a true **PWA (Progressive Web App)**, meaning it packages itself into an app directly from the browser, or you can download the ready **Spendio-v1.3.apk** release!
 
 1. Host this project on **GitHub Pages** (or any static hosting).
 2. Open the URL in your phone's browser (Chrome or Safari).
