@@ -597,11 +597,11 @@ async function pushToCloud(dataObj, silent = false, requestSessionId = null, tar
       lastBackup: new Date().toISOString(),
       email: _currentUser.email,
     });
+    updateCloudStatus(
+      "synced",
+      `Auto-synced with cloud (${new Date().toLocaleTimeString()})`
+    );
     if (!silent) {
-      updateCloudStatus(
-        "synced",
-        `Backed up ${new Date().toLocaleTimeString()}`,
-      );
       showToast("☁️ Data backed up to cloud!", "success");
     }
     return true;
@@ -801,7 +801,7 @@ function setupRealtimeSync(uid) {
         // Check if update originated from this exact client session to avoid echo
         const incomingDeviceId = cloudPayload._meta?.deviceId;
         const myDeviceId = getDeviceId();
-        if (incomingDeviceId === myDeviceId && _syncInProgress) {
+        if (incomingDeviceId === myDeviceId) {
           return;
         }
 
@@ -1154,7 +1154,7 @@ window.isCloudSyncActive = function() { return _syncInProgress || _isApplyingClo
 
 let _cloudDebounceTimer = null;
 window.triggerAutoCloudBackup = function(stateObj) {
-  if (!_currentUser || !_db || _isApplyingCloudChange) return;
+  if (!_currentUser || !_db) return;
   clearTimeout(_cloudDebounceTimer);
   _cloudDebounceTimer = setTimeout(async () => {
     try {
