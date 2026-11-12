@@ -759,8 +759,8 @@
                     </div>
                   </div>
 
-                  <!-- Quick Auth inside card for backward compatibility -->
-                  <div class="cloud-auth-section" style="margin-bottom: 16px;">
+                  <!-- Quick Auth inside card for backward compatibility (only shown when signed out) -->
+                  <div class="cloud-auth-section" id="cloudAuthSectionWrap" style="margin-bottom: 16px;">
                     <button class="btn btn-google" id="cloudSignInBtn" onclick="openAuthModal()">
                       <svg width="18" height="18" viewBox="0 0 24 24">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -773,7 +773,6 @@
                     <button class="btn btn-signout" id="cloudSignOutBtn" onclick="cloudSignOut()" style="display: none">
                       🚪 Sign Out
                     </button>
-                    <div class="cloud-user-info" id="cloudUserInfo" style="display: none"></div>
                   </div>
 
                   <!-- Status Banner -->

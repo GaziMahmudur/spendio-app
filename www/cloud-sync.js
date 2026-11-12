@@ -1002,15 +1002,15 @@ function updateCloudUI() {
 
   if (!cloudSection) return;
 
+  const authWrap = document.getElementById("cloudAuthSectionWrap");
+
   if (signedIn) {
+    if (authWrap) authWrap.style.display = "none";
     if (signInBtn) signInBtn.style.display = "none";
-    if (signOutBtn) signOutBtn.style.display = "inline-flex";
+    if (signOutBtn) signOutBtn.style.display = "none";
     if (backupBtn) backupBtn.disabled = false;
     if (restoreBtn) restoreBtn.disabled = false;
-    if (userInfo) {
-      userInfo.textContent = `Signed in as ${displayName} (${email})`;
-      userInfo.style.display = "block";
-    }
+    if (userInfo) userInfo.style.display = "none";
     const meta = getMeta();
     if (meta && meta.lastBackup) {
       updateCloudStatus(
@@ -1021,6 +1021,7 @@ function updateCloudUI() {
       updateCloudStatus("idle", "Ready to backup.");
     }
   } else {
+    if (authWrap) authWrap.style.display = "block";
     if (signInBtn) signInBtn.style.display = "inline-flex";
     if (signOutBtn) signOutBtn.style.display = "none";
     if (backupBtn) backupBtn.disabled = true;
