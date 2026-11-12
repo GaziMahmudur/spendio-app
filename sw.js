@@ -4,7 +4,7 @@
    Auto-updates: new SW activates immediately and notifies clients
 ===================================================== */
 
-const CACHE_NAME = "spendio-v89";
+const CACHE_NAME = "spendio-v90";
 const OFFLINE_PAGE = "./index.html";
 
 // Core files to precache on install

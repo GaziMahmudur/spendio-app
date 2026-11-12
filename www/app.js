@@ -3512,6 +3512,7 @@ function openAuthModal() {
   const modal = document.getElementById("authModal");
   if (!modal) return;
   modal.classList.add("open");
+  updateScrollLocks();
   setAuthTab("signin");
   const errEl = document.getElementById("authErrorMsg");
   if (errEl) errEl.style.display = "none";
@@ -3520,6 +3521,7 @@ function openAuthModal() {
 function closeAuthModal() {
   const modal = document.getElementById("authModal");
   if (modal) modal.classList.remove("open");
+  updateScrollLocks();
 }
 
 function handleAuthBackdrop(event) {
@@ -3650,3 +3652,20 @@ async function handleAuthForgotPassword(event) {
 function handlePinLockSetup() {
   showToast("PIN Lock security will be available in the next security update!", "info");
 }
+
+// ── KEYBOARD & MODAL VIEWPORT SCROLL HELPER ───────────────
+// When mobile virtual keyboard appears, keep active input visible
+document.addEventListener("focusin", (e) => {
+  if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT")) {
+    const modalBox = e.target.closest(".modal-box, .auth-modal-box");
+    if (modalBox) {
+      setTimeout(() => {
+        try {
+          e.target.scrollIntoView({ behavior: "smooth", block: "center" });
+        } catch (_) {
+          e.target.scrollIntoView();
+        }
+      }, 300);
+    }
+  }
+});
