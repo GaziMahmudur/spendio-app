@@ -135,6 +135,10 @@ async function initFirebase() {
       signInWithCredential,
       signOut,
       onAuthStateChanged,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      sendPasswordResetEmail,
+      updateProfile,
     } = await import(
       "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"
     );
@@ -161,6 +165,10 @@ async function initFirebase() {
       signInWithCredential,
       signOut,
       onAuthStateChanged,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      sendPasswordResetEmail,
+      updateProfile,
     };
 
     _cloudInitialized = true;
@@ -298,6 +306,95 @@ async function cloudSignIn() {
     updateCloudStatus("error", "Sign-in failed: " + errorMsg);
 
     showToast("Sign-in failed: " + errorMsg, "error");
+    throw err;
+  }
+}
+
+async function cloudSignInWithEmail(email, password) {
+  updateCloudStatus("signing-in", "Signing in with email…");
+  const ok = await initFirebase();
+  if (!ok) {
+    updateCloudStatus("error", "Firebase initialization failed.");
+    showToast("Firebase initialization failed.", "error");
+    throw new Error("Firebase initialization failed");
+  }
+
+  try {
+    const { signInWithEmailAndPassword } = window._fsModules;
+    const userCredential = await signInWithEmailAndPassword(_auth, email.trim(), password);
+    showToast("Signed in successfully!", "success");
+    return userCredential.user;
+  } catch (err) {
+    console.error("[SpendWise Cloud] Email sign-in error:", err);
+    let msg = err.message || "Failed to sign in";
+    if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found") {
+      msg = "Invalid email or password.";
+    } else if (err.code === "auth/too-many-requests") {
+      msg = "Too many attempts. Please try again later.";
+    }
+    updateCloudStatus("error", "Sign-in error: " + msg);
+    showToast(msg, "error");
+    throw new Error(msg);
+  }
+}
+
+async function cloudSignUpWithEmail(name, email, password) {
+  updateCloudStatus("signing-in", "Creating account…");
+  const ok = await initFirebase();
+  if (!ok) {
+    updateCloudStatus("error", "Firebase initialization failed.");
+    showToast("Firebase initialization failed.", "error");
+    throw new Error("Firebase initialization failed");
+  }
+
+  try {
+    const { createUserWithEmailAndPassword, updateProfile } = window._fsModules;
+    const userCredential = await createUserWithEmailAndPassword(_auth, email.trim(), password);
+    if (name && name.trim()) {
+      try {
+        await updateProfile(userCredential.user, { displayName: name.trim() });
+      } catch (profileErr) {
+        console.warn("[SpendWise Cloud] Update profile error:", profileErr);
+      }
+    }
+    showToast("Account created successfully!", "success");
+    return userCredential.user;
+  } catch (err) {
+    console.error("[SpendWise Cloud] Sign-up error:", err);
+    let msg = err.message || "Failed to sign up";
+    if (err.code === "auth/email-already-in-use") {
+      msg = "This email is already registered. Please sign in.";
+    } else if (err.code === "auth/weak-password") {
+      msg = "Password should be at least 6 characters.";
+    } else if (err.code === "auth/invalid-email") {
+      msg = "Please enter a valid email address.";
+    }
+    updateCloudStatus("error", "Sign-up error: " + msg);
+    showToast(msg, "error");
+    throw new Error(msg);
+  }
+}
+
+async function cloudResetPassword(email) {
+  const ok = await initFirebase();
+  if (!ok) {
+    showToast("Firebase initialization failed.", "error");
+    throw new Error("Firebase initialization failed");
+  }
+
+  try {
+    const { sendPasswordResetEmail } = window._fsModules;
+    await sendPasswordResetEmail(_auth, email.trim());
+    showToast("Password reset email sent! Check your inbox.", "success");
+    return true;
+  } catch (err) {
+    console.error("[SpendWise Cloud] Password reset error:", err);
+    let msg = err.message || "Failed to send reset email";
+    if (err.code === "auth/user-not-found") {
+      msg = "No account found with this email.";
+    }
+    showToast(msg, "error");
+    throw new Error(msg);
   }
 }
 
@@ -331,21 +428,12 @@ async function cloudSignOut() {
 
   _currentUser = null;
 
-  // Wipe isolated user storage keys and legacy keys on sign-out
-  if (oldUid) {
-    localStorage.removeItem(getUserStorageKey(oldUid));
-    localStorage.removeItem(getUserMigrationKey(oldUid));
-    localStorage.removeItem(getUserMetaKey(oldUid));
-  }
-  localStorage.removeItem("spendwise_v2");
-  localStorage.removeItem(MIGRATION_KEY);
-  localStorage.removeItem(CLOUD_META_KEY);
-
+  // Sign out cleanly without destroying guest local storage data!
   if (typeof setStorageUserUid === "function") {
     setStorageUserUid(null);
   }
 
-  // Reload empty app state and re-render UI
+  // Reload guest app state and re-render UI
   if (typeof loadState === "function") {
     loadState();
     if (typeof renderAll === "function") {
@@ -354,7 +442,7 @@ async function cloudSignOut() {
   }
 
   updateCloudUI();
-  showToast("Signed out from cloud backup. Local data cleared.", "info");
+  showToast("Signed out. Switched to offline guest mode.", "info");
 }
 
 // ─────────────────────────────────────────────────────
@@ -816,6 +904,94 @@ function updateCloudUI() {
   const userInfo = document.getElementById("cloudUserInfo");
   const cloudSection = document.getElementById("cloudSyncSection");
 
+  // Update Topbar and Sidebar Profile Elements
+  const topbarAvatar = document.getElementById("topbarAvatar");
+  const topbarSyncIcon = document.getElementById("topbarSyncIcon");
+  const sidebarProfileCard = document.getElementById("sidebarProfileCard");
+  const accountHeader = document.getElementById("accountProfileHeader");
+
+  const displayName = (_currentUser && (_currentUser.displayName || _currentUser.email.split("@")[0])) || "User";
+  const email = (_currentUser && _currentUser.email) || "";
+  const photoURL = (_currentUser && _currentUser.photoURL) || "";
+
+  // 1. Topbar Update
+  if (topbarAvatar) {
+    if (signedIn) {
+      if (photoURL) {
+        topbarAvatar.innerHTML = `<img src="${photoURL}" alt="${displayName}" class="user-avatar-img" />`;
+      } else {
+        const initial = displayName.charAt(0).toUpperCase();
+        topbarAvatar.innerHTML = `<div class="user-avatar-initial">${initial}</div>`;
+      }
+      topbarAvatar.title = `${displayName} (${email})`;
+    } else {
+      topbarAvatar.innerHTML = `<div class="user-avatar-guest" title="Guest Mode - Click to Sign In"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span class="guest-dot"></span></div>`;
+    }
+  }
+
+  // 2. Sidebar Profile Card Update
+  if (sidebarProfileCard) {
+    if (signedIn) {
+      const avatarHtml = photoURL
+        ? `<img src="${photoURL}" alt="${displayName}" class="sidebar-avatar-img" />`
+        : `<div class="sidebar-avatar-initial">${displayName.charAt(0).toUpperCase()}</div>`;
+      sidebarProfileCard.innerHTML = `
+        <div class="sidebar-user-info" onclick="navigateTo('cloud')">
+          ${avatarHtml}
+          <div class="sidebar-user-text">
+            <span class="sidebar-user-name">${displayName}</span>
+            <span class="sidebar-user-status" id="sidebarSyncStatus"><span class="sync-dot synced"></span> Synced</span>
+          </div>
+        </div>
+      `;
+    } else {
+      sidebarProfileCard.innerHTML = `
+        <div class="sidebar-guest-card" onclick="openAuthModal()">
+          <div class="sidebar-guest-badge">Guest</div>
+          <span class="sidebar-guest-msg">Sign in to back up</span>
+          <button class="sidebar-guest-btn" type="button">Sign In</button>
+        </div>
+      `;
+    }
+  }
+
+  // 3. Account Header in Cloud/Account Page
+  if (accountHeader) {
+    if (signedIn) {
+      const avatarHtml = photoURL
+        ? `<img src="${photoURL}" alt="${displayName}" class="acc-hero-avatar-img" />`
+        : `<div class="acc-hero-avatar-initial">${displayName.charAt(0).toUpperCase()}</div>`;
+      accountHeader.innerHTML = `
+        <div class="acc-hero-left">
+          ${avatarHtml}
+          <div class="acc-hero-info">
+            <h2 class="acc-hero-name">${displayName}</h2>
+            <p class="acc-hero-email">${email}</p>
+            <span class="acc-badge-cloud"><span class="pulse-dot"></span> Cloud Sync Active</span>
+          </div>
+        </div>
+        <button class="btn btn-danger-soft btn-acc-signout" onclick="cloudSignOut()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          Sign Out
+        </button>
+      `;
+    } else {
+      accountHeader.innerHTML = `
+        <div class="acc-guest-hero">
+          <div class="acc-guest-hero-info">
+            <div class="acc-guest-pill">Guest Mode</div>
+            <h2 class="acc-guest-title">Back up and sync your expenses</h2>
+            <p class="acc-guest-subtitle">Sign in free to sync across mobile, tablet, and desktop without losing offline freedom.</p>
+          </div>
+          <button class="btn btn-primary btn-hero-signin" onclick="openAuthModal()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+            Sign In / Register
+          </button>
+        </div>
+      `;
+    }
+  }
+
   if (!cloudSection) return;
 
   if (signedIn) {
@@ -824,7 +1000,7 @@ function updateCloudUI() {
     if (backupBtn) backupBtn.disabled = false;
     if (restoreBtn) restoreBtn.disabled = false;
     if (userInfo) {
-      userInfo.textContent = `Signed in as ${_currentUser.email}`;
+      userInfo.textContent = `Signed in as ${displayName} (${email})`;
       userInfo.style.display = "block";
     }
     const meta = getMeta();

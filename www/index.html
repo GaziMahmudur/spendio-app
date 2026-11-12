@@ -30,7 +30,7 @@
         rel="stylesheet"
       />
     </noscript>
-    <link rel="stylesheet" href="style.css?v=1794500300000" />
+    <link rel="stylesheet" href="style.css?v=1794500500000" />
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#6d28d9" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
@@ -106,8 +106,7 @@
           id="nav-cloud"
           onclick="navigateTo('cloud')"
         >
-          <span class="nav-icon">☁️</span
-          ><span class="nav-label">Cloud Backup</span>
+          <span class="nav-icon">👤</span><span class="nav-label">Account & Sync</span>
           <span class="nav-badge" id="cloudNavBadge" style="display: none"
             >●</span
           >
@@ -130,6 +129,14 @@
           ><span class="nav-label">Get Android App (v1.3)</span>
         </a>
       </nav>
+      <!-- Profile Card in Sidebar -->
+      <div class="sidebar-profile-wrap" id="sidebarProfileCard">
+        <div class="sidebar-guest-card" onclick="openAuthModal()">
+          <div class="sidebar-guest-badge">Guest</div>
+          <span class="sidebar-guest-msg">Sign in to back up</span>
+          <button class="sidebar-guest-btn" type="button">Sign In</button>
+        </div>
+      </div>
       <div class="sidebar-footer">
         <div class="sidebar-date" id="sidebarDate"></div>
       </div>
@@ -143,9 +150,17 @@
           <span></span><span></span><span></span>
         </button>
         <h1 class="topbar-title" id="topbarTitle">Dashboard</h1>
-        <button class="btn-add-topbar" onclick="openAddExpenseModal()">
-          + Add Expense
-        </button>
+        <div class="topbar-actions">
+          <button class="btn-add-topbar" onclick="openAddExpenseModal()">
+            + Add Expense
+          </button>
+          <div class="topbar-avatar-wrap" id="topbarAvatar" onclick="handleTopbarAvatarClick()">
+            <div class="user-avatar-guest" title="Guest Mode - Click to Sign In">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <span class="guest-dot"></span>
+            </div>
+          </div>
+        </div>
       </header>
 
       <!-- Pages -->
@@ -727,102 +742,119 @@
           </div>
         </section>
 
-        <!-- CLOUD PAGE -->
+        <!-- ACCOUNT & CLOUD SYNC PAGE -->
         <section class="page" id="page-cloud">
-          <div class="cloud-layout">
-            <!-- Cloud Backup Card -->
-            <div class="glass-card cloud-card" id="cloudSyncSection">
-              <div class="cloud-card-header">
-                <div class="cloud-icon-wrap">☁️</div>
-                <div>
-                  <h2 class="card-title" style="margin-bottom: 4px">
-                    Google Drive Cloud Backup
-                  </h2>
-                  <p class="export-desc">
-                    Securely backup and sync your data via Google Firestore.
-                  </p>
+          <div class="account-dashboard-wrap">
+            <!-- Account Hero Header -->
+            <div class="glass-card acc-hero-card" id="accountProfileHeader">
+              <div class="acc-guest-hero">
+                <div class="acc-guest-hero-info">
+                  <div class="acc-guest-pill">Guest Mode</div>
+                  <h2 class="acc-guest-title">Back up and sync your expenses</h2>
+                  <p class="acc-guest-subtitle">Sign in free to sync across mobile, tablet, and desktop without losing offline freedom.</p>
+                </div>
+                <button class="btn btn-primary btn-hero-signin" onclick="openAuthModal()">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+                  Sign In / Register
+                </button>
+              </div>
+            </div>
+
+            <!-- Two Column Layout -->
+            <div class="account-grid">
+              <!-- Left Column: Cloud Sync & Storage -->
+              <div class="account-col">
+                <div class="glass-card account-card" id="cloudSyncSection">
+                  <div class="card-header-with-icon">
+                    <div class="acc-icon-box">☁️</div>
+                    <div>
+                      <h3 class="acc-card-title">Cloud Backup & Realtime Sync</h3>
+                      <p class="acc-card-subtitle">Encrypted and private to your account via Google Firestore.</p>
+                    </div>
+                  </div>
+
+                  <!-- Quick Auth inside card for backward compatibility -->
+                  <div class="cloud-auth-section" style="margin-bottom: 16px;">
+                    <button class="btn btn-google" id="cloudSignInBtn" onclick="openAuthModal()">
+                      <svg width="18" height="18" viewBox="0 0 24 24">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                      </svg>
+                      Sign In with Google / Email
+                    </button>
+                    <button class="btn btn-signout" id="cloudSignOutBtn" onclick="cloudSignOut()" style="display: none">
+                      🚪 Sign Out
+                    </button>
+                    <div class="cloud-user-info" id="cloudUserInfo" style="display: none"></div>
+                  </div>
+
+                  <!-- Status Banner -->
+                  <div class="cloud-status-bar">
+                    <span class="cloud-status-msg" id="cloudStatusMsg">☁️ Sign in to enable cloud backup.</span>
+                  </div>
+
+                  <!-- Manual Actions -->
+                  <div class="cloud-actions" style="margin-top: 16px;">
+                    <button class="btn btn-cloud-action btn-backup-cloud" id="cloudBackupBtn" onclick="backupToCloud()" disabled>
+                      <span class="cloud-action-icon">⬆️</span>
+                      <div>
+                        <div class="cloud-action-title">Backup Now</div>
+                        <div class="cloud-action-desc">Push current changes to cloud</div>
+                      </div>
+                    </button>
+                    <button class="btn btn-cloud-action btn-restore-cloud" id="cloudRestoreBtn" onclick="restoreCloudBackup()" disabled>
+                      <span class="cloud-action-icon">⬇️</span>
+                      <div>
+                        <div class="cloud-action-title">Restore from Cloud</div>
+                        <div class="cloud-action-desc">Download & merge cloud data</div>
+                      </div>
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <!-- Auth -->
-              <div class="cloud-auth-section">
-                <button
-                  class="btn btn-google"
-                  id="cloudSignInBtn"
-                  onclick="cloudSignIn()"
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24">
-                    <path
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                      fill="#4285F4"
-                    />
-                    <path
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                      fill="#34A853"
-                    />
-                    <path
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                      fill="#FBBC05"
-                    />
-                    <path
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                      fill="#EA4335"
-                    />
-                  </svg>
-                  Sign in with Google
-                </button>
-                <button
-                  class="btn btn-signout"
-                  id="cloudSignOutBtn"
-                  onclick="cloudSignOut()"
-                  style="display: none"
-                >
-                  🚪 Sign Out
-                </button>
-                <div
-                  class="cloud-user-info"
-                  id="cloudUserInfo"
-                  style="display: none"
-                ></div>
-              </div>
-
-              <!-- Status -->
-              <div class="cloud-status-bar">
-                <span class="cloud-status-msg" id="cloudStatusMsg"
-                  >☁️ Sign in to enable cloud backup.</span
-                >
-              </div>
-
-              <!-- Actions -->
-              <div class="cloud-actions">
-                <button
-                  class="btn btn-cloud-action btn-backup-cloud"
-                  id="cloudBackupBtn"
-                  onclick="backupToCloud()"
-                  disabled
-                >
-                  <span class="cloud-action-icon">⬆️</span>
-                  <div>
-                    <div class="cloud-action-title">Backup Now</div>
-                    <div class="cloud-action-desc">
-                      Upload current data to cloud
+              <!-- Right Column: Security & Data Portability -->
+              <div class="account-col">
+                <!-- App Security & PIN Lock -->
+                <div class="glass-card account-card">
+                  <div class="card-header-with-icon">
+                    <div class="acc-icon-box">🔒</div>
+                    <div>
+                      <h3 class="acc-card-title">Privacy & App Lock</h3>
+                      <p class="acc-card-subtitle">Protect your financial records with a 4-digit PIN.</p>
                     </div>
                   </div>
-                </button>
-                <button
-                  class="btn btn-cloud-action btn-restore-cloud"
-                  id="cloudRestoreBtn"
-                  onclick="restoreCloudBackup()"
-                  disabled
-                >
-                  <span class="cloud-action-icon">⬇️</span>
-                  <div>
-                    <div class="cloud-action-title">Restore from Cloud</div>
-                    <div class="cloud-action-desc">
-                      Download & merge cloud data
+                  <div class="security-toggle-row">
+                    <div>
+                      <div class="security-title">4-Digit PIN Lock</div>
+                      <div class="security-desc" id="pinLockStatusText">PIN lock is currently disabled</div>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm" id="btnTogglePinLock" onclick="handlePinLockSetup()">
+                      Set Up PIN
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Data Export & Import -->
+                <div class="glass-card account-card">
+                  <div class="card-header-with-icon">
+                    <div class="acc-icon-box">📦</div>
+                    <div>
+                      <h3 class="acc-card-title">Data Backup & Export</h3>
+                      <p class="acc-card-subtitle">Export your data to JSON or Excel/CSV anytime.</p>
                     </div>
                   </div>
-                </button>
+                  <div class="acc-data-actions">
+                    <button class="btn btn-secondary" onclick="exportDataJSON()" style="flex:1;">
+                      📥 Export JSON
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportDataCSV()" style="flex:1;">
+                      📊 Export CSV
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1101,6 +1133,133 @@
           <button class="btn btn-primary" onclick="doCopy()">
             📋 Copy to Clipboard
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUTH MODAL (SPLIT DESKTOP & SLIDE-UP MOBILE SHEET) -->
+    <div class="modal-backdrop auth-modal-backdrop" id="authModal" onclick="handleAuthBackdrop(event)">
+      <div class="auth-modal-box" id="authModalBox">
+        <!-- Mobile Drag Bar -->
+        <div class="auth-sheet-handle"></div>
+
+        <!-- Left Brand / Benefits Panel (Desktop) -->
+        <div class="auth-brand-side">
+          <div class="auth-brand-top">
+            <div class="auth-logo-badge">
+              <img src="icons/logo-transparent.png" alt="Spendio" style="width:34px;height:34px;object-fit:contain;" />
+              <span class="auth-logo-name">Spendio</span>
+            </div>
+            <h2 class="auth-brand-heading">One account.<br>Every device synced.</h2>
+            <p class="auth-brand-sub">Works fully offline by default. Signing in seamlessly backs up your data to the cloud.</p>
+          </div>
+
+          <div class="auth-perks-list">
+            <div class="auth-perk-item">
+              <div class="auth-perk-icon">🔄</div>
+              <div>
+                <div class="auth-perk-title">Sync Everywhere</div>
+                <div class="auth-perk-desc">Access expenses on Phone, Tablet, and Desktop.</div>
+              </div>
+            </div>
+            <div class="auth-perk-item">
+              <div class="auth-perk-icon">⚡</div>
+              <div>
+                <div class="auth-perk-title">100% Offline-First</div>
+                <div class="auth-perk-desc">Log your spending anywhere without internet.</div>
+              </div>
+            </div>
+            <div class="auth-perk-item">
+              <div class="auth-perk-icon">🔒</div>
+              <div>
+                <div class="auth-perk-title">Private & Secure</div>
+                <div class="auth-perk-desc">Encrypted and linked safely to your account.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="auth-brand-footer">
+            <span>Spendio Cloud · Free Tier Spark Plan</span>
+          </div>
+        </div>
+
+        <!-- Right Form Panel -->
+        <div class="auth-form-side">
+          <button class="modal-close auth-close-btn" aria-label="Close auth dialog" onclick="closeAuthModal()">✕</button>
+
+          <div class="auth-header">
+            <h3 class="auth-form-title" id="authFormTitle">Sign In to Spendio</h3>
+            <p class="auth-form-subtitle" id="authFormSubtitle">Sync your expenses across all devices</p>
+          </div>
+
+          <!-- Auth Mode Tabs (Sign In / Register) -->
+          <div class="auth-tab-pill">
+            <button type="button" class="auth-tab-btn active" id="authTabSignIn" onclick="setAuthTab('signin')">Sign In</button>
+            <button type="button" class="auth-tab-btn" id="authTabSignUp" onclick="setAuthTab('signup')">Create Account</button>
+          </div>
+
+          <!-- Google 1-Tap Button -->
+          <button type="button" class="btn btn-google btn-auth-google" id="btnAuthGoogle" onclick="handleAuthGoogle()">
+            <svg width="20" height="20" viewBox="0 0 24 24">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            <span id="authGoogleBtnText">Continue with Google</span>
+          </button>
+
+          <!-- Divider -->
+          <div class="auth-divider">
+            <span>or with email</span>
+          </div>
+
+          <!-- Email / Password Form -->
+          <form id="authEmailForm" onsubmit="handleAuthSubmit(event)">
+            <!-- Name Field (Register only) -->
+            <div class="form-group" id="authNameGroup" style="display: none;">
+              <label class="form-label" for="authNameInput">Your Name</label>
+              <input type="text" class="form-input" id="authNameInput" placeholder="Mahmudur Rahman" />
+            </div>
+
+            <!-- Email Field -->
+            <div class="form-group">
+              <label class="form-label" for="authEmailInput">Email Address</label>
+              <input type="email" class="form-input" id="authEmailInput" placeholder="name@example.com" required autocomplete="email" />
+            </div>
+
+            <!-- Password Field -->
+            <div class="form-group">
+              <div class="form-label-row">
+                <label class="form-label" for="authPasswordInput">Password</label>
+                <a href="#" class="auth-forgot-link" id="authForgotLink" onclick="handleAuthForgotPassword(event)">Forgot?</a>
+              </div>
+              <div class="password-input-wrap">
+                <input type="password" class="form-input" id="authPasswordInput" placeholder="••••••••" required minlength="6" autocomplete="current-password" />
+                <button type="button" class="btn-toggle-eye" aria-label="Toggle password visibility" onclick="togglePasswordVisibility('authPasswordInput')">
+                  👁️
+                </button>
+              </div>
+            </div>
+
+            <!-- Error Message Banner -->
+            <div class="auth-error-msg" id="authErrorMsg" style="display: none;"></div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary btn-auth-submit" id="btnAuthSubmit">
+              <span id="btnAuthSubmitText">Sign In</span>
+            </button>
+          </form>
+
+          <!-- Guest Switch & Privacy Note -->
+          <div class="auth-footer-links">
+            <button type="button" class="auth-guest-link" onclick="closeAuthModal()">
+              Continue as Guest (No sync)
+            </button>
+            <div class="auth-privacy-note">
+              🔒 Encrypted and private to your account.
+            </div>
+          </div>
         </div>
       </div>
     </div>

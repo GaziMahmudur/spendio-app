@@ -3492,3 +3492,158 @@ function addMoreToSavings(code, name) {
   if (descEl) descEl.value = name || code;
   if (codeEl) codeEl.value = code;
 }
+
+
+// ── AUTH MODAL & PROFILE CONTROLLER ─────────────────────
+let currentAuthTab = "signin";
+
+function handleTopbarAvatarClick() {
+  if (typeof _currentUser !== "undefined" && _currentUser) {
+    navigateTo("cloud");
+  } else {
+    openAuthModal();
+  }
+}
+
+function openAuthModal() {
+  const modal = document.getElementById("authModal");
+  if (!modal) return;
+  modal.classList.add("open");
+  setAuthTab("signin");
+  const errEl = document.getElementById("authErrorMsg");
+  if (errEl) errEl.style.display = "none";
+}
+
+function closeAuthModal() {
+  const modal = document.getElementById("authModal");
+  if (modal) modal.classList.remove("open");
+}
+
+function handleAuthBackdrop(event) {
+  if (event.target && event.target.id === "authModal") {
+    closeAuthModal();
+  }
+}
+
+function setAuthTab(tab) {
+  currentAuthTab = tab;
+  const btnIn = document.getElementById("authTabSignIn");
+  const btnUp = document.getElementById("authTabSignUp");
+  const title = document.getElementById("authFormTitle");
+  const subtitle = document.getElementById("authFormSubtitle");
+  const nameGroup = document.getElementById("authNameGroup");
+  const forgotLink = document.getElementById("authForgotLink");
+  const submitText = document.getElementById("btnAuthSubmitText");
+  const errEl = document.getElementById("authErrorMsg");
+  if (errEl) errEl.style.display = "none";
+
+  if (tab === "signin") {
+    if (btnIn) btnIn.classList.add("active");
+    if (btnUp) btnUp.classList.remove("active");
+    if (title) title.textContent = "Sign In to Spendio";
+    if (subtitle) subtitle.textContent = "Sync your expenses across all devices";
+    if (nameGroup) nameGroup.style.display = "none";
+    if (forgotLink) forgotLink.style.display = "block";
+    if (submitText) submitText.textContent = "Sign In";
+  } else {
+    if (btnIn) btnIn.classList.remove("active");
+    if (btnUp) btnUp.classList.add("active");
+    if (title) title.textContent = "Create an Account";
+    if (subtitle) subtitle.textContent = "Free forever · Cloud sync & automatic backup";
+    if (nameGroup) nameGroup.style.display = "block";
+    if (forgotLink) forgotLink.style.display = "none";
+    if (submitText) submitText.textContent = "Create Account";
+  }
+}
+
+function togglePasswordVisibility(inputId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  input.type = input.type === "password" ? "text" : "password";
+}
+
+async function handleAuthGoogle() {
+  const btnText = document.getElementById("authGoogleBtnText");
+  const orig = btnText ? btnText.textContent : "Continue with Google";
+  try {
+    if (btnText) btnText.textContent = "Connecting to Google…";
+    if (typeof cloudSignIn === "function") {
+      await cloudSignIn();
+      closeAuthModal();
+    }
+  } catch (err) {
+    console.error(err);
+    const errEl = document.getElementById("authErrorMsg");
+    if (errEl) {
+      errEl.textContent = err.message || "Failed to sign in with Google.";
+      errEl.style.display = "block";
+    }
+  } finally {
+    if (btnText) btnText.textContent = orig;
+  }
+}
+
+async function handleAuthSubmit(event) {
+  event.preventDefault();
+  const email = document.getElementById("authEmailInput")?.value || "";
+  const password = document.getElementById("authPasswordInput")?.value || "";
+  const name = document.getElementById("authNameInput")?.value || "";
+  const submitBtn = document.getElementById("btnAuthSubmit");
+  const submitText = document.getElementById("btnAuthSubmitText");
+  const errEl = document.getElementById("authErrorMsg");
+  if (errEl) errEl.style.display = "none";
+
+  if (!email || !password) return;
+
+  const origText = submitText ? submitText.textContent : "Submit";
+  if (submitBtn) submitBtn.disabled = true;
+  if (submitText) submitText.textContent = "Please wait…";
+
+  try {
+    if (currentAuthTab === "signin") {
+      if (typeof cloudSignInWithEmail === "function") {
+        await cloudSignInWithEmail(email, password);
+        closeAuthModal();
+      }
+    } else {
+      if (typeof cloudSignUpWithEmail === "function") {
+        await cloudSignUpWithEmail(name, email, password);
+        closeAuthModal();
+      }
+    }
+  } catch (err) {
+    if (errEl) {
+      errEl.textContent = err.message || "Authentication failed.";
+      errEl.style.display = "block";
+    }
+  } finally {
+    if (submitBtn) submitBtn.disabled = false;
+    if (submitText) submitText.textContent = origText;
+  }
+}
+
+async function handleAuthForgotPassword(event) {
+  event.preventDefault();
+  const email = document.getElementById("authEmailInput")?.value || "";
+  if (!email) {
+    showToast("Please enter your email address first.", "warning");
+    document.getElementById("authEmailInput")?.focus();
+    return;
+  }
+
+  try {
+    if (typeof cloudResetPassword === "function") {
+      await cloudResetPassword(email);
+    }
+  } catch (err) {
+    const errEl = document.getElementById("authErrorMsg");
+    if (errEl) {
+      errEl.textContent = err.message || "Failed to send reset email.";
+      errEl.style.display = "block";
+    }
+  }
+}
+
+function handlePinLockSetup() {
+  showToast("PIN Lock security will be available in the next security update!", "info");
+}
