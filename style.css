@@ -5180,10 +5180,11 @@ body.modal-open {
 /* Ensure all modals fit well when mobile keyboard opens */
 @media (max-width: 600px) {
   .modal-backdrop {
-    padding: 16px 12px calc(24px + env(safe-area-inset-bottom, 0px));
+    padding: 16px 12px calc(80px + env(safe-area-inset-bottom, 0px));
+    align-items: flex-start;
   }
   .modal-box {
-    max-height: calc(100dvh - 32px);
+    margin: 0 auto;
     overflow: visible;
   }
 }
