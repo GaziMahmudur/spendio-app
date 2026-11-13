@@ -895,6 +895,35 @@ async function restoreCloudBackup() {
 }
 
 // ─────────────────────────────────────────────────────
+// AVATAR & USER PROFILE HELPERS
+// ─────────────────────────────────────────────────────
+const DEFAULT_AVATAR_DATA_URI = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%236366f1'/%3E%3Cstop offset='100%25' stop-color='%234f46e5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='50' fill='url(%23g)'/%3E%3Ccircle cx='50' cy='38' r='16' fill='%23ffffff' opacity='0.95'/%3E%3Cpath d='M22 84 C22 68 34 58 50 58 C66 58 78 68 78 84 Z' fill='%23ffffff' opacity='0.95'/%3E%3C/svg%3E";
+
+function getEffectiveUserPhoto(user) {
+  if (!user) return "";
+  if (user.photoURL && typeof user.photoURL === "string" && user.photoURL.trim()) {
+    return user.photoURL.trim();
+  }
+  if (Array.isArray(user.providerData)) {
+    for (const p of user.providerData) {
+      if (p && p.photoURL && typeof p.photoURL === "string" && p.photoURL.trim()) {
+        return p.photoURL.trim();
+      }
+    }
+  }
+  return "";
+}
+
+function renderUserAvatar(user, sizeClass = "user-avatar-img") {
+  const photo = getEffectiveUserPhoto(user);
+  const name = (user && (user.displayName || (user.email ? user.email.split("@")[0] : ""))) || "User";
+  if (photo) {
+    return `<img src="${photo}" alt="${name}" class="${sizeClass}" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${DEFAULT_AVATAR_DATA_URI}';" />`;
+  }
+  return `<img src="${DEFAULT_AVATAR_DATA_URI}" alt="${name}" class="${sizeClass}" />`;
+}
+
+// ─────────────────────────────────────────────────────
 // UI HELPERS
 // ─────────────────────────────────────────────────────
 function updateCloudUI() {
@@ -912,17 +941,11 @@ function updateCloudUI() {
 
   const displayName = (_currentUser && (_currentUser.displayName || _currentUser.email.split("@")[0])) || "User";
   const email = (_currentUser && _currentUser.email) || "";
-  const photoURL = (_currentUser && _currentUser.photoURL) || "";
 
   // 1. Topbar Update
   if (topbarAvatar) {
     if (signedIn) {
-      if (photoURL) {
-        topbarAvatar.innerHTML = `<img src="${photoURL}" alt="${displayName}" class="user-avatar-img" />`;
-      } else {
-        const initial = displayName.charAt(0).toUpperCase();
-        topbarAvatar.innerHTML = `<div class="user-avatar-initial">${initial}</div>`;
-      }
+      topbarAvatar.innerHTML = renderUserAvatar(_currentUser, "user-avatar-img");
       topbarAvatar.title = `${displayName} (${email})`;
     } else {
       topbarAvatar.innerHTML = `<div class="user-avatar-guest" title="Guest Mode - Click to Sign In"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span class="guest-dot"></span></div>`;
@@ -932,9 +955,7 @@ function updateCloudUI() {
   // 2. Sidebar Profile Card Update
   if (sidebarProfileCard) {
     if (signedIn) {
-      const avatarHtml = photoURL
-        ? `<img src="${photoURL}" alt="${displayName}" class="sidebar-avatar-img" />`
-        : `<div class="sidebar-avatar-initial">${displayName.charAt(0).toUpperCase()}</div>`;
+      const avatarHtml = renderUserAvatar(_currentUser, "sidebar-avatar-img");
       sidebarProfileCard.innerHTML = `
         <div class="sidebar-user-info" onclick="navigateTo('cloud')">
           ${avatarHtml}
@@ -958,9 +979,7 @@ function updateCloudUI() {
   // 3. Account Header in Cloud/Account Page
   if (accountHeader) {
     if (signedIn) {
-      const avatarHtml = photoURL
-        ? `<img src="${photoURL}" alt="${displayName}" class="acc-hero-avatar-img" />`
-        : `<div class="acc-hero-avatar-initial">${displayName.charAt(0).toUpperCase()}</div>`;
+      const avatarHtml = renderUserAvatar(_currentUser, "acc-hero-avatar-img");
       accountHeader.innerHTML = `
         <div class="acc-hero-wrapper">
           <div class="acc-hero-left">
