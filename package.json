@@ -1,6 +1,6 @@
 {
-  "name": "expenses",
-  "version": "1.0.0",
+  "name": "spendio",
+  "version": "1.4.0",
   "description": "Spendio is a clean, modern, and completely local-first expense tracking application designed with a beautiful Apple iOS aesthetics.",
   "main": "app.js",
   "scripts": {
