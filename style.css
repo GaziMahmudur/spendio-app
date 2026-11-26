@@ -5154,5 +5154,22 @@ body.modal-open {
     margin: 0 auto;
     overflow: visible;
   }
+
+  /* Compact popup dialogs (e.g. Confirm Delete, Restore, Signout, Import Result) should stay vertically centered on screen */
+  .modal-backdrop:has(.confirm-box),
+  .modal-backdrop:has(#importResultModal .modal-box),
+  #confirmModal,
+  #importResultModal {
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 16px 20px !important;
+  }
+  #confirmModal .modal-box,
+  #importResultModal .modal-box,
+  .confirm-box {
+    margin: auto !important;
+    max-width: 360px !important;
+    width: 100% !important;
+  }
 }
 
