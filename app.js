@@ -759,11 +759,6 @@ let qcatSelectedColor = PRESET_COLORS[0];
 
 // ── INIT ───────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
-  // Detect Windows OS and activate crisp vector icon set for Windows desktop
-  const isWindows = /Windows|Win32|Win64/i.test(navigator.userAgent || navigator.platform || "");
-  if (isWindows) {
-    document.documentElement.classList.add("is-windows");
-  }
   if (typeof lucide !== "undefined" && lucide.createIcons) {
     lucide.createIcons();
   }

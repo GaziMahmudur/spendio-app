@@ -3934,50 +3934,6 @@ button:active,
 
 
 /* ══════════════════════════════════════════════════════
-   WINDOWS OS VECTOR ICON ENHANCEMENT
-══════════════════════════════════════════════════════ */
-/* Default: Hide vector SVG on iOS, macOS, Android (keep native emoji) */
-.win-icon {
-  display: none !important;
-}
-
-.native-emoji {
-  display: inline-block;
-}
-
-/* On Windows OS (or fallback when flagged): Display Lucide SVG vector icons */
-html.is-windows .win-icon {
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-  stroke-width: 2.2px;
-}
-
-html.is-windows .native-emoji {
-  display: none !important;
-}
-
-/* Size and align vector icons */
-html.is-windows .nav-icon .win-icon {
-  width: 19px;
-  height: 19px;
-  stroke: currentColor;
-  vertical-align: middle;
-}
-
-html.is-windows .logo-icon .win-icon {
-  width: 20px;
-  height: 20px;
-  stroke: #ffffff;
-}
-
-html.is-windows #sidebarWalletBox .win-icon {
-  width: 16px;
-  height: 16px;
-  stroke: var(--primary);
-}
-
-/* ══════════════════════════════════════════════════════
    MOBILE OVERRIDES (Ensured at very bottom of stylesheet)
 ══════════════════════════════════════════════════════ */
 @media (max-width: 600px) {
