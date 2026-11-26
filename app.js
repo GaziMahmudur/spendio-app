@@ -3473,7 +3473,7 @@ function renderSavingsPage() {
 
   grid.innerHTML = cards.map(c => {
     return `
-      <div class="savings-card" style="position:relative; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-sm); transition: all 0.2s ease;">
+      <div class="savings-card" style="position:relative; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-sm); transition: all 0.2s ease; display:flex; flex-direction:column;">
         <div class="savings-card-top" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 14px;">
           <div>
             <span style="display:inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.8px; padding: 3px 8px; border-radius: 4px; background: rgba(16,185,129,0.12); color: var(--green); margin-bottom: 6px;">
@@ -3490,18 +3490,30 @@ function renderSavingsPage() {
           ${fmtAmount(c.totalSaved)}
         </div>
 
-        <div style="display:flex; justify-content:space-between; align-items:center; border-top: 1px solid var(--border); padding-top: 12px; margin-top: auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-top: 1px solid var(--border); padding-top: 14px; margin-top: auto; gap: 8px; flex-wrap: wrap;">
           <span style="font-size: 12px; color: var(--text-muted);">
-            Last saved: ${fmtDate(c.lastDate)}
+            Last: ${fmtDate(c.lastDate)}
           </span>
-          <button
-            type="button"
-            class="btn btn-secondary"
-            onclick="addMoreToSavings('${escHtml(c.code)}', '${escHtml(c.name)}')"
-            style="width:auto; padding: 5px 12px; font-size: 12px; font-weight: 600; border-radius: var(--radius-pill); background: rgba(16,185,129,0.08); color: var(--green); border-color: rgba(16,185,129,0.3);"
-          >
-            ＋ Add More
-          </button>
+          <div style="display:flex; gap: 6px; align-items:center;">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="addMoreToSavings('${escHtml(c.code)}', '${escHtml(c.name)}')"
+              style="width:auto; padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: var(--radius-pill); background: rgba(16,185,129,0.08); color: var(--green); border-color: rgba(16,185,129,0.3);"
+              title="Add more money to this card"
+            >
+              ＋ Add More
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              onclick="openSpendSavingsModal('${escHtml(c.code)}', ${c.totalSaved}, '${escHtml(c.name)}')"
+              style="width:auto; padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: var(--radius-pill); background: #3b82f6 !important; border-color: #3b82f6 !important; color: #fff;"
+              title="Spend funds and complete this goal"
+            >
+              🎉 Spend Goal
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -3515,6 +3527,136 @@ function addMoreToSavings(code, name) {
   const codeEl = document.getElementById("expSavingsCode");
   if (descEl) descEl.value = name || code;
   if (codeEl) codeEl.value = code;
+}
+
+// ── SPEND & COMPLETE SAVINGS MODAL CONTROLLER ─────────────
+let _activeSpendSavingsData = null;
+
+function openSpendSavingsModal(code, totalSaved, name) {
+  _activeSpendSavingsData = { code, totalSaved, name };
+  
+  const codeInput = document.getElementById("spendSavingsCode");
+  const totalSavedEl = document.getElementById("spendSavingsTotalSaved");
+  const actualAmountInput = document.getElementById("spendActualAmount");
+  const descInput = document.getElementById("spendExpenseDesc");
+  const catSelect = document.getElementById("spendCategorySelect");
+  const titleEl = document.getElementById("spendSavingsModalTitle");
+
+  if (codeInput) codeInput.value = code;
+  if (totalSavedEl) totalSavedEl.textContent = fmtAmount(totalSaved);
+  if (actualAmountInput) {
+    actualAmountInput.value = totalSaved;
+    actualAmountInput.max = totalSaved * 2;
+  }
+  if (descInput) descInput.value = name || `Completed ${code}`;
+  if (titleEl) titleEl.textContent = `🎉 Spend Goal: ${code}`;
+
+  // Populate categories excluding savings category
+  if (catSelect) {
+    const regularCats = (state.categories || []).filter(c => c.id !== "cat_savings" && c.name.toLowerCase() !== "savings");
+    catSelect.innerHTML = regularCats.map(c => `<option value="${c.id}">${c.icon || "🏷️"} ${escHtml(c.name)}</option>`).join("");
+  }
+
+  updateSpendSurplusPreview();
+  const modal = document.getElementById("spendSavingsModal");
+  if (modal) modal.classList.add("open");
+}
+
+function closeSpendSavingsModal() {
+  const modal = document.getElementById("spendSavingsModal");
+  if (modal) modal.classList.remove("open");
+  _activeSpendSavingsData = null;
+}
+
+function handleSpendSavingsBackdrop(event) {
+  if (event.target.id === "spendSavingsModal") {
+    closeSpendSavingsModal();
+  }
+}
+
+function updateSpendSurplusPreview() {
+  if (!_activeSpendSavingsData) return;
+  const actualInput = document.getElementById("spendActualAmount");
+  const previewEl = document.getElementById("spendSurplusPreview");
+  if (!actualInput || !previewEl) return;
+
+  const actual = parseFloat(actualInput.value) || 0;
+  const totalSaved = _activeSpendSavingsData.totalSaved;
+  const diff = totalSaved - actual;
+
+  if (diff > 0) {
+    previewEl.style.display = "block";
+    previewEl.style.background = "rgba(16, 185, 129, 0.1)";
+    previewEl.style.border = "1px solid rgba(16, 185, 129, 0.25)";
+    previewEl.style.color = "var(--green)";
+    previewEl.innerHTML = `✨ <b>Extra Saved: ${fmtAmount(diff)}!</b> This unspent amount will be refunded directly to your Current Balance.`;
+  } else if (diff < 0) {
+    previewEl.style.display = "block";
+    previewEl.style.background = "rgba(239, 68, 68, 0.1)";
+    previewEl.style.border = "1px solid rgba(239, 68, 68, 0.25)";
+    previewEl.style.color = "var(--red)";
+    previewEl.innerHTML = `⚠️ <b>Budget Exceeded by ${fmtAmount(Math.abs(diff))}.</b> The additional amount will be deducted from your Current Balance.`;
+  } else {
+    previewEl.style.display = "block";
+    previewEl.style.background = "rgba(59, 130, 246, 0.1)";
+    previewEl.style.border = "1px solid rgba(59, 130, 246, 0.25)";
+    previewEl.style.color = "#3b82f6";
+    previewEl.innerHTML = `🎯 <b>Exact Match!</b> All ${fmtAmount(totalSaved)} will be recorded as actual expense.`;
+  }
+}
+
+function handleSpendSavingsSubmit(event) {
+  event.preventDefault();
+  if (!_activeSpendSavingsData) return;
+
+  const code = _activeSpendSavingsData.code;
+  const totalSaved = _activeSpendSavingsData.totalSaved;
+  const actualAmount = parseFloat(document.getElementById("spendActualAmount").value) || 0;
+  const catId = document.getElementById("spendCategorySelect").value;
+  const desc = document.getElementById("spendExpenseDesc").value.trim() || `Spent for ${code}`;
+
+  if (actualAmount < 0) {
+    showToast("Please enter a valid amount.", "error");
+    return;
+  }
+
+  // 1. Remove/Retire all deposits for this savings code from state.expenses
+  const targetCode = code.toUpperCase();
+  state.expenses = (state.expenses || []).filter(e => {
+    const cat = state.categories.find(c => c.id === e.categoryId);
+    const isSavings = cat && (cat.id === "cat_savings" || cat.name.toLowerCase() === "savings");
+    const eCode = (e.savingsCode || (isSavings ? e.desc : "") || "").trim().toUpperCase();
+    return eCode !== targetCode;
+  });
+
+  // 2. Add the actual real expense transaction
+  if (actualAmount > 0) {
+    state.expenses.push({
+      id: "exp_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      amount: actualAmount,
+      categoryId: catId,
+      date: today(),
+      desc: desc + ` [From Savings: ${code}]`,
+      savingsGoalSpent: code
+    });
+  }
+
+  saveState();
+  renderAll();
+
+  // If auto-sync is active, push to cloud
+  if (typeof triggerAutoPush === "function") {
+    triggerAutoPush();
+  }
+
+  const unspent = totalSaved - actualAmount;
+  closeSpendSavingsModal();
+
+  if (unspent > 0) {
+    showToast(`Goal Completed! Spent ${fmtAmount(actualAmount)}, and ${fmtAmount(unspent)} returned to your Balance!`, "success");
+  } else {
+    showToast(`Goal Completed! Recorded expense of ${fmtAmount(actualAmount)}.`, "success");
+  }
 }
 
 

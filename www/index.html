@@ -1068,6 +1068,74 @@
       </div>
     </div>
 
+    <!-- SPEND / COMPLETE SAVINGS MODAL -->
+    <div
+      class="modal-backdrop"
+      id="spendSavingsModal"
+      onclick="handleSpendSavingsBackdrop(event)"
+    >
+      <div class="modal-box" style="max-width: 440px;">
+        <div class="modal-header">
+          <h2 class="modal-title" id="spendSavingsModalTitle">🎉 Spend & Complete Goal</h2>
+          <button class="modal-close" aria-label="Close modal" onclick="closeSpendSavingsModal()">✕</button>
+        </div>
+        <form id="spendSavingsForm" onsubmit="handleSpendSavingsSubmit(event)">
+          <input type="hidden" id="spendSavingsCode" />
+          
+          <div style="background: var(--bg-hover); padding: 14px 16px; border-radius: var(--radius-sm); margin-bottom: 16px; border: 1px solid var(--border);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <span style="font-size: 13px; color: var(--text-muted);">Total Saved in Card:</span>
+              <strong id="spendSavingsTotalSaved" style="font-size: 16px; color: var(--green);">0.00 taka</strong>
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+              Any unspent amount will be automatically returned to your Current Balance.
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" for="spendActualAmount">Actual Amount Spent (taka) <span class="required">*</span></label>
+            <input
+              type="number"
+              class="form-input"
+              id="spendActualAmount"
+              step="0.01"
+              min="0"
+              required
+              placeholder="0.00"
+              oninput="updateSpendSurplusPreview()"
+            />
+          </div>
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" for="spendCategorySelect">Expense Category <span class="required">*</span></label>
+            <select class="form-select" id="spendCategorySelect" required>
+              <!-- Categories populated dynamically -->
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" for="spendExpenseDesc">Expense Description</label>
+            <input
+              type="text"
+              class="form-input"
+              id="spendExpenseDesc"
+              placeholder="e.g. Bought Bicycle"
+              maxlength="80"
+            />
+          </div>
+
+          <div id="spendSurplusPreview" style="display:none; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 12.5px; font-weight: 600; margin-bottom: 16px;"></div>
+
+          <div class="modal-actions" style="margin-top: 18px;">
+            <button type="button" class="btn btn-secondary" onclick="closeSpendSavingsModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="spendSavingsSubmitBtn" style="background: var(--green) !important; border-color: var(--green) !important;">
+              Confirm & Complete
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- COPY AS TEXT MODAL -->
     <div
       class="copy-preview-modal"
