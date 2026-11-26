@@ -4616,7 +4616,7 @@ body.modal-open {
   width: 100vw;
   height: 100vh;
   height: 100dvh;
-  background: #fbfbfd;
+  background: #ffffff;
   z-index: 9999;
   display: none;
   overflow-y: auto;
@@ -4924,12 +4924,6 @@ body.modal-open {
   object-fit: contain;
   object-position: right center;
   filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.06));
-  animation: floatArt 6s ease-in-out infinite alternate;
-}
-
-@keyframes floatArt {
-  0% { transform: translateY(0px) rotate(0deg); }
-  100% { transform: translateY(-10px) rotate(0.5deg); }
 }
 
 .auth-error-msg {
