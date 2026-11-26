@@ -3414,7 +3414,10 @@ function getSavingsCardsData() {
   const cardsMap = {};
 
   // Group all expenses with category 'cat_savings' or with a savingsCode
+  // NOTE: Exclude completed goal expenses (e.savingsGoalSpent) so they don't recreate active cards!
   (state.expenses || []).forEach(e => {
+    if (e.savingsGoalSpent) return; // Completed goal expense, not an active deposit!
+
     const cat = state.categories.find(c => c.id === e.categoryId);
     const isSavingsCat = cat && (cat.id === "cat_savings" || cat.name.toLowerCase() === "savings");
     if (!isSavingsCat && !e.savingsCode) return;
@@ -3448,15 +3451,16 @@ function renderSavingsPage() {
   const totalBadge = document.getElementById("savingsTotalBadge");
 
   const cards = getSavingsCardsData();
+  const completedGoals = state.completedSavingsGoals || [];
   const totalSavedAll = cards.reduce((s, c) => s + c.totalSaved, 0);
 
   if (totalBadge) {
-    totalBadge.textContent = `Total Saved: ${fmtAmount(totalSavedAll)}`;
+    totalBadge.textContent = `Active Saved: ${fmtAmount(totalSavedAll)}`;
   }
 
   if (!grid) return;
 
-  if (cards.length === 0) {
+  if (cards.length === 0 && completedGoals.length === 0) {
     grid.innerHTML = `
       <div class="empty-state" style="grid-column: 1 / -1; padding: 48px 24px;">
         <div class="empty-icon" style="font-size: 48px; margin-bottom: 12px;">💰</div>
@@ -3471,17 +3475,20 @@ function renderSavingsPage() {
     return;
   }
 
-  grid.innerHTML = cards.map(c => {
+  let html = "";
+
+  // Render active savings cards
+  html += cards.map(c => {
     return `
-      <div class="savings-card" style="position:relative; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-sm); transition: all 0.2s ease; display:flex; flex-direction:column;">
-        <div class="savings-card-top" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 14px;">
-          <div>
-            <span style="display:inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.8px; padding: 3px 8px; border-radius: 4px; background: rgba(16,185,129,0.12); color: var(--green); margin-bottom: 6px;">
+      <div class="savings-card" style="position:relative; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-sm); transition: all 0.2s ease; display:flex; flex-direction:column; overflow:hidden; min-width:0;">
+        <div class="savings-card-top" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 14px; gap:10px;">
+          <div style="min-width:0; flex:1;">
+            <span style="display:inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.8px; padding: 3px 8px; border-radius: 4px; background: rgba(16,185,129,0.12); color: var(--green); margin-bottom: 6px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; word-break: break-all;">
               CODE: ${escHtml(c.code)}
             </span>
-            <h4 class="savings-card-title" style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin:0;" title="${escHtml(c.name)}">${escHtml(c.name)}</h4>
+            <h4 class="savings-card-title" style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin:0; word-break: break-word; overflow-wrap: anywhere;" title="${escHtml(c.name)}">${escHtml(c.name)}</h4>
           </div>
-          <span class="savings-card-badge" style="font-size: 11px; font-weight: 700; color: var(--green); background: rgba(16,185,129,0.1); padding: 4px 8px; border-radius: var(--radius-pill);">
+          <span class="savings-card-badge" style="font-size: 11px; font-weight: 700; color: var(--green); background: rgba(16,185,129,0.1); padding: 4px 8px; border-radius: var(--radius-pill); white-space: nowrap; flex-shrink: 0;">
             ${c.entriesCount} deposit${c.entriesCount !== 1 ? 's' : ''}
           </span>
         </div>
@@ -3518,6 +3525,48 @@ function renderSavingsPage() {
       </div>
     `;
   }).join("");
+
+  // Render completed savings goal history cards
+  if (completedGoals.length > 0) {
+    html += completedGoals.map((cg, idx) => {
+      const surplusHtml = cg.surplus > 0
+        ? `<div style="font-size:12px; color:var(--green); font-weight:700; background:rgba(16,185,129,0.1); padding:4px 8px; border-radius:6px; margin-top:4px;">✨ +${fmtAmount(cg.surplus)} returned to Wallet</div>`
+        : "";
+      return `
+        <div class="savings-card completed-goal-card" style="position:relative; background: var(--bg-surface); border: 1px solid rgba(16,185,129,0.35); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-sm); display:flex; flex-direction:column; overflow:hidden; min-width:0; background: linear-gradient(180deg, rgba(16,185,129,0.04) 0%, var(--bg-surface) 100%);">
+          <div class="savings-card-top" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 12px; gap:10px;">
+            <div style="min-width:0; flex:1;">
+              <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px; flex-wrap:wrap;">
+                <span style="display:inline-block; font-size: 10px; font-weight: 800; letter-spacing: 0.5px; padding: 2px 7px; border-radius: 4px; background: rgba(16,185,129,0.18); color: #059669;">
+                  CODE: ${escHtml(cg.code)}
+                </span>
+                <span style="display:inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: var(--radius-pill); background: #10b981; color:#fff;">
+                  ✅ Goal Achieved
+                </span>
+              </div>
+              <h4 class="savings-card-title" style="font-size: 17px; font-weight: 700; color: var(--text-primary); margin:0; word-break: break-word; overflow-wrap: anywhere;">${escHtml(cg.name)}</h4>
+            </div>
+            <button type="button" onclick="deleteCompletedSavingsGoal(${idx})" title="Remove history card" style="background:none; border:none; cursor:pointer; font-size:14px; opacity:0.6; padding:2px;" aria-label="Delete history">✖</button>
+          </div>
+
+          <div style="margin: 8px 0 14px 0;">
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 2px;">Actual Spent:</div>
+            <div style="font-size: 24px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.5px;">
+              ${fmtAmount(cg.actualSpent)}
+            </div>
+            ${surplusHtml}
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top: 1px dashed var(--border); padding-top: 12px; margin-top: auto; font-size: 11.5px; color: var(--text-muted);">
+            <span>Saved: <b>${fmtAmount(cg.totalSaved)}</b></span>
+            <span>Completed: ${fmtDate(cg.date)}</span>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  grid.innerHTML = html;
 }
 
 function addMoreToSavings(code, name) {
@@ -3636,6 +3685,19 @@ function handleSpendSavingsSubmit(event) {
     });
   }
 
+  // 4. Save to completed goals history
+  if (!state.completedSavingsGoals) state.completedSavingsGoals = [];
+  const cleanGoalName = desc.replace(/\s*\[Goal Completed:.*?\]/i, "").trim() || code;
+  state.completedSavingsGoals.unshift({
+    id: "goal_comp_" + Date.now().toString(36),
+    code: code,
+    name: cleanGoalName,
+    totalSaved: totalSaved,
+    actualSpent: actualAmount,
+    surplus: (totalSaved - actualAmount) > 0 ? (totalSaved - actualAmount) : 0,
+    date: today()
+  });
+
   saveState();
   renderAll();
 
@@ -3652,6 +3714,15 @@ function handleSpendSavingsSubmit(event) {
   } else {
     showToast(`Goal Completed! Recorded expense of ${fmtAmount(actualAmount)}.`, "success");
   }
+}
+
+function deleteCompletedSavingsGoal(index) {
+  if (!state.completedSavingsGoals) return;
+  state.completedSavingsGoals.splice(index, 1);
+  saveState();
+  renderSavingsPage();
+  if (typeof triggerAutoPush === "function") triggerAutoPush();
+  showToast("Completed goal removed from history.", "info");
 }
 
 
