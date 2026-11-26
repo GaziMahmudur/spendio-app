@@ -4923,7 +4923,7 @@ body.modal-open {
   max-height: 85vh;
   object-fit: contain;
   object-position: right center;
-  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.06));
+  mix-blend-mode: multiply;
 }
 
 .auth-error-msg {
