@@ -3539,23 +3539,15 @@ function openSpendSavingsModal(code, totalSaved, name) {
   const totalSavedEl = document.getElementById("spendSavingsTotalSaved");
   const actualAmountInput = document.getElementById("spendActualAmount");
   const descInput = document.getElementById("spendExpenseDesc");
-  const catSelect = document.getElementById("spendCategorySelect");
   const titleEl = document.getElementById("spendSavingsModalTitle");
 
   if (codeInput) codeInput.value = code;
   if (totalSavedEl) totalSavedEl.textContent = fmtAmount(totalSaved);
   if (actualAmountInput) {
     actualAmountInput.value = totalSaved;
-    actualAmountInput.max = totalSaved * 2;
   }
   if (descInput) descInput.value = name || `Completed ${code}`;
   if (titleEl) titleEl.textContent = `🎉 Spend Goal: ${code}`;
-
-  // Populate categories excluding savings category
-  if (catSelect) {
-    const regularCats = (state.categories || []).filter(c => c.id !== "cat_savings" && c.name.toLowerCase() !== "savings");
-    catSelect.innerHTML = regularCats.map(c => `<option value="${c.id}">${c.icon || "🏷️"} ${escHtml(c.name)}</option>`).join("");
-  }
 
   updateSpendSurplusPreview();
   const modal = document.getElementById("spendSavingsModal");
@@ -3612,7 +3604,6 @@ function handleSpendSavingsSubmit(event) {
   const code = _activeSpendSavingsData.code;
   const totalSaved = _activeSpendSavingsData.totalSaved;
   const actualAmount = parseFloat(document.getElementById("spendActualAmount").value) || 0;
-  const catId = document.getElementById("spendCategorySelect").value;
   const desc = document.getElementById("spendExpenseDesc").value.trim() || `Spent for ${code}`;
 
   if (actualAmount < 0) {
@@ -3620,7 +3611,11 @@ function handleSpendSavingsSubmit(event) {
     return;
   }
 
-  // 1. Remove/Retire all deposits for this savings code from state.expenses
+  // 1. Find the savings category id to keep the category consistent and pure
+  const savingsCat = state.categories.find(c => c.id === "cat_savings" || c.name.toLowerCase() === "savings");
+  const savingsCatId = savingsCat ? savingsCat.id : "cat_savings";
+
+  // 2. Remove/Retire previous deposits for this savings code from state.expenses
   const targetCode = code.toUpperCase();
   state.expenses = (state.expenses || []).filter(e => {
     const cat = state.categories.find(c => c.id === e.categoryId);
@@ -3629,14 +3624,14 @@ function handleSpendSavingsSubmit(event) {
     return eCode !== targetCode;
   });
 
-  // 2. Add the actual real expense transaction
+  // 3. Add the final actual expense transaction directly under the Savings Goal
   if (actualAmount > 0) {
     state.expenses.push({
       id: "exp_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       amount: actualAmount,
-      categoryId: catId,
+      categoryId: savingsCatId,
       date: today(),
-      desc: desc + ` [From Savings: ${code}]`,
+      desc: desc + ` [Goal Completed: ${code}]`,
       savingsGoalSpent: code
     });
   }
