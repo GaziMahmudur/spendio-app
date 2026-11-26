@@ -1645,7 +1645,11 @@ function txItemHTML(expense) {
     color: "#7c3aed",
   };
   const isSavings = cat.id === "cat_savings" || cat.name.toLowerCase() === "savings" || !!expense.savingsCode;
-  const savingsBadge = expense.savingsCode
+  // If the description already contains the savings code (or goal completion label), don't show the duplicate green badge
+  const descLower = (expense.desc || "").toLowerCase();
+  const codeLower = (expense.savingsCode || "").toLowerCase();
+  const isRedundantBadge = !expense.savingsCode || (codeLower && descLower.includes(codeLower));
+  const savingsBadge = (!isRedundantBadge && expense.savingsCode)
     ? `<span style="display:inline-block; margin-left:6px; padding: 2px 6px; border-radius: 4px; background: rgba(16,185,129,0.15); color: #10b981; font-size: 10px; font-weight: 800; letter-spacing:0.5px;">${escHtml(expense.savingsCode)}</span>`
     : "";
 
