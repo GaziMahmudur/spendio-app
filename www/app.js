@@ -3963,10 +3963,6 @@ async function handleAuthForgotPassword(event) {
   }
 }
 
-function handlePinLockSetup() {
-  showToast("PIN Lock security will be available in the next security update!", "info");
-}
-
 // ── KEYBOARD & MODAL VIEWPORT SCROLL HELPER ───────────────
 // When mobile virtual keyboard appears, keep active input visible
 document.addEventListener("focusin", (e) => {
