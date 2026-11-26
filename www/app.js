@@ -1638,24 +1638,48 @@ function renderRecentTransactions(listOverride) {
   </div>`;
 }
 
+function formatTxDescHTML(rawDesc, savingsCode) {
+  let desc = rawDesc || "";
+  const goalRegex = /\[Goal Completed:\s*([^\]]+)\]/i;
+  const match = desc.match(goalRegex);
+
+  if (match) {
+    const goalName = match[1].trim();
+    const cleanDesc = desc.replace(goalRegex, "").trim();
+    const celebrationBadge = `<span class="badge-goal-achievement" title="Goal Successfully Achieved!">
+      <span class="achievement-icon">🏆</span>
+      <span class="achievement-text">Goal Achieved · ${escHtml(goalName)}</span>
+      <span class="achievement-sparkle">✨</span>
+    </span>`;
+
+    return cleanDesc
+      ? `<span class="tx-main-desc">${escHtml(cleanDesc)}</span> ${celebrationBadge}`
+      : celebrationBadge;
+  }
+
+  // Normal description with savings badge if applicable
+  const descLower = desc.toLowerCase();
+  const codeLower = (savingsCode || "").toLowerCase();
+  const isRedundantBadge = !savingsCode || (codeLower && descLower.includes(codeLower));
+  const savingsBadge = (!isRedundantBadge && savingsCode)
+    ? `<span style="display:inline-block; margin-left:6px; padding: 2px 6px; border-radius: 4px; background: rgba(16,185,129,0.15); color: #10b981; font-size: 10px; font-weight: 800; letter-spacing:0.5px;">${escHtml(savingsCode)}</span>`
+    : "";
+
+  return `<span class="tx-main-desc">${escHtml(desc)}</span>${savingsBadge}`;
+}
+
 function txItemHTML(expense) {
   const cat = state.categories.find((c) => c.id === expense.categoryId) || {
     icon: "💸",
     name: "Uncategorized",
     color: "#7c3aed",
   };
-  const isSavings = cat.id === "cat_savings" || cat.name.toLowerCase() === "savings" || !!expense.savingsCode;
-  // If the description already contains the savings code (or goal completion label), don't show the duplicate green badge
-  const descLower = (expense.desc || "").toLowerCase();
-  const codeLower = (expense.savingsCode || "").toLowerCase();
-  const isRedundantBadge = !expense.savingsCode || (codeLower && descLower.includes(codeLower));
-  const savingsBadge = (!isRedundantBadge && expense.savingsCode)
-    ? `<span style="display:inline-block; margin-left:6px; padding: 2px 6px; border-radius: 4px; background: rgba(16,185,129,0.15); color: #10b981; font-size: 10px; font-weight: 800; letter-spacing:0.5px;">${escHtml(expense.savingsCode)}</span>`
-    : "";
+
+  const formattedDescHTML = formatTxDescHTML(expense.desc, expense.savingsCode);
 
   return `<tr>
     <td style="white-space: nowrap;">${fmtDate(expense.date)}</td>
-    <td style="font-weight: 600;">${escHtml(expense.desc)}${savingsBadge}</td>
+    <td style="font-weight: 600;">${formattedDescHTML}</td>
     <td style="white-space: nowrap;"><span style="display:inline-block; padding: 4px 8px; border-radius: 4px; background: ${
       cat.color
     }22; color: ${cat.color}; font-size: 11px; font-weight: 700;">${

@@ -5015,3 +5015,59 @@ body.modal-open {
   }
 }
 
+/* ══════════════════════════════════════════════════════
+   CELEBRATORY GOAL ACHIEVEMENT BADGE (IN TRANSACTIONS)
+══════════════════════════════════════════════════════ */
+.badge-goal-achievement {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 6px;
+  vertical-align: middle;
+  padding: 3px 9px;
+  border-radius: 99px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.16) 0%, rgba(217, 119, 6, 0.22) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.15);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: #b45309;
+  white-space: nowrap;
+  animation: achieveGlow 2.5s infinite alternate ease-in-out;
+}
+
+[data-theme="dark"] .badge-goal-achievement {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.22) 0%, rgba(217, 119, 6, 0.3) 100%);
+  border-color: rgba(245, 158, 11, 0.55);
+  color: #fde68a;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25);
+}
+
+.badge-goal-achievement .achievement-icon {
+  font-size: 13px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+}
+
+.badge-goal-achievement .achievement-text {
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.badge-goal-achievement .achievement-sparkle {
+  font-size: 11px;
+  line-height: 1;
+}
+
+@keyframes achieveGlow {
+  0% {
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.15);
+  }
+  100% {
+    box-shadow: 0 3px 12px rgba(245, 158, 11, 0.32);
+    border-color: rgba(245, 158, 11, 0.7);
+  }
+}
+
+
