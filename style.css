@@ -2160,6 +2160,22 @@ input[type="number"]::-webkit-inner-spin-button {
   vertical-align: middle;
 }
 
+.preview-table td.cell-actions-cell {
+  padding: 12px 14px;
+  vertical-align: middle;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.preview-table .cell-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
 .preview-table tr:hover td {
   background: var(--primary-xlight);
 }
@@ -2596,6 +2612,10 @@ input[type="number"]::-webkit-inner-spin-button {
   }
   .preview-table td:last-child {
     text-align: right;
+  }
+  .preview-table .cell-actions {
+    display: inline-flex;
+    justify-content: flex-end;
   }
 
   html,
@@ -4162,15 +4182,6 @@ body.modal-open {
 .dp-footer-btn {
   min-height: 44px;
   padding: 8px 16px;
-}
-
-.preview-table .cell-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
-  width: auto;
-  white-space: nowrap;
 }
 
 .cell-actions button,

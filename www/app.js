@@ -1628,13 +1628,15 @@ function txItemHTML(expense) {
   } ${escHtml(cat.name)}</span></td>
     <td>${expense.note ? escHtml(expense.note) : "—"}</td>
     <td class="cell-amount">−${fmtAmount(expense.amount)}</td>
-    <td class="cell-actions">
-      <button class="tx-action-btn" title="Edit" aria-label="Edit expense: ${escHtml(expense.desc)}" onclick="editExpense('${
-        expense.id
-      }')">✏️</button>
-      <button class="tx-action-btn tx-delete-btn" title="Delete" aria-label="Delete expense: ${escHtml(expense.desc)}" onclick="promptDeleteExpense('${
-        expense.id
-      }')">🗑️</button>
+    <td class="cell-actions-cell" style="text-align: right; white-space: nowrap;">
+      <div class="cell-actions">
+        <button class="tx-action-btn" title="Edit" aria-label="Edit expense: ${escHtml(expense.desc)}" onclick="editExpense('${
+          expense.id
+        }')">✏️</button>
+        <button class="tx-action-btn tx-delete-btn" title="Delete" aria-label="Delete expense: ${escHtml(expense.desc)}" onclick="promptDeleteExpense('${
+          expense.id
+        }')">🗑️</button>
+      </div>
     </td>
   </tr>`;
 }
