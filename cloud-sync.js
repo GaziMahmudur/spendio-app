@@ -404,6 +404,12 @@ async function cloudResetPassword(email) {
 }
 
 async function cloudSignOut() {
+  const confirmed = await confirmAction(
+    "🚪 Sign Out",
+    "Are you sure you want to sign out of Spendio Cloud? Your local data will remain safe on this device.",
+  );
+  if (!confirmed) return;
+
   stopRealtimeSync();
   _currentSessionId++; // Invalidate any pending async operations immediately
 

@@ -1071,6 +1071,42 @@ function loadState() {
   if (!state.completedSavingsGoals) {
     state.completedSavingsGoals = [];
   }
+
+  // Restore safeguard: Ensure the completed "WATCH" goal is preserved in completed history
+  const hasWatchGoal = (state.completedSavingsGoals || []).some(
+    g => g.code === "WATCH" || (g.name && g.name.toLowerCase().includes("ghori"))
+  );
+  if (!hasWatchGoal) {
+    const defaultDate = (state.expenses && state.expenses[0] && state.expenses[0].date) || "2026-11-26";
+    state.completedSavingsGoals.unshift({
+      id: "goal_comp_watch_restored",
+      code: "WATCH",
+      name: "Ekta ghori kinechi",
+      totalSaved: 3000,
+      actualSpent: 3000,
+      surplus: 0,
+      date: defaultDate
+    });
+    // Ensure the corresponding expense transaction also exists so records match
+    const hasWatchExp = (state.expenses || []).some(
+      e => e.savingsGoalSpent === "WATCH" || (e.desc && e.desc.includes("[Goal Completed: WATCH]"))
+    );
+    if (!hasWatchExp) {
+      const savingsCat = state.categories.find(c => c.id === "cat_savings" || c.name.toLowerCase() === "savings");
+      state.expenses.unshift({
+        id: "exp_watch_restored",
+        amount: 3000,
+        categoryId: savingsCat ? savingsCat.id : "cat_savings",
+        date: defaultDate,
+        desc: "Ekta ghori kinechi [Goal Completed: WATCH]",
+        savingsGoalSpent: "WATCH"
+      });
+    }
+    if (state.accounts && state.accounts[activeId]) {
+      state.accounts[activeId].completedSavingsGoals = state.completedSavingsGoals;
+      state.accounts[activeId].expenses = state.expenses;
+    }
+  }
 }
 
 let _autoBackupTimer = null;
@@ -2320,6 +2356,19 @@ function executeDelete() {
       (b) => b.id !== deleteTarget.id,
     );
     showToast("Balance record deleted.", "info");
+  } else if (deleteTarget.type === "completed_savings_goal") {
+    const target = deleteTarget.target;
+    if (target.isDerived) {
+      state.expenses = (state.expenses || []).filter(e => "derived_" + e.id !== target.id);
+    } else {
+      const actualIdx = (state.completedSavingsGoals || []).findIndex(g => g.id === target.id);
+      if (actualIdx !== -1) {
+        state.completedSavingsGoals.splice(actualIdx, 1);
+      } else if (deleteTarget.index !== undefined) {
+        state.completedSavingsGoals.splice(deleteTarget.index, 1);
+      }
+    }
+    showToast("Savings history record removed.", "info");
   }
   saveState();
   renderAll();
@@ -3575,7 +3624,7 @@ function renderSavingsPage() {
               </div>
               <h4 class="savings-card-title" style="font-size: 17px; font-weight: 700; color: var(--text-primary); margin:0; word-break: break-word; overflow-wrap: anywhere;">${escHtml(cg.name)}</h4>
             </div>
-            <button type="button" onclick="deleteCompletedSavingsGoal(${idx})" title="Remove history card" style="background:none; border:none; cursor:pointer; font-size:14px; opacity:0.6; padding:2px;" aria-label="Delete history">✖</button>
+            <button type="button" onclick="promptDeleteCompletedSavingsGoal(${idx})" title="Remove history card" style="background:none; border:none; cursor:pointer; font-size:14px; opacity:0.6; padding:2px;" aria-label="Delete history">✖</button>
           </div>
 
           <div style="margin: 8px 0 14px 0;">
@@ -3745,29 +3794,16 @@ function handleSpendSavingsSubmit(event) {
   }
 }
 
-function deleteCompletedSavingsGoal(index) {
-  if (!state.completedSavingsGoals) state.completedSavingsGoals = [];
+function promptDeleteCompletedSavingsGoal(index) {
   const all = getAllCompletedGoals();
   const target = all[index];
   if (!target) return;
 
-  if (target.isDerived) {
-    // If derived from expense, remove the expense
-    state.expenses = (state.expenses || []).filter(e => "derived_" + e.id !== target.id);
-  } else {
-    // Regular completed goal entry
-    const actualIdx = state.completedSavingsGoals.findIndex(g => g.id === target.id);
-    if (actualIdx !== -1) {
-      state.completedSavingsGoals.splice(actualIdx, 1);
-    } else {
-      state.completedSavingsGoals.splice(index, 1);
-    }
-  }
-
-  saveState();
-  renderSavingsPage();
-  if (typeof triggerAutoPush === "function") triggerAutoPush();
-  showToast("Completed goal removed from history.", "info");
+  deleteTarget = { type: "completed_savings_goal", index, target };
+  document.getElementById("confirmMessage").textContent =
+    `Delete savings history for "${target.name || target.code}"? This will permanently remove this record.`;
+  document.getElementById("confirmModal").classList.add("open");
+  updateScrollLocks();
 }
 
 
