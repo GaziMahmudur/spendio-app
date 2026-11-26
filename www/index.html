@@ -30,7 +30,7 @@
         rel="stylesheet"
       />
     </noscript>
-    <link rel="stylesheet" href="style.css?v=1794512900000" />
+    <link rel="stylesheet" href="style.css?v=1794513600000" />
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#6d28d9" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
@@ -1133,49 +1133,16 @@
       </div>
     </div>
 
-    <!-- AUTH MODAL (SPLIT DESKTOP & SLIDE-UP MOBILE SHEET) -->
+    <!-- AUTH MODAL (REVOLUT FINTECH MINIMALIST SPLIT & CLEAN MOBILE SHEET) -->
     <div class="modal-backdrop auth-modal-backdrop" id="authModal" onclick="handleAuthBackdrop(event)">
       <div class="auth-modal-box" id="authModalBox">
         <!-- Mobile Drag Bar -->
         <div class="auth-sheet-handle"></div>
 
-        <!-- Left Brand / Benefits Panel (Desktop) -->
+        <!-- Left Brand / 3D Art Panel (Desktop) -->
         <div class="auth-brand-side">
-          <div class="auth-brand-top">
-            <div class="auth-logo-badge">
-              <img src="icons/logo-transparent.png" alt="Spendio" style="width:34px;height:34px;object-fit:contain;" />
-              <span class="auth-logo-name">Spendio</span>
-            </div>
-            <h2 class="auth-brand-heading">One account.<br>Every device synced.</h2>
-            <p class="auth-brand-sub">Works fully offline by default. Signing in seamlessly backs up your data to the cloud.</p>
-          </div>
-
-          <div class="auth-perks-list">
-            <div class="auth-perk-item">
-              <div class="auth-perk-icon">🔄</div>
-              <div>
-                <div class="auth-perk-title">Sync Everywhere</div>
-                <div class="auth-perk-desc">Access expenses on Phone, Tablet, and Desktop.</div>
-              </div>
-            </div>
-            <div class="auth-perk-item">
-              <div class="auth-perk-icon">⚡</div>
-              <div>
-                <div class="auth-perk-title">100% Offline-First</div>
-                <div class="auth-perk-desc">Log your spending anywhere without internet.</div>
-              </div>
-            </div>
-            <div class="auth-perk-item">
-              <div class="auth-perk-icon">🔒</div>
-              <div>
-                <div class="auth-perk-title">Private & Secure</div>
-                <div class="auth-perk-desc">Encrypted and linked safely to your account.</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="auth-brand-footer">
-            <span>Spendio Cloud · Free Tier Spark Plan</span>
+          <div class="auth-brand-art-wrap">
+            <img src="icons/spendio-auth-art.jpg" alt="Spendio 3D Financial Graphic" class="auth-brand-art-img" />
           </div>
         </div>
 
@@ -1184,76 +1151,78 @@
           <button class="modal-close auth-close-btn" aria-label="Close auth dialog" onclick="closeAuthModal()">✕</button>
 
           <div class="auth-header">
-            <h3 class="auth-form-title" id="authFormTitle">Sign In to Spendio</h3>
-            <p class="auth-form-subtitle" id="authFormSubtitle">Sync your expenses across all devices</p>
-          </div>
-
-          <!-- Auth Mode Tabs (Sign In / Register) -->
-          <div class="auth-tab-pill">
-            <button type="button" class="auth-tab-btn active" id="authTabSignIn" onclick="setAuthTab('signin')">Sign In</button>
-            <button type="button" class="auth-tab-btn" id="authTabSignUp" onclick="setAuthTab('signup')">Create Account</button>
-          </div>
-
-          <!-- Google 1-Tap Button -->
-          <button type="button" class="btn btn-google btn-auth-google" id="btnAuthGoogle" onclick="handleAuthGoogle()">
-            <svg width="20" height="20" viewBox="0 0 24 24">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-            </svg>
-            <span id="authGoogleBtnText">Continue with Google</span>
-          </button>
-
-          <!-- Divider -->
-          <div class="auth-divider">
-            <span>or with email</span>
+            <h2 class="auth-form-title" id="authFormTitle">Log in to<br>Spendio</h2>
+            <p class="auth-form-subtitle" id="authFormSubtitle">
+              Don't have an account? <a href="#" class="auth-link-sub" id="authToggleActionLink" onclick="toggleAuthMode(event)">Sign up</a>
+            </p>
           </div>
 
           <!-- Email / Password Form -->
           <form id="authEmailForm" onsubmit="handleAuthSubmit(event)">
             <!-- Name Field (Register only) -->
             <div class="form-group" id="authNameGroup" style="display: none;">
-              <label class="form-label" for="authNameInput">Your Name</label>
-              <input type="text" class="form-input" id="authNameInput" placeholder="Mahmudur Rahman" />
+              <input type="text" class="form-input rev-input" id="authNameInput" placeholder="Your Full Name" />
             </div>
 
             <!-- Email Field -->
-            <div class="form-group">
-              <label class="form-label" for="authEmailInput">Email Address</label>
-              <input type="email" class="form-input" id="authEmailInput" placeholder="name@example.com" required autocomplete="email" />
+            <div class="form-group" style="margin-bottom: 12px;">
+              <input type="email" class="form-input rev-input" id="authEmailInput" placeholder="Email" required autocomplete="email" />
             </div>
 
             <!-- Password Field -->
-            <div class="form-group">
-              <div class="form-label-row">
-                <label class="form-label" for="authPasswordInput">Password</label>
-                <a href="#" class="auth-forgot-link" id="authForgotLink" onclick="handleAuthForgotPassword(event)">Forgot?</a>
-              </div>
+            <div class="form-group" style="margin-bottom: 14px;">
               <div class="password-input-wrap">
-                <input type="password" class="form-input" id="authPasswordInput" placeholder="••••••••" required minlength="6" autocomplete="current-password" />
+                <input type="password" class="form-input rev-input" id="authPasswordInput" placeholder="Password" required minlength="6" autocomplete="current-password" />
                 <button type="button" class="btn-toggle-eye" aria-label="Toggle password visibility" onclick="togglePasswordVisibility('authPasswordInput')">
                   👁️
                 </button>
+              </div>
+              <div style="display: flex; justify-content: flex-end; margin-top: 6px;">
+                <a href="#" class="auth-forgot-link" id="authForgotLink" onclick="handleAuthForgotPassword(event)">Forgot password?</a>
               </div>
             </div>
 
             <!-- Error Message Banner -->
             <div class="auth-error-msg" id="authErrorMsg" style="display: none;"></div>
 
-            <!-- Submit Button -->
-            <button type="submit" class="btn btn-primary btn-auth-submit" id="btnAuthSubmit">
-              <span id="btnAuthSubmitText">Sign In</span>
+            <!-- Main Primary Action Button (Blue pill like Revolut) -->
+            <button type="submit" class="btn rev-btn-primary" id="btnAuthSubmit">
+              <span id="btnAuthSubmitText">Continue with email</span>
             </button>
           </form>
 
-          <!-- Guest Switch & Privacy Note -->
-          <div class="auth-footer-links">
-            <button type="button" class="auth-guest-link" onclick="closeAuthModal()">
-              Continue as Guest (No sync)
+          <!-- Revolut Style Divider -->
+          <div class="rev-divider">
+            <span>Or</span>
+          </div>
+
+          <!-- Secondary Actions: QR / Guest and Google -->
+          <div class="rev-secondary-actions">
+            <!-- Google Button -->
+            <button type="button" class="btn rev-btn-outline" id="btnAuthGoogle" onclick="handleAuthGoogle()">
+              <svg width="18" height="18" viewBox="0 0 24 24" style="flex-shrink: 0;">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              </svg>
+              <span id="authGoogleBtnText">Continue with Google</span>
             </button>
-            <div class="auth-privacy-note">
-              🔒 Encrypted and private to your account.
+
+            <!-- Continue as Guest / Offline Button -->
+            <button type="button" class="btn rev-btn-outline" onclick="closeAuthModal()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+              <span>Continue as Guest (Offline)</span>
+            </button>
+          </div>
+
+          <!-- Bottom Footer Link & Branding -->
+          <div class="rev-auth-bottom">
+            <p class="rev-personal-hint" id="revBottomHint">
+              Offline-first expense tracking · <a href="#" onclick="closeAuthModal(); return false;">Use locally</a>
+            </p>
+            <div class="rev-copyright-row">
+              <span>Spendio App · <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:middle;margin:0 2px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> English (US)</span>
             </div>
           </div>
         </div>

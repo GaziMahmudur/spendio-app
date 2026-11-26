@@ -4608,23 +4608,21 @@ body.modal-open {
 }
 
 .auth-modal-box {
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  border-radius: 32px;
-  width: 860px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 28px;
+  width: 980px;
   max-width: 95vw;
-  min-height: 520px;
+  min-height: 560px;
   display: flex;
   overflow: hidden;
-  box-shadow: 0 32px 80px rgba(15, 10, 31, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
   position: relative;
-  animation: appleModalPop 0.36s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: appleModalPop 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes appleModalPop {
-  0% { opacity: 0; transform: scale(0.94) translateY(8px); }
+  0% { opacity: 0; transform: scale(0.96) translateY(6px); }
   100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
@@ -4632,404 +4630,244 @@ body.modal-open {
   display: none;
 }
 
-/* Left Brand Panel - Apple Fluid Gradient */
+/* Left Brand / 3D Art Canvas Panel */
 .auth-brand-side {
-  width: 44%;
-  background: radial-gradient(circle at 10% 20%, #7c3aed 0%, #6d28d9 45%, #4c1d95 100%);
-  color: #fff;
-  padding: 44px 36px;
+  width: 50%;
+  background: #f7f9fc;
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  border-right: 1px solid #edf2f7;
+}
+
+.auth-brand-art-wrap {
+  width: 100%;
+  height: 100%;
+  min-height: 520px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
   overflow: hidden;
 }
 
-.auth-brand-side::before {
-  content: "";
-  position: absolute;
-  top: -50px;
-  right: -50px;
-  width: 220px;
-  height: 220px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.22) 0%, transparent 70%);
-  border-radius: 50%;
-  pointer-events: none;
+.auth-brand-art-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.auth-brand-side::after {
-  content: "";
-  position: absolute;
-  bottom: -60px;
-  left: -40px;
-  width: 260px;
-  height: 260px;
-  background: radial-gradient(circle, rgba(167, 139, 250, 0.25) 0%, transparent 70%);
-  border-radius: 50%;
-  pointer-events: none;
+.auth-brand-side:hover .auth-brand-art-img {
+  transform: scale(1.02);
 }
 
-.auth-logo-badge {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 28px;
-}
-
-.auth-logo-badge img {
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.25));
-}
-
-.auth-logo-name {
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.6px;
-  color: #ffffff;
-}
-
-.auth-brand-heading {
-  font-size: 28px;
-  font-weight: 800;
-  line-height: 1.2;
-  letter-spacing: -0.6px;
-  margin-bottom: 12px;
-  color: #ffffff;
-}
-
-.auth-brand-sub {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.85);
-  line-height: 1.5;
-  font-weight: 400;
-}
-
-.auth-perks-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin: 28px 0;
-  position: relative;
-  z-index: 1;
-}
-
-.auth-perk-item {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  padding: 10px 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  transition: transform 0.2s ease, background 0.2s ease;
-}
-
-.auth-perk-item:hover {
-  background: rgba(255, 255, 255, 0.16);
-  transform: translateX(4px);
-}
-
-.auth-perk-icon {
-  font-size: 20px;
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-.auth-perk-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 2px;
-}
-
-.auth-perk-desc {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.8);
-  line-height: 1.35;
-}
-
-.auth-brand-footer {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.65);
-  font-weight: 500;
-  position: relative;
-  z-index: 1;
-}
-
-/* Right Form Side - Clean iOS Canvas */
+/* Right Form Side - Revolut Clean Typography & Geometry */
 .auth-form-side {
-  width: 56%;
-  padding: 42px 46px;
+  width: 50%;
+  padding: 46px 52px;
   display: flex;
   flex-direction: column;
   position: relative;
   background: #ffffff;
+  justify-content: space-between;
 }
 
 .auth-close-btn {
   position: absolute;
-  top: 22px;
-  right: 24px;
-  width: 34px;
-  height: 34px;
+  top: 20px;
+  right: 22px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: #f1f3f5;
   border: none;
-  font-size: 15px;
+  font-size: 14px;
   cursor: pointer;
   color: #64748b;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  z-index: 2;
 }
 
 .auth-close-btn:hover {
   background: #e2e8f0;
   color: #0f172a;
-  transform: scale(1.06);
 }
 
+/* Revolut Headings */
 .auth-form-title {
-  font-size: 26px;
+  font-size: 32px;
   font-weight: 800;
-  color: #0f172a;
-  letter-spacing: -0.6px;
-  margin-bottom: 4px;
+  color: #121826;
+  letter-spacing: -0.8px;
+  line-height: 1.15;
+  margin-bottom: 8px;
 }
 
 .auth-form-subtitle {
   font-size: 14px;
   color: #64748b;
-  margin-bottom: 22px;
+  margin-bottom: 26px;
+  font-weight: 400;
 }
 
-/* Apple Segmented Control */
-.auth-tab-pill {
-  display: flex;
-  background: #f1f5f9;
-  border-radius: 14px;
-  padding: 4px;
-  margin-bottom: 22px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-}
-
-.auth-tab-btn {
-  flex: 1;
-  border: none;
-  background: transparent;
-  padding: 9px 14px;
-  border-radius: 11px;
-  font-size: 13px;
+.auth-link-sub {
+  color: #2563eb;
   font-weight: 600;
-  color: #64748b;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+  transition: opacity 0.2s;
 }
 
-.auth-tab-btn.active {
-  background: #ffffff;
-  color: #6d28d9;
-  font-weight: 700;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+.auth-link-sub:hover {
+  text-decoration: underline;
+  opacity: 0.9;
 }
 
-/* Google Sign-in - Clean Apple Card Button */
-.btn-auth-google {
+/* Revolut Gray Field Input */
+.rev-input {
   width: 100%;
+  background: #f1f3f6 !important;
+  border: 1px solid transparent !important;
+  border-radius: 14px !important;
+  padding: 15px 16px !important;
+  font-size: 15px !important;
+  color: #0f172a !important;
+  transition: all 0.2s ease !important;
+  outline: none !important;
+}
+
+.rev-input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.rev-input:focus {
+  background: #ffffff !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+}
+
+/* Revolut Primary Blue Pill Button */
+.rev-btn-primary {
+  width: 100%;
+  padding: 14px 20px;
+  background: #2563eb;
+  color: #ffffff;
+  border-radius: 99px;
+  font-weight: 600;
+  font-size: 15px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 13px;
-  border-radius: 16px;
-  border: 1.5px solid #e2e8f0;
-  background: #ffffff;
-  color: #1e293b;
-  font-weight: 700;
-  font-size: 14px;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.btn-auth-google:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+.rev-btn-primary:hover {
+  background: #1d4ed8;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
-.btn-auth-google:active {
-  transform: scale(0.98);
+.rev-btn-primary:active {
+  transform: scale(0.99);
 }
 
-.auth-divider {
+/* Revolut Clean Divider */
+.rev-divider {
   display: flex;
   align-items: center;
   text-align: center;
   margin: 18px 0;
   color: #94a3b8;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
 }
 
-.auth-divider::before,
-.auth-divider::after {
+.rev-divider::before,
+.rev-divider::after {
   content: "";
   flex: 1;
   border-bottom: 1px solid #e2e8f0;
 }
 
-.auth-divider span {
-  padding: 0 12px;
+.rev-divider span {
+  padding: 0 14px;
 }
 
-/* Apple Rounded Inputs */
-.auth-form-side .form-group {
-  margin-bottom: 14px;
+/* Secondary Action Buttons (White pill card button with border) */
+.rev-secondary-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.auth-form-side .form-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #334155;
-  margin-bottom: 6px;
-  display: block;
-}
-
-.auth-form-side .form-input {
+.rev-btn-outline {
   width: 100%;
-  background: #f8fafc;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 12px 14px;
-  font-size: 14px;
-  color: #0f172a;
-  transition: all 0.2s ease;
-}
-
-.auth-form-side .form-input:focus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 13px 18px;
   background: #ffffff;
-  border-color: #7c3aed;
-  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12);
-  outline: none;
-}
-
-.password-input-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.password-input-wrap .form-input {
-  padding-right: 44px;
-}
-
-.btn-toggle-eye {
-  position: absolute;
-  right: 12px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  opacity: 0.5;
-  transition: opacity 0.2s;
-}
-
-.btn-toggle-eye:hover {
-  opacity: 0.9;
-}
-
-.form-label-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.auth-forgot-link {
-  font-size: 12px;
-  color: #7c3aed;
-  text-decoration: none;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 99px;
+  font-size: 14px;
   font-weight: 600;
-  transition: opacity 0.2s;
-}
-
-.auth-forgot-link:hover {
-  text-decoration: underline;
-  opacity: 0.85;
-}
-
-.auth-error-msg {
-  padding: 10px 14px;
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  color: #ef4444;
-  border-radius: 12px;
-  font-size: 13px;
-  margin-bottom: 12px;
-  font-weight: 500;
-}
-
-/* Apple Primary Action Button */
-.btn-auth-submit {
-  width: 100%;
-  margin-top: 8px;
-  padding: 14px;
-  border-radius: 16px;
-  font-weight: 700;
-  font-size: 15px;
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-  color: #ffffff;
-  border: none;
+  color: #1e293b;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(109, 40, 217, 0.28);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
-.btn-auth-submit:hover {
-  transform: translateY(-1.5px);
-  box-shadow: 0 10px 24px rgba(109, 40, 217, 0.35);
+.rev-btn-outline:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
 }
 
-.btn-auth-submit:active {
-  transform: scale(0.98);
+.rev-btn-outline:active {
+  transform: scale(0.99);
 }
 
-.auth-footer-links {
-  margin-top: auto;
-  padding-top: 16px;
+/* Bottom text and language / copyright */
+.rev-auth-bottom {
+  margin-top: 24px;
   text-align: center;
 }
 
-.auth-guest-link {
-  background: none;
-  border: none;
-  color: #64748b;
+.rev-personal-hint {
   font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: color 0.2s ease;
+  color: #64748b;
+  margin-bottom: 12px;
 }
 
-.auth-guest-link:hover {
-  color: #0f172a;
+.rev-personal-hint a {
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.rev-personal-hint a:hover {
   text-decoration: underline;
 }
 
-.auth-privacy-note {
-  font-size: 11px;
+.rev-copyright-row {
+  font-size: 12px;
   color: #94a3b8;
-  margin-top: 8px;
-  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -5135,7 +4973,11 @@ body.modal-open {
 
   .auth-form-side {
     width: 100%;
-    padding: 16px 24px calc(34px + env(safe-area-inset-bottom, 0px));
+    padding: 24px 24px calc(34px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .auth-form-title {
+    font-size: 26px;
   }
 
   .auth-close-btn {

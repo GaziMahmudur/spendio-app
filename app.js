@@ -3844,34 +3844,38 @@ function handleAuthBackdrop(event) {
   }
 }
 
+function toggleAuthMode(event) {
+  if (event) event.preventDefault();
+  setAuthTab(currentAuthTab === "signin" ? "signup" : "signin");
+}
+
 function setAuthTab(tab) {
   currentAuthTab = tab;
-  const btnIn = document.getElementById("authTabSignIn");
-  const btnUp = document.getElementById("authTabSignUp");
   const title = document.getElementById("authFormTitle");
   const subtitle = document.getElementById("authFormSubtitle");
   const nameGroup = document.getElementById("authNameGroup");
   const forgotLink = document.getElementById("authForgotLink");
   const submitText = document.getElementById("btnAuthSubmitText");
+  const toggleLink = document.getElementById("authToggleActionLink");
   const errEl = document.getElementById("authErrorMsg");
   if (errEl) errEl.style.display = "none";
 
   if (tab === "signin") {
-    if (btnIn) btnIn.classList.add("active");
-    if (btnUp) btnUp.classList.remove("active");
-    if (title) title.textContent = "Sign In to Spendio";
-    if (subtitle) subtitle.textContent = "Sync your expenses across all devices";
+    if (title) title.innerHTML = "Log in to<br>Spendio";
+    if (subtitle) {
+      subtitle.innerHTML = `Don't have an account? <a href="#" class="auth-link-sub" id="authToggleActionLink" onclick="toggleAuthMode(event)">Sign up</a>`;
+    }
     if (nameGroup) nameGroup.style.display = "none";
     if (forgotLink) forgotLink.style.display = "block";
-    if (submitText) submitText.textContent = "Sign In";
+    if (submitText) submitText.textContent = "Continue with email";
   } else {
-    if (btnIn) btnIn.classList.remove("active");
-    if (btnUp) btnUp.classList.add("active");
-    if (title) title.textContent = "Create an Account";
-    if (subtitle) subtitle.textContent = "Free forever · Cloud sync & automatic backup";
+    if (title) title.innerHTML = "Sign up to<br>Spendio";
+    if (subtitle) {
+      subtitle.innerHTML = `Already have an account? <a href="#" class="auth-link-sub" id="authToggleActionLink" onclick="toggleAuthMode(event)">Log in</a>`;
+    }
     if (nameGroup) nameGroup.style.display = "block";
     if (forgotLink) forgotLink.style.display = "none";
-    if (submitText) submitText.textContent = "Create Account";
+    if (submitText) submitText.textContent = "Create account with email";
   }
 }
 
