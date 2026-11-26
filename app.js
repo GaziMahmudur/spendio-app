@@ -1060,6 +1060,7 @@ function loadState() {
   if (state.accounts[activeId]) {
     state.expenses = state.accounts[activeId].expenses || [];
     state.balanceRecords = state.accounts[activeId].balanceRecords || [];
+    state.completedSavingsGoals = state.accounts[activeId].completedSavingsGoals || state.completedSavingsGoals || [];
   }
 
   state.expenses = state.expenses || [];
@@ -1072,6 +1073,9 @@ function loadState() {
   if (!state.savingsVaults) {
     state.savingsVaults = [];
   }
+  if (!state.completedSavingsGoals) {
+    state.completedSavingsGoals = [];
+  }
 }
 
 let _autoBackupTimer = null;
@@ -1082,6 +1086,7 @@ function saveState() {
 
   state.accounts[activeId].expenses = state.expenses;
   state.accounts[activeId].balanceRecords = state.balanceRecords;
+  state.accounts[activeId].completedSavingsGoals = state.completedSavingsGoals || [];
 
   const activeKey = getActiveStateKey();
   localStorage.setItem(activeKey, JSON.stringify(state));
@@ -3446,12 +3451,39 @@ function getSavingsCardsData() {
   return Object.values(cardsMap);
 }
 
+function getAllCompletedGoals() {
+  const list = [...(state.completedSavingsGoals || [])];
+  
+  // Backward compatibility: If an expense with savingsGoalSpent exists in state.expenses
+  // but wasn't recorded in state.completedSavingsGoals yet, derive and show it!
+  (state.expenses || []).forEach(e => {
+    if (e.savingsGoalSpent) {
+      const alreadyListed = list.some(cg => cg.code === e.savingsGoalSpent || (cg.id && cg.id.includes(e.id)));
+      if (!alreadyListed) {
+        const cleanName = (e.desc || "").replace(/\s*\[Goal Completed:.*?\]/i, "").trim() || e.savingsGoalSpent;
+        list.push({
+          id: "derived_" + e.id,
+          code: e.savingsGoalSpent,
+          name: cleanName,
+          totalSaved: Number(e.amount),
+          actualSpent: Number(e.amount),
+          surplus: 0,
+          date: e.date,
+          isDerived: true
+        });
+      }
+    }
+  });
+
+  return list;
+}
+
 function renderSavingsPage() {
   const grid = document.getElementById("savingsVaultsGrid");
   const totalBadge = document.getElementById("savingsTotalBadge");
 
   const cards = getSavingsCardsData();
-  const completedGoals = state.completedSavingsGoals || [];
+  const completedGoals = getAllCompletedGoals();
   const totalSavedAll = cards.reduce((s, c) => s + c.totalSaved, 0);
 
   if (totalBadge) {
@@ -3717,8 +3749,24 @@ function handleSpendSavingsSubmit(event) {
 }
 
 function deleteCompletedSavingsGoal(index) {
-  if (!state.completedSavingsGoals) return;
-  state.completedSavingsGoals.splice(index, 1);
+  if (!state.completedSavingsGoals) state.completedSavingsGoals = [];
+  const all = getAllCompletedGoals();
+  const target = all[index];
+  if (!target) return;
+
+  if (target.isDerived) {
+    // If derived from expense, remove the expense
+    state.expenses = (state.expenses || []).filter(e => "derived_" + e.id !== target.id);
+  } else {
+    // Regular completed goal entry
+    const actualIdx = state.completedSavingsGoals.findIndex(g => g.id === target.id);
+    if (actualIdx !== -1) {
+      state.completedSavingsGoals.splice(actualIdx, 1);
+    } else {
+      state.completedSavingsGoals.splice(index, 1);
+    }
+  }
+
   saveState();
   renderSavingsPage();
   if (typeof triggerAutoPush === "function") triggerAutoPush();
