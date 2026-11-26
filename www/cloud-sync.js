@@ -220,6 +220,11 @@ async function initFirebase() {
         }
         // Start real-time cross-device sync listener
         setupRealtimeSync(activeUid);
+
+        // Flush any state change that was made before auth resolved
+        if (typeof flushPendingAutoBackup === "function") {
+          flushPendingAutoBackup();
+        }
       } else {
         stopRealtimeSync();
       }
@@ -682,6 +687,9 @@ async function restoreFromCloud(silent = false, requestSessionId = null, targetU
         : [],
       currency: cleanData.currency || "taka",
       savingsVaults: cleanData.savingsVaults || [],
+      completedSavingsGoals: Array.isArray(cleanData.completedSavingsGoals)
+        ? cleanData.completedSavingsGoals
+        : [],
       accounts: cleanData.accounts || null,
       activeAccountId: cleanData.activeAccountId || null,
     };
@@ -765,6 +773,7 @@ function mergeStates(local, cloud) {
     balanceRecords: mergeArray(local.balanceRecords, cloud.balanceRecords),
     currency: cloud.currency || local.currency || "taka",
     savingsVaults: cloud.savingsVaults || local.savingsVaults || [],
+    completedSavingsGoals: mergeArray(local.completedSavingsGoals, cloud.completedSavingsGoals),
     accounts: cloud.accounts || local.accounts || null,
     activeAccountId: cloud.activeAccountId || local.activeAccountId || null,
   };
@@ -812,6 +821,7 @@ function setupRealtimeSync(uid) {
           balanceRecords: Array.isArray(cleanData.balanceRecords) ? cleanData.balanceRecords : [],
           currency: cleanData.currency || "taka",
           savingsVaults: cleanData.savingsVaults || [],
+          completedSavingsGoals: Array.isArray(cleanData.completedSavingsGoals) ? cleanData.completedSavingsGoals : [],
           accounts: cleanData.accounts || null,
           activeAccountId: cleanData.activeAccountId || null,
         };
@@ -829,7 +839,9 @@ function setupRealtimeSync(uid) {
         console.log("[Spendio Cloud] Real-time sync update received from device:", incomingDeviceId);
         _isApplyingCloudChange = true;
 
-        const merged = mergeStates(currentLocal, incomingState);
+        // When remote update is pushed from another active device, adopt remote state directly
+        // so deletions and edits propagate cleanly across devices without stale union resuscitation.
+        const merged = incomingState;
         const userStorageKey = getUserStorageKey(activeUid);
         localStorage.setItem(userStorageKey, JSON.stringify(merged));
 
@@ -1155,12 +1167,11 @@ function scheduleFirebaseInit() {
   }
 }
 
-if ("requestIdleCallback" in window) {
-  window.requestIdleCallback(scheduleFirebaseInit, { timeout: 1500 });
+// Initialize Firebase immediately on page load / DOM ready so authentication and real-time listeners activate instantly
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", scheduleFirebaseInit);
 } else {
-  window.addEventListener("load", () => {
-    setTimeout(scheduleFirebaseInit, 100);
-  });
+  scheduleFirebaseInit();
 }
 
 
@@ -1171,9 +1182,24 @@ window.pushToCloud = pushToCloud;
 window.isCloudUserSignedIn = function() { return !!_currentUser; };
 window.isCloudSyncActive = function() { return _syncInProgress || _isApplyingCloudChange; };
 
+let _pendingAutoBackupState = null;
 let _cloudDebounceTimer = null;
+
+function flushPendingAutoBackup() {
+  if (_pendingAutoBackupState && _currentUser && _db) {
+    const dataToFlush = _pendingAutoBackupState;
+    _pendingAutoBackupState = null;
+    const activeUid = _currentUser.uid;
+    pushToCloud(dataToFlush, true, null, activeUid);
+  }
+}
+
 window.triggerAutoCloudBackup = function(stateObj) {
-  if (!_currentUser || !_db) return;
+  // If Firebase or user session is not ready yet, queue it so it gets backed up once auth resolves
+  if (!_currentUser || !_db) {
+    _pendingAutoBackupState = stateObj ? JSON.parse(JSON.stringify(stateObj)) : null;
+    return;
+  }
   clearTimeout(_cloudDebounceTimer);
   _cloudDebounceTimer = setTimeout(async () => {
     try {
@@ -1185,5 +1211,5 @@ window.triggerAutoCloudBackup = function(stateObj) {
     } catch (e) {
       console.warn('[Spendio Cloud] Auto cloud backup failed:', e);
     }
-  }, 400);
+  }, 250);
 };

@@ -1089,11 +1089,11 @@ function saveState() {
   // Real-time automatic cloud backup whenever state is saved
   if (typeof window.triggerAutoCloudBackup === "function") {
     window.triggerAutoCloudBackup(state);
-  } else if (typeof pushToCloud === "function" && typeof isCloudUserSignedIn === "function" && isCloudUserSignedIn() && !isCloudSyncActive()) {
+  } else if (typeof pushToCloud === "function" && typeof isCloudUserSignedIn === "function" && isCloudUserSignedIn()) {
     clearTimeout(_autoBackupTimer);
     _autoBackupTimer = setTimeout(() => {
       pushToCloud(state, true);
-    }, 800);
+    }, 300);
   }
 }
 
