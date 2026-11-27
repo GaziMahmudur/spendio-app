@@ -5017,17 +5017,17 @@ body.modal-open {
   }
 
   .auth-fullscreen-left .auth-header {
-    text-align: center;
+    text-align: left;
     width: 100%;
   }
 
   .auth-fullscreen-left .auth-form-title {
     font-size: 32px;
-    text-align: center;
+    text-align: left;
   }
 
   .auth-fullscreen-left .auth-form-subtitle {
-    text-align: center;
+    text-align: left;
     margin-bottom: 24px;
   }
 
