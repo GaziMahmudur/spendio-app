@@ -191,7 +191,12 @@ async function initFirebase() {
       const thisSessionId = _currentSessionId;
       const activeUid = user ? user.uid : null;
 
-      _currentUser = user;
+            _currentUser = user;
+      if (user) {
+        localStorage.setItem("spendwise_active_user_uid", user.uid);
+        if (typeof _isAuthorizedSession !== "undefined") _isAuthorizedSession = true;
+        if (typeof enforceSecurityGate === "function") enforceSecurityGate();
+      }
 
       if (typeof setStorageUserUid === "function") {
         setStorageUserUid(activeUid);
@@ -453,7 +458,11 @@ async function cloudSignOut() {
   }
 
   updateCloudUI();
-  showToast("Signed out. Switched to offline guest mode.", "info");
+  localStorage.removeItem("spendwise_active_user_uid");
+  sessionStorage.removeItem("spendio_guest_authorized");
+  if (typeof _isAuthorizedSession !== "undefined") _isAuthorizedSession = false;
+  if (typeof enforceSecurityGate === "function") enforceSecurityGate();
+  showToast("Signed out successfully.", "info");
 }
 
 // ─────────────────────────────────────────────────────
@@ -1008,7 +1017,7 @@ function updateCloudUI() {
               <h2 class="acc-hero-name">${displayName}</h2>
               <p class="acc-hero-email">${email}</p>
               <div class="acc-hero-meta">
-                <span class="acc-badge-cloud"><span class="pulse-dot"></span> Cloud Sync Active</span>
+                <span class="status-badge status-badge-success acc-badge-cloud"><span class="pulse-dot"></span> Cloud Active</span>
               </div>
             </div>
           </div>

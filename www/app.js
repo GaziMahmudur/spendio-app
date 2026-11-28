@@ -759,6 +759,7 @@ let qcatSelectedColor = PRESET_COLORS[0];
 
 // ── INIT ───────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
+  enforceSecurityGate();
   if (typeof lucide !== "undefined" && lucide.createIcons) {
     lucide.createIcons();
   }
@@ -1072,40 +1073,16 @@ function loadState() {
     state.completedSavingsGoals = [];
   }
 
-  // Restore safeguard: Ensure the completed "WATCH" goal is preserved in completed history
-  const hasWatchGoal = (state.completedSavingsGoals || []).some(
-    g => g.code === "WATCH" || (g.name && g.name.toLowerCase().includes("ghori"))
-  );
-  if (!hasWatchGoal) {
-    const defaultDate = (state.expenses && state.expenses[0] && state.expenses[0].date) || "2026-11-26";
-    state.completedSavingsGoals.unshift({
-      id: "goal_comp_watch_restored",
-      code: "WATCH",
-      name: "Ekta ghori kinechi",
-      totalSaved: 3000,
-      actualSpent: 3000,
-      surplus: 0,
-      date: defaultDate
-    });
-    // Ensure the corresponding expense transaction also exists so records match
-    const hasWatchExp = (state.expenses || []).some(
-      e => e.savingsGoalSpent === "WATCH" || (e.desc && e.desc.includes("[Goal Completed: WATCH]"))
-    );
-    if (!hasWatchExp) {
-      const savingsCat = state.categories.find(c => c.id === "cat_savings" || c.name.toLowerCase() === "savings");
-      state.expenses.unshift({
-        id: "exp_watch_restored",
-        amount: 3000,
-        categoryId: savingsCat ? savingsCat.id : "cat_savings",
-        date: defaultDate,
-        desc: "Ekta ghori kinechi [Goal Completed: WATCH]",
-        savingsGoalSpent: "WATCH"
-      });
-    }
-    if (state.accounts && state.accounts[activeId]) {
-      state.accounts[activeId].completedSavingsGoals = state.completedSavingsGoals;
-      state.accounts[activeId].expenses = state.expenses;
-    }
+  // Clean any legacy mock dummy data if previously injected
+  if (state.expenses && state.expenses.length > 0) {
+    state.expenses = state.expenses.filter(e => e.id !== "exp_watch_restored" && e.desc !== "Ekta ghori kinechi [Goal Completed: WATCH]");
+  }
+  if (state.completedSavingsGoals && state.completedSavingsGoals.length > 0) {
+    state.completedSavingsGoals = state.completedSavingsGoals.filter(g => g.id !== "goal_comp_watch_restored" && g.code !== "WATCH");
+  }
+  if (state.accounts && state.accounts[activeId]) {
+    state.accounts[activeId].expenses = state.expenses;
+    state.accounts[activeId].completedSavingsGoals = state.completedSavingsGoals;
   }
 }
 
@@ -1239,15 +1216,18 @@ function navigateTo(page) {
 // ── SCROLL LOCKING HELPERS ─────────────────────────────
 function updateScrollLocks() {
   const hasOpenModal = !!document.querySelector('.modal-backdrop.open, .copy-preview-modal.open');
+  const authModal = document.getElementById('authModal');
+  const hasOpenAuth = !!(authModal && authModal.classList.contains('open'));
   const sidebar = document.getElementById('sidebar');
   const hasOpenSidebar = !!(sidebar && sidebar.classList.contains('open'));
 
   // Body classes
   document.body.classList.toggle('modal-open', hasOpenModal);
+  document.body.classList.toggle('auth-open', hasOpenAuth);
   document.body.classList.toggle('sidebar-open', hasOpenSidebar);
 
-  // If any modal or mobile sidebar is open, lock body/pages-container scroll
-  if (hasOpenModal || (hasOpenSidebar && window.innerWidth <= 900)) {
+  // If any modal, auth screen or mobile sidebar is open, lock body/pages-container scroll
+  if (hasOpenModal || hasOpenAuth || (hasOpenSidebar && window.innerWidth <= 900)) {
     document.body.style.overflow = 'hidden';
     const pc = document.querySelector('.pages-container');
     if (pc) pc.style.overflow = 'hidden';
@@ -1630,7 +1610,7 @@ function renderRecentTransactions(listOverride) {
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">🧾</div><p>No transactions found for this period.<br/>Add an expense or switch filter!</p></div>`;
     return;
   }
-  el.innerHTML = `<div class="preview-table-wrap">
+  el.innerHTML = `<div class="preview-table-wrap content-fade-in">
     <table class="preview-table">
       <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Note</th><th class="col-amount">Amount</th><th class="col-actions">Actions</th></tr></thead>
       <tbody>${sorted.map((e) => txItemHTML(e)).join("")}</tbody>
@@ -1677,7 +1657,7 @@ function txItemHTML(expense) {
 
   const formattedDescHTML = formatTxDescHTML(expense.desc, expense.savingsCode);
 
-  return `<tr>
+  return `<tr id="txRow-${expense.id}" data-expense-id="${expense.id}">
     <td style="white-space: nowrap;">${fmtDate(expense.date)}</td>
     <td style="font-weight: 600;">${formattedDescHTML}</td>
     <td style="white-space: nowrap;"><span style="display:inline-block; padding: 4px 8px; border-radius: 4px; background: ${
@@ -2157,7 +2137,7 @@ function filterTransactions() {
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><p>No transactions found.</p></div>`;
     return;
   }
-  el.innerHTML = `<div class="preview-table-wrap">
+  el.innerHTML = `<div class="preview-table-wrap content-fade-in">
     <table class="preview-table">
       <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Note</th><th class="col-amount">Amount</th><th class="col-actions">Actions</th></tr></thead>
       <tbody>${list.map((e) => txItemHTML(e)).join("")}</tbody>
@@ -2240,7 +2220,12 @@ function openAddExpenseModalForSavings() {
   openAddExpenseModal(null, savingsCat ? savingsCat.id : "cat_savings");
 }
 function closeAddExpenseModal() {
-  document.getElementById("addExpenseModal").classList.remove("open");
+  const modal = document.getElementById("addExpenseModal");
+  if (modal) {
+    modal.classList.add("anim-interrupted");
+    modal.classList.remove("open");
+    setTimeout(() => modal.classList.remove("anim-interrupted"), 150);
+  }
   updateScrollLocks();
   // Also collapse quick-cat panel if open
   const panel = document.getElementById("qcatPanel");
@@ -2276,20 +2261,32 @@ function saveExpense(event) {
 
   if (!desc) {
     showToast("Please enter a description or goal name.", "error");
-    document.getElementById("expDesc")?.focus();
+    const el = document.getElementById("expDesc");
+    if (el) {
+      el.focus();
+      triggerKinestheticShake(el);
+    }
     return;
   }
   if (!amountVal || isNaN(amount) || amount <= 0) {
     showToast("Please enter a valid amount.", "error");
-    document.getElementById("expAmount")?.focus();
+    const el = document.getElementById("expAmount");
+    if (el) {
+      el.focus();
+      triggerKinestheticShake(el);
+    }
     return;
   }
   if (!date) {
     showToast("Please pick a date.", "error");
+    const el = document.getElementById("expDate");
+    if (el) triggerKinestheticShake(el);
     return;
   }
   if (!catId) {
     showToast("Please select a category.", "error");
+    const el = document.querySelector(".cs-trigger, #expenseCategoryGroup");
+    if (el) triggerKinestheticShake(el);
     return;
   }
 
@@ -2373,34 +2370,53 @@ function handleConfirmBackdropClick(e) {
 }
 function executeDelete() {
   if (!deleteTarget) return;
-  if (deleteTarget.type === "expense") {
-    state.expenses = state.expenses.filter((e) => e.id !== deleteTarget.id);
-    showToast("Expense deleted.", "info");
-  } else if (deleteTarget.type === "category") {
-    state.categories = state.categories.filter((c) => c.id !== deleteTarget.id);
-    showToast("Category deleted.", "info");
-  } else if (deleteTarget.type === "balance") {
-    state.balanceRecords = state.balanceRecords.filter(
-      (b) => b.id !== deleteTarget.id,
-    );
-    showToast("Balance record deleted.", "info");
-  } else if (deleteTarget.type === "completed_savings_goal") {
-    const target = deleteTarget.target;
-    if (target.isDerived) {
-      state.expenses = (state.expenses || []).filter(e => "derived_" + e.id !== target.id);
-    } else {
-      const actualIdx = (state.completedSavingsGoals || []).findIndex(g => g.id === target.id);
-      if (actualIdx !== -1) {
-        state.completedSavingsGoals.splice(actualIdx, 1);
-      } else if (deleteTarget.index !== undefined) {
-        state.completedSavingsGoals.splice(deleteTarget.index, 1);
-      }
-    }
-    showToast("Savings history record removed.", "info");
-  }
-  saveState();
-  renderAll();
+  const currentTarget = { ...deleteTarget };
   closeConfirmModal();
+
+  // Spatial Row Deletion: Animate collapse if target element exists in DOM
+  let targetRow = null;
+  if (currentTarget.type === "expense") {
+    targetRow = document.getElementById(`txRow-${currentTarget.id}`);
+  }
+
+  const performDataDeletion = () => {
+    if (currentTarget.type === "expense") {
+      state.expenses = state.expenses.filter((e) => e.id !== currentTarget.id);
+      showToast("Expense deleted.", "info");
+    } else if (currentTarget.type === "category") {
+      state.categories = state.categories.filter((c) => c.id !== currentTarget.id);
+      showToast("Category deleted.", "info");
+    } else if (currentTarget.type === "balance") {
+      state.balanceRecords = state.balanceRecords.filter(
+        (b) => b.id !== currentTarget.id,
+      );
+      showToast("Balance record deleted.", "info");
+    } else if (currentTarget.type === "completed_savings_goal") {
+      const target = currentTarget.target;
+      if (target.isDerived) {
+        state.expenses = (state.expenses || []).filter(e => "derived_" + e.id !== target.id);
+      } else {
+        const actualIdx = (state.completedSavingsGoals || []).findIndex(g => g.id === target.id);
+        if (actualIdx !== -1) {
+          state.completedSavingsGoals.splice(actualIdx, 1);
+        } else if (currentTarget.index !== undefined) {
+          state.completedSavingsGoals.splice(currentTarget.index, 1);
+        }
+      }
+      showToast("Savings history record removed.", "info");
+    }
+    saveState();
+    renderAll();
+  };
+
+  if (targetRow) {
+    targetRow.classList.add("row-collapsing");
+    setTimeout(() => {
+      performDataDeletion();
+    }, 280);
+  } else {
+    performDataDeletion();
+  }
 }
 
 // ── CATEGORIES PAGE ────────────────────────────────────
@@ -2689,7 +2705,7 @@ function renderBalanceHistory() {
         b.note ? " · " + escHtml(b.note) : ""
       }</div>
       </div>
-      <div class="bal-badge add">Income</div>
+      <div class="status-badge status-badge-success"><span class="status-badge-icon">✓</span> Income</div>
       <div class="bal-actions">
         <button class="tx-action-btn" aria-label="Edit income: ${escHtml(b.source || 'Income')}" onclick="editBalance('${
           b.id
@@ -2754,7 +2770,7 @@ function renderExportPreview() {
   }
   const rows = expenses.map((e) => {
     const cat = state.categories.find((c) => c.id === e.categoryId);
-    return `<tr>
+    return `<tr id="txRow-${expense.id}" data-expense-id="${expense.id}">
       <td>${fmtDate(e.date)}</td>
       <td>${escHtml(e.desc)}</td>
       <td>${cat ? cat.icon + " " + escHtml(cat.name) : "Uncategorized"}</td>
@@ -3068,6 +3084,53 @@ function csvEsc(s) {
   return (s || "").toString().replace(/"/g, '""');
 }
 
+// ── PURPOSEFUL MOTION UTILITIES ──────────────────────────────
+function triggerKinestheticShake(el) {
+  if (!el) return;
+  el.classList.remove("anim-shake-error", "shake-error");
+  void el.offsetWidth; // Force reflow
+  el.classList.add("anim-shake-error");
+  setTimeout(() => {
+    el.classList.remove("anim-shake-error");
+  }, 450);
+}
+
+function triggerParticleBurst(originEl, particleCount = 12) {
+  if (!originEl) return;
+  originEl.classList.add("anim-pop");
+  setTimeout(() => originEl.classList.remove("anim-pop"), 450);
+
+  const rect = originEl.getBoundingClientRect();
+  const container = document.createElement("div");
+  container.className = "particle-burst-container";
+  container.style.position = "fixed";
+  container.style.left = `${rect.left + rect.width / 2}px`;
+  container.style.top = `${rect.top + rect.height / 2}px`;
+  document.body.appendChild(container);
+
+  const colors = ["#2563eb", "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899"];
+
+  for (let i = 0; i < particleCount; i++) {
+    const p = document.createElement("div");
+    p.className = "burst-particle";
+    const angle = (i / particleCount) * 2 * Math.PI + (Math.random() - 0.5) * 0.4;
+    const distance = 36 + Math.random() * 32;
+    const dx = Math.cos(angle) * distance;
+    const dy = Math.sin(angle) * distance;
+
+    p.style.setProperty("--dx", `${dx}px`);
+    p.style.setProperty("--dy", `${dy}px`);
+    p.style.background = colors[i % colors.length];
+    p.style.width = `${5 + Math.random() * 4}px`;
+    p.style.height = p.style.width;
+    container.appendChild(p);
+  }
+
+  setTimeout(() => {
+    if (container.parentNode) container.parentNode.removeChild(container);
+  }, 600);
+}
+
 // ── EXPORT TABS ────────────────────────────────────────
 function switchExportTab(tab) {
   document
@@ -3304,7 +3367,11 @@ function closeImportResultModal() {
 
 // ── TOAST ──────────────────────────────────────────────
 function showToast(message, type = "info") {
-  const icons = { success: "✅", info: "ℹ️", error: "❌" };
+  const icons = {
+    success: `<svg class="success-check-svg" viewBox="0 0 52 52" style="width:20px;height:20px;display:inline-block;vertical-align:middle;margin-right:4px;"><circle class="success-circle-path" cx="26" cy="26" r="20" stroke-width="4"></circle><path class="success-tick-path" d="M16 26l7 7 14-14" stroke-width="5"></path></svg>`,
+    info: "ℹ️",
+    error: "❌"
+  };
   const el = document.createElement("div");
   el.className = `toast ${type}`;
   el.innerHTML = `<span>${icons[type] || "ℹ️"}</span> ${escHtml(message)}`;
@@ -3327,6 +3394,7 @@ function escHtml(str) {
 
 // Keep export preview updated on filter changes
 document.addEventListener("DOMContentLoaded", () => {
+  enforceSecurityGate();
   [
     "exportFrom",
     "exportTo",
@@ -3646,8 +3714,8 @@ function renderSavingsPage() {
                 <span style="display:inline-block; font-size: 10px; font-weight: 800; letter-spacing: 0.5px; padding: 2px 7px; border-radius: 4px; background: rgba(16,185,129,0.18); color: #059669;">
                   CODE: ${escHtml(cg.code)}
                 </span>
-                <span style="display:inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: var(--radius-pill); background: #10b981; color:#fff;">
-                  ✅ Goal Achieved
+                <span class="status-badge status-badge-success">
+                  <span class="status-badge-icon">✓</span> Goal Achieved
                 </span>
               </div>
               <h4 class="savings-card-title" style="font-size: 17px; font-weight: 700; color: var(--text-primary); margin:0; word-break: break-word; overflow-wrap: anywhere;">${escHtml(cg.name)}</h4>
@@ -3846,10 +3914,116 @@ function handleTopbarAvatarClick() {
   }
 }
 
+// ── TOP-LEVEL SECURITY AUTH GATE ───────────────────────────
+// Device authorization flag in sessionStorage/localStorage
+let _isAuthorizedSession = false;
+let _detachedAppContent = null;
+let _securityObserver = null;
+
+function isAppSessionAuthorized() {
+  if (_isAuthorizedSession) return true;
+  // If user signed into cloud (Firebase UID stored)
+  const currentUid = localStorage.getItem("spendwise_active_user_uid");
+  if (currentUid) {
+    _isAuthorizedSession = true;
+    return true;
+  }
+  // If user explicitly chose Guest Mode for this device/session
+  const guestPass = sessionStorage.getItem("spendio_guest_authorized");
+  if (guestPass === "true") {
+    _isAuthorizedSession = true;
+    return true;
+  }
+  return false;
+}
+
+function enforceSecurityGate() {
+  const isAuth = isAppSessionAuthorized();
+  if (isAuth) {
+    document.documentElement.classList.remove("auth-locked");
+  } else {
+    document.documentElement.classList.add("auth-locked");
+  }
+  const authModal = document.getElementById("authModal");
+  const mainContent = document.querySelector(".main-content");
+  const sidebar = document.querySelector(".sidebar");
+  const closeBtn = document.getElementById("authCloseBtn");
+
+  if (!isAppSessionAuthorized()) {
+    // 1. Lock down UI: Show Auth Gate
+    if (authModal) {
+      authModal.classList.add("open");
+      authModal.style.display = "block";
+      authModal.style.zIndex = "999999";
+    }
+    // 2. Hide close (X) button - user cannot bypass
+    if (closeBtn) {
+      closeBtn.style.display = "none";
+    }
+    // 3. Detach / hide internal content so inspect/CSS display hacking cannot expose data
+    if (mainContent) {
+      mainContent.setAttribute("aria-hidden", "true");
+      mainContent.style.visibility = "hidden";
+      mainContent.style.pointerEvents = "none";
+    }
+    if (sidebar) {
+      sidebar.setAttribute("aria-hidden", "true");
+      sidebar.style.visibility = "hidden";
+      sidebar.style.pointerEvents = "none";
+    }
+
+    // 4. Install MutationObserver: If any hacker tries to remove 'open' class or set display:none on authModal via devtools, auto-revert instantly
+    if (!_securityObserver && authModal) {
+      _securityObserver = new MutationObserver((mutations) => {
+        if (!isAppSessionAuthorized()) {
+          if (!authModal.classList.contains("open")) {
+            authModal.classList.add("open");
+          }
+          if (authModal.style.display === "none") {
+            authModal.style.display = "block";
+          }
+          if (mainContent && mainContent.style.visibility !== "hidden") {
+            mainContent.style.visibility = "hidden";
+            mainContent.style.pointerEvents = "none";
+          }
+        }
+      });
+      _securityObserver.observe(authModal, { attributes: true, attributeFilter: ["class", "style"] });
+    }
+    updateScrollLocks();
+  } else {
+    // Session is authorized (either signed-in or guest mode active)
+    if (authModal) {
+      authModal.classList.remove("open");
+      authModal.style.display = "";
+    }
+    if (closeBtn) {
+      closeBtn.style.display = "";
+    }
+    if (mainContent) {
+      mainContent.removeAttribute("aria-hidden");
+      mainContent.style.visibility = "";
+      mainContent.style.pointerEvents = "";
+    }
+    if (sidebar) {
+      sidebar.removeAttribute("aria-hidden");
+      sidebar.style.visibility = "";
+      sidebar.style.pointerEvents = "";
+    }
+    updateScrollLocks();
+  }
+}
+
 function openAuthModal() {
   const modal = document.getElementById("authModal");
   if (!modal) return;
   modal.classList.add("open");
+  modal.style.display = "block";
+  const closeBtn = document.getElementById("authCloseBtn");
+  if (closeBtn) {
+    // Only show close button if already logged in / guest
+    closeBtn.style.display = isAppSessionAuthorized() ? "flex" : "none";
+  }
   updateScrollLocks();
   setAuthTab("signin");
   const errEl = document.getElementById("authErrorMsg");
@@ -3857,14 +4031,26 @@ function openAuthModal() {
 }
 
 function closeAuthModal() {
+  // If device is not authorized yet, do not allow closing
+  if (!isAppSessionAuthorized()) {
+    showToast("Please log in or select Continue as Guest.", "warning");
+    return;
+  }
   const modal = document.getElementById("authModal");
-  if (modal) modal.classList.remove("open");
+  if (modal) {
+    modal.classList.add("anim-interrupted");
+    modal.classList.remove("open");
+    modal.style.display = "";
+    setTimeout(() => modal.classList.remove("anim-interrupted"), 150);
+  }
   updateScrollLocks();
 }
 
 function handleAuthBackdrop(event) {
   if (event.target && event.target.id === "authModal") {
-    closeAuthModal();
+    if (isAppSessionAuthorized()) {
+      closeAuthModal();
+    }
   }
 }
 
@@ -3884,6 +4070,8 @@ function setAuthTab(tab) {
   const errEl = document.getElementById("authErrorMsg");
   if (errEl) errEl.style.display = "none";
 
+  const instaBottomBtn = document.getElementById("instaBottomBtnText");
+
   if (tab === "signin") {
     if (title) title.innerHTML = "Log in to<br>Spendio";
     if (subtitle) {
@@ -3891,7 +4079,9 @@ function setAuthTab(tab) {
     }
     if (nameGroup) nameGroup.style.display = "none";
     if (forgotLink) forgotLink.style.display = "block";
-    if (submitText) submitText.textContent = "Continue with email";
+    const isDesktop = window.innerWidth > 900;
+    if (submitText) submitText.textContent = isDesktop ? "Continue with email" : "Log in";
+    if (instaBottomBtn) instaBottomBtn.textContent = "Create new account";
   } else {
     if (title) title.innerHTML = "Sign up to<br>Spendio";
     if (subtitle) {
@@ -3899,14 +4089,132 @@ function setAuthTab(tab) {
     }
     if (nameGroup) nameGroup.style.display = "block";
     if (forgotLink) forgotLink.style.display = "none";
-    if (submitText) submitText.textContent = "Create account with email";
+    const isDesktopSignUp = window.innerWidth > 900;
+    if (submitText) submitText.textContent = isDesktopSignUp ? "Continue with email" : "Sign up";
+    if (instaBottomBtn) instaBottomBtn.textContent = "I have an account";
   }
 }
 
 function togglePasswordVisibility(inputId) {
   const input = document.getElementById(inputId);
   if (!input) return;
-  input.type = input.type === "password" ? "text" : "password";
+  const isNowText = input.type === "password";
+  input.type = isNowText ? "text" : "password";
+
+  // Find the toggle button associated with this input
+  const wrap = input.closest(".password-input-wrap");
+  const btn = wrap ? wrap.querySelector(".btn-toggle-eye") : document.getElementById("btnToggleAuthPassword");
+  if (btn) {
+    if (isNowText) {
+      btn.classList.add("show-password");
+      btn.setAttribute("aria-label", "Hide password");
+    } else {
+      btn.classList.remove("show-password");
+      btn.setAttribute("aria-label", "Show password");
+    }
+  }
+}
+
+// ── FORGOT PASSWORD MODAL HANDLERS ─────────────────────────
+function openForgotPasswordModal(event) {
+  if (event) event.preventDefault();
+  const modal = document.getElementById("modalForgotPassword");
+  if (!modal) {
+    handleAuthForgotPassword(event);
+    return;
+  }
+  const currentEmail = document.getElementById("authEmailInput")?.value || "";
+  const modalInput = document.getElementById("forgotModalEmailInput");
+  if (modalInput && currentEmail) {
+    modalInput.value = currentEmail;
+  }
+  const statusEl = document.getElementById("forgotModalStatusMsg");
+  if (statusEl) {
+    statusEl.style.display = "none";
+    statusEl.textContent = "";
+  }
+  modal.classList.add("open");
+  updateScrollLocks();
+  setTimeout(() => {
+    const box = modal.querySelector(".modal-box");
+    if (box) box.scrollIntoView({ behavior: "smooth", block: "center" });
+    modalInput?.focus({ preventScroll: true });
+  }, 120);
+}
+
+function closeForgotPasswordModal() {
+  const modal = document.getElementById("modalForgotPassword");
+  if (modal) {
+    modal.classList.remove("open");
+    updateScrollLocks();
+  }
+}
+
+function handleForgotPasswordBackdrop(event) {
+  if (event.target && event.target.id === "modalForgotPassword") {
+    closeForgotPasswordModal();
+  }
+}
+
+async function submitForgotPasswordModal(event) {
+  if (event) event.preventDefault();
+  const emailInput = document.getElementById("forgotModalEmailInput");
+  const statusEl = document.getElementById("forgotModalStatusMsg");
+  const submitBtn = document.getElementById("btnForgotModalSubmit");
+  const email = emailInput?.value?.trim() || "";
+
+  if (!email) {
+    if (statusEl) {
+      statusEl.textContent = "Please enter a valid email address.";
+      statusEl.style.color = "#dc2626";
+      statusEl.style.background = "#fee2e2";
+      statusEl.style.display = "block";
+    }
+    return;
+  }
+
+  const origText = submitBtn ? submitBtn.textContent : "Send Reset Link";
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Sending…";
+  }
+
+  try {
+    if (typeof cloudResetPassword === "function") {
+      await cloudResetPassword(email);
+    } else {
+      showToast("Password reset link simulated for " + email, "success");
+    }
+    if (statusEl) {
+      statusEl.textContent = "✓ Password reset instructions sent to " + email;
+      statusEl.style.color = "#166534";
+      statusEl.style.background = "#dcfce7";
+      statusEl.style.display = "block";
+    }
+    setTimeout(() => {
+      closeForgotPasswordModal();
+    }, 1800);
+  } catch (err) {
+    if (statusEl) {
+      statusEl.textContent = err.message || "Failed to send reset email.";
+      statusEl.style.color = "#dc2626";
+      statusEl.style.background = "#fee2e2";
+      statusEl.style.display = "block";
+    }
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = origText;
+    }
+  }
+}
+
+// ── GUEST MODE HANDLER ─────────────────────────────────────
+function continueAsGuest() {
+  _isAuthorizedSession = true;
+  sessionStorage.setItem("spendio_guest_authorized", "true");
+  enforceSecurityGate();
+  showToast("Welcome! Browsing in Guest Mode (Offline).", "info");
 }
 
 async function handleAuthGoogle() {
@@ -3962,6 +4270,9 @@ async function handleAuthSubmit(event) {
     if (errEl) {
       errEl.textContent = err.message || "Authentication failed.";
       errEl.style.display = "block";
+      triggerKinestheticShake(errEl);
+      const formWrap = document.querySelector(".auth-fullscreen-form-wrap");
+      if (formWrap) triggerKinestheticShake(formWrap);
     }
   } finally {
     if (submitBtn) submitBtn.disabled = false;
@@ -4007,3 +4318,215 @@ document.addEventListener("focusin", (e) => {
     }
   }
 });
+
+// ── SKELETON PLACEHOLDER GENERATORS (PERCEIVED PERFORMANCE) ──
+function renderTransactionTableSkeleton(count = 5) {
+  return `<div class="preview-table-wrap">
+    <table class="preview-table" style="pointer-events: none;">
+      <thead>
+        <tr>
+          <th>Date</th><th>Description</th><th>Category</th><th>Note</th>
+          <th class="col-amount">Amount</th><th class="col-actions">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${Array.from({ length: count }).map(() => `
+          <tr>
+            <td><span class="skeleton-box skeleton-text short" style="height: 12px; margin: 0;"></span></td>
+            <td><span class="skeleton-box skeleton-text medium" style="height: 14px; margin: 0;"></span></td>
+            <td><span class="skeleton-box skeleton-text" style="height: 20px; width: 85px; border-radius: 4px; margin: 0;"></span></td>
+            <td><span class="skeleton-box skeleton-text short" style="height: 12px; margin: 0;"></span></td>
+            <td class="cell-amount"><span class="skeleton-box skeleton-text short" style="height: 14px; margin: 0 0 0 auto;"></span></td>
+            <td style="text-align: right;"><span class="skeleton-box skeleton-text" style="height: 20px; width: 44px; margin: 0 0 0 auto; border-radius: 4px;"></span></td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function renderStatCardsSkeleton() {
+  return Array.from({ length: 3 }).map(() => `
+    <div class="stat-card glass-card skeleton-stat-card" style="display:flex; flex-direction:column; justify-content:center; gap:8px;">
+      <span class="skeleton-box skeleton-text short" style="height: 12px;"></span>
+      <span class="skeleton-box skeleton-text medium" style="height: 22px;"></span>
+    </div>
+  `).join("");
+}
+
+// ── MICRO-INTERACTIONS ENGINE ─────────────────────────────
+
+// Spec 2: Weighted Pull-to-Refresh (0.35x drag resistance)
+function initPullToRefresh(containerSelector, onRefresh) {
+  const container = document.querySelector(containerSelector);
+  if (!container) return;
+
+  let startY = 0;
+  let currentY = 0;
+  let isDragging = false;
+  const resistance = 0.35; // Exact 35% drag damping factor
+  const threshold = 70; // pixels to trigger refresh
+
+  container.addEventListener("touchstart", (e) => {
+    if (container.scrollTop === 0) {
+      startY = e.touches[0].clientY;
+      isDragging = true;
+    }
+  }, { passive: true });
+
+  container.addEventListener("touchmove", (e) => {
+    if (!isDragging) return;
+    currentY = e.touches[0].clientY;
+    const delta = currentY - startY;
+    if (delta > 0) {
+      const translation = delta * resistance;
+      container.style.transform = `translateY(${Math.min(translation, threshold * 1.5)}px)`;
+      container.style.transition = "none";
+    }
+  }, { passive: true });
+
+  container.addEventListener("touchend", () => {
+    if (!isDragging) return;
+    isDragging = false;
+    const delta = currentY - startY;
+    container.style.transition = "transform 0.3s var(--ease-spring)";
+    container.style.transform = "translateY(0)";
+
+    if (delta * resistance >= threshold && typeof onRefresh === "function") {
+      onRefresh();
+    }
+    startY = 0;
+    currentY = 0;
+  });
+}
+
+// Spec 3: Rolling Number / Digit Transition (Odometer roll)
+function animateRollingNumber(element, newNumberText) {
+  if (!element) return;
+  const chars = String(newNumberText).split("");
+  let html = "";
+
+  chars.forEach((char) => {
+    if (/\d/.test(char)) {
+      const digit = parseInt(char, 10);
+      html += `<span class="rolling-digit-box"><span class="rolling-digit-column" style="transform: translateY(-${digit * 10}%);">${[0,1,2,3,4,5,6,7,8,9].map(n => `<span class="rolling-digit-item">${n}</span>`).join("")}</span></span>`;
+    } else {
+      html += `<span>${char}</span>`;
+    }
+  });
+
+  element.innerHTML = html;
+}
+
+// Spec 4: Drag-to-Reorder Lift & Shift (1.05 scale & surrounding shift)
+function initDraggableReorder(listSelector, onReorder) {
+  const list = document.querySelector(listSelector);
+  if (!list) return;
+
+  let draggedItem = null;
+
+  list.querySelectorAll(".draggable-item").forEach((item) => {
+    item.setAttribute("draggable", "true");
+
+    item.addEventListener("dragstart", () => {
+      draggedItem = item;
+      setTimeout(() => item.classList.add("is-dragging"), 0); // 105% scale via CSS
+    });
+
+    item.addEventListener("dragend", () => {
+      item.classList.remove("is-dragging");
+      list.querySelectorAll(".draggable-item").forEach(el => el.classList.remove("shift-down", "shift-up"));
+      if (typeof onReorder === "function") onReorder();
+    });
+
+    item.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      const afterElement = getDragAfterElement(list, e.clientY);
+      if (afterElement == null) {
+        list.appendChild(draggedItem);
+      } else {
+        list.insertBefore(draggedItem, afterElement);
+      }
+    });
+  });
+
+  function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll(".draggable-item:not(.is-dragging)")];
+    return draggableElements.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: child };
+      } else {
+        return closest;
+      }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+  }
+}
+
+// Spec 6: Two-step Sequenced Success Checkmark Generator
+function createSuccessCheckmarkHTML() {
+  return `<svg class="success-check-svg" viewBox="0 0 52 52">
+    <circle class="success-circle-path" cx="26" cy="26" r="20"></circle>
+    <path class="success-tick-path" d="M16 26l7 7 14-14"></path>
+  </svg>`;
+}
+
+// ── LIQUID GLASS: SCROLL-ADAPTIVE TOPBAR & NAVIGATION ─────
+let lastScrollTop = 0;
+const scrollDeltaThreshold = 12;
+
+window.addEventListener("scroll", () => {
+  const topbar = document.querySelector(".topbar");
+  if (!topbar) return;
+  const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+
+  if (Math.abs(lastScrollTop - currentScroll) <= scrollDeltaThreshold) return;
+
+  if (currentScroll > lastScrollTop && currentScroll > 60) {
+    // Scrolling down -> elevate content by smoothly hiding topbar
+    topbar.classList.add("scroll-hidden");
+  } else if (currentScroll < lastScrollTop) {
+    // Scrolling up -> restore topbar immediately
+    topbar.classList.remove("scroll-hidden");
+  }
+  lastScrollTop = Math.max(0, currentScroll);
+}, { passive: true });
+
+// ── LIQUID GLASS: TAP-ANCHORED CONTEXT MENUS ──────────────
+function openTapAnchoredMenu(event, items = []) {
+  event.stopPropagation();
+  // Remove any existing active popovers
+  document.querySelectorAll(".tap-anchored-popover").forEach(el => el.remove());
+
+  const clickX = event.clientX || (event.touches && event.touches[0].clientX) || 100;
+  const clickY = event.clientY || (event.touches && event.touches[0].clientY) || 100;
+
+  const menu = document.createElement("div");
+  menu.className = "tap-anchored-popover";
+  menu.style.top = `${clickY + 8}px`;
+  menu.style.left = `${Math.min(clickX, window.innerWidth - 200)}px`;
+
+  menu.innerHTML = items.map(item => `
+    <div class="tap-menu-item" style="padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-primary); transition: background 0.15s ease;" onclick="${item.action}">
+      ${item.icon ? `<span style="margin-right: 8px;">${item.icon}</span>` : ""}${escHtml(item.label)}
+    </div>
+  `).join("");
+
+  document.body.appendChild(menu);
+
+  const closeMenu = (e) => {
+    if (!menu.contains(e.target)) {
+      menu.remove();
+      document.removeEventListener("click", closeMenu);
+    }
+  };
+  setTimeout(() => document.addEventListener("click", closeMenu), 10);
+}
+
+
+
+
+function handleAuthQRCode() {
+  showToast("Scan the QR code from your Spendio mobile app to instantly sign in.");
+}

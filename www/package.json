@@ -1,0 +1,37 @@
+{
+  "name": "spendio",
+  "version": "1.4.0",
+  "description": "Spendio is a clean, modern, and completely local-first expense tracking application designed with a beautiful Apple iOS aesthetics.",
+  "main": "app.js",
+  "scripts": {
+    "build:js": "node build-js.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GaziMahmudur/spendwise-app.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/GaziMahmudur/spendwise-app/issues"
+  },
+  "homepage": "https://github.com/GaziMahmudur/spendwise-app#readme",
+  "dependencies": {
+    "@capacitor-firebase/authentication": "^8.3.0",
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/filesystem": "^8.1.3",
+    "@capacitor/share": "^8.0.1",
+    "firebase": "^12.17.1"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "esbuild": "^0.28.2",
+    "sharp": "^0.35.3"
+  }
+}

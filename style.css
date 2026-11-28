@@ -54,6 +54,13 @@
   --radius-md: 11px;               /* rounded.md */
   --radius-pill: 9999px;           /* rounded.pill */
 
+  /* ── Tactile Spring Physics Tokens ── */
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.15); /* Natural ~1.5% overshoot */
+  --ease-spring-snappy: cubic-bezier(0.2, 0.9, 0.3, 1.08); /* Brisk UI interactive response */
+  --ease-decel: cubic-bezier(0.05, 0.7, 0.1, 1.0); /* Momentum decay */
+  --transition-spring: 0.28s var(--ease-spring);
+  --transition-press: 0.12s cubic-bezier(0.2, 0.8, 0.25, 1);
+
   /* ── Layout & Responsive Safe Areas ── */
   --sidebar-w: 240px;
   --topbar-h: calc(54px + env(safe-area-inset-top, 0px));
@@ -61,7 +68,7 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
-  --transition: 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  --transition: 0.24s var(--ease-spring-snappy);
 
   /* ── Apple Elevation (Clean hairlines & soft product shadow) ── */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -268,8 +275,8 @@ body {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(17, 24, 39, 0.5);
-  backdrop-filter: blur(4px);
+  background: rgba(17, 24, 39, 0.65);
+  /* solid interface */
   z-index: 99;
   overscroll-behavior: contain;
   touch-action: none;
@@ -286,19 +293,33 @@ body {
   flex-direction: column;
 }
 
-/* ── TOPBAR ── */
+/* ── TOPBAR (SOLID SURFACE) ── */
 .topbar {
   position: sticky;
   top: 0;
   height: var(--topbar-h);
-  background: var(--bg-surface);
-  border-bottom: 1px solid var(--border);
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   display: flex;
   align-items: center;
   gap: 16px;
   padding: 0 28px;
   z-index: 50;
-  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s var(--ease-spring), opacity 0.25s ease, background 0.3s ease;
+  will-change: transform;
+}
+
+[data-theme="dark"] .topbar {
+  background: #111827;
+  border-bottom: 1px solid #1f2937;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.topbar.scroll-hidden {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .topbar-title {
@@ -419,50 +440,50 @@ body {
 
 /* Balance card – Shikho purple gradient */
 .card-balance {
-  background: linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%);
-  border: none;
+  background: linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%) !important;
+  border: none !important;
 }
 .card-balance::before {
   background: #fff;
 }
 .card-balance .card-label,
 .card-balance .card-sub {
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.8) !important;
 }
 .card-balance .card-amount {
-  color: #fff;
+  color: #ffffff !important;
 }
 
 /* Income card */
 .card-income {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  border: none;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  border: none !important;
 }
 .card-income::before {
   background: #fff;
 }
 .card-income .card-label,
 .card-income .card-sub {
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.8) !important;
 }
 .card-income .card-amount {
-  color: #fff;
+  color: #ffffff !important;
 }
 
 /* Expenses card */
 .card-expenses {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  border: none;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+  border: none !important;
 }
 .card-expenses::before {
   background: #fff;
 }
 .card-expenses .card-label,
 .card-expenses .card-sub {
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.8) !important;
 }
 .card-expenses .card-amount {
-  color: #fff;
+  color: #ffffff !important;
 }
 
 .card-label {
@@ -2039,8 +2060,8 @@ input[type="number"]::-webkit-inner-spin-button {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(17, 24, 39, 0.6);
-  backdrop-filter: blur(8px);
+  background: rgba(17, 24, 39, 0.65);
+  /* solid interface */
   z-index: 200;
   align-items: center;
   justify-content: center;
@@ -2202,8 +2223,8 @@ input[type="number"]::-webkit-inner-spin-button {
   width: 100%;
   height: 100%;
   height: 100dvh;
-  background: rgba(17, 24, 39, 0.55);
-  backdrop-filter: blur(8px);
+  background: rgba(17, 24, 39, 0.65);
+  /* solid interface */
   z-index: 200;
   align-items: flex-start;
   justify-content: center;
@@ -3261,7 +3282,7 @@ body.dropdown-open::before {
   inset: 0;
   z-index: 100;
   background: rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(2px);
+  /* solid interface */
   pointer-events: none;
   animation: modalIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -4025,9 +4046,16 @@ button:active,
 
 /* ── PREVENT BACKGROUND SCROLL WHEN SIDEBAR OR MODAL IS OPEN ── */
 body.sidebar-open,
-body.modal-open {
+body.modal-open,
+body.auth-open {
   overflow: hidden !important;
   overscroll-behavior: none !important;
+}
+
+body.auth-open .main-content,
+body.auth-open .pages-container {
+  overflow: hidden !important;
+  pointer-events: none !important;
 }
 @media (max-width: 900px) {
   body.sidebar-open {
@@ -4591,9 +4619,9 @@ body.modal-open {
   width: 100vw;
   height: 100vh;
   height: 100dvh;
-  background: rgba(15, 10, 31, 0.45);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(17, 24, 39, 0.65);
+  /* solid interface */
+  -webkit-/* solid interface */
   z-index: 1000;
   align-items: center;
   justify-content: center;
@@ -4616,7 +4644,7 @@ body.modal-open {
   width: 100vw;
   height: 100vh;
   height: 100dvh;
-  background: #ffffff;
+  background: #f8f9fa; /* Clean light off-white/cool gray canvas (#f7f8f9 / #f8f9fa) */
   z-index: 9999;
   display: none;
   overflow-y: auto;
@@ -4683,7 +4711,7 @@ body.modal-open {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 60px 40px 40px 10%;
+  padding: 56px 40px 36px 8%;
   background: transparent;
   box-sizing: border-box;
 }
@@ -4692,23 +4720,43 @@ body.modal-open {
   width: 100%;
   max-width: 400px;
   margin: auto 0 auto auto;
-  padding-right: 40px;
+  padding-right: 50px;
 }
 
 /* Headings */
+.auth-fullscreen-desktop-logo {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.auth-fullscreen-desktop-logo img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 12px;
+  transform: none;
+  transition: transform 0.2s ease;
+}
+
+.auth-fullscreen-desktop-logo img:hover {
+  transform: scale(1.05);
+}
+
 .auth-fullscreen-left .auth-form-title {
-  font-size: 38px;
+  font-size: 40px;
   font-weight: 800;
-  color: #121826;
-  letter-spacing: -1.2px;
+  color: #111827;
+  letter-spacing: -1.4px;
   line-height: 1.15;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 .auth-fullscreen-left .auth-form-subtitle {
   font-size: 14px;
-  color: #64748b;
-  margin-bottom: 32px;
+  color: #6b7280;
+  margin-bottom: 28px;
   font-weight: 400;
 }
 
@@ -4722,29 +4770,32 @@ body.modal-open {
   text-decoration: underline;
 }
 
-/* Input Fields */
+/* Input Fields (Desktop: soft light-gray rounded rectangle, ~12px radius, #eceef1 / #eef0f3 fill, muted gray placeholder) */
 .rev-input {
   width: 100%;
-  background: #f1f3f6 !important;
+  height: 52px;
+  min-height: 52px;
+  background: #eef0f3 !important;
   border: 1px solid transparent !important;
   border-radius: 12px !important;
-  padding: 14px 16px !important;
+  padding: 0 16px !important;
   font-size: 15px !important;
-  color: #0f172a !important;
+  font-weight: 400 !important;
+  color: #111827 !important;
   transition: all 0.2s ease !important;
   outline: none !important;
   box-sizing: border-box;
 }
 
 .rev-input::placeholder {
-  color: #94a3b8;
+  color: #9ca3af;
   font-weight: 400;
 }
 
 .rev-input:focus {
   background: #ffffff !important;
   border-color: #2563eb !important;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
 }
 
 .password-input-wrap {
@@ -4752,25 +4803,95 @@ body.modal-open {
   display: flex;
   align-items: center;
   width: 100%;
+  height: 52px;
 }
 
-.password-input-wrap .form-input {
-  padding-right: 44px !important;
+.password-input-wrap .form-input,
+.password-input-wrap .rev-input {
+  width: 100%;
+  margin-bottom: 0 !important;
+  padding-right: 48px !important;
 }
 
+/* Instagram-Style Eye Icon Toggle: Zero bounce, perfectly static anchor, smooth SVG crossfade */
 .btn-toggle-eye {
   position: absolute;
+  top: 50%;
   right: 14px;
-  background: none;
+  transform: translateY(-50%) !important; /* Fixed coordinate anchor - never jumps vertically */
+  width: 32px;
+  height: 32px;
+  background: transparent;
   border: none;
+  outline: none;
   cursor: pointer;
-  font-size: 16px;
-  opacity: 0.5;
-  transition: opacity 0.2s;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.65;
+  z-index: 5;
+  user-select: none;
+  touch-action: manipulation;
+  transition: opacity 0.18s ease;
+  will-change: opacity;
 }
 
 .btn-toggle-eye:hover {
-  opacity: 0.9;
+  opacity: 0.95;
+}
+
+.btn-toggle-eye:active {
+  opacity: 1;
+  /* Never scale or translateY on active press to prevent any bounce */
+  transform: translateY(-50%) !important;
+}
+
+/* Eye SVG crossfade & rotation */
+.btn-toggle-eye .eye-icon-svg {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  stroke: #8e8e93;
+  transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+.btn-toggle-eye .eye-open {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+.btn-toggle-eye .eye-closed {
+  opacity: 0;
+  transform: scale(0.85) rotate(-12deg);
+}
+
+/* When password visibility is toggled on (.show-password on button or container) */
+.btn-toggle-eye.show-password .eye-open {
+  opacity: 0;
+  transform: scale(0.85) rotate(12deg);
+}
+
+.btn-toggle-eye.show-password .eye-closed {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+  stroke: #2563eb;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-toggle-eye .eye-icon-svg {
+    transition: opacity 0.1s linear;
+    transform: none !important;
+  }
+}
+
+/* On Desktop, hide the mobile inline forgot password link in the form */
+@media (min-width: 901px) {
+  .auth-forgot-wrap {
+    display: none !important;
+  }
 }
 
 .auth-forgot-link {
@@ -4784,18 +4905,20 @@ body.modal-open {
   text-decoration: underline;
 }
 
-/* Primary Button */
+/* Primary CTA Button (Desktop: Full-width pill-shaped ~999px, solid vibrant blue #2563eb, white text "Continue with email") */
 .rev-btn-primary {
   width: 100%;
-  padding: 14px 20px;
+  height: 50px;
+  min-height: 50px;
+  padding: 0 20px;
   background: #2563eb;
   color: #ffffff;
-  border-radius: 99px;
+  border-radius: 999px;
   font-weight: 600;
   font-size: 15px;
   border: none;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.22);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   align-items: center;
@@ -4805,7 +4928,7 @@ body.modal-open {
 
 .rev-btn-primary:hover {
   background: #1d4ed8;
-  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.32);
   transform: translateY(-1px);
 }
 
@@ -4813,13 +4936,13 @@ body.modal-open {
   transform: scale(0.99);
 }
 
-/* Revolut Divider */
+/* Revolut Divider: Centered muted gray "Or" flanked by thin horizontal hairline rules */
 .rev-divider {
   display: flex;
   align-items: center;
   text-align: center;
-  margin: 20px 0;
-  color: #94a3b8;
+  margin: 22px 0 20px;
+  color: #9ca3af;
   font-size: 13px;
   font-weight: 500;
 }
@@ -4828,14 +4951,14 @@ body.modal-open {
 .rev-divider::after {
   content: "";
   flex: 1;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .rev-divider span {
-  padding: 0 14px;
+  padding: 0 16px;
 }
 
-/* Secondary Action Buttons */
+/* Secondary Action Buttons (stacked vertically with consistent spacing) */
 .rev-secondary-actions {
   display: flex;
   flex-direction: column;
@@ -4844,25 +4967,27 @@ body.modal-open {
 
 .rev-btn-outline {
   width: 100%;
+  height: 48px;
+  min-height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 13px 18px;
+  gap: 12px;
+  padding: 0 20px;
   background: #ffffff;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 99px;
-  font-size: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  font-size: 14.5px;
   font-weight: 600;
-  color: #1e293b;
+  color: #1f2937;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .rev-btn-outline:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: #f9fafb;
+  border-color: #d1d5db;
   transform: translateY(-1px);
 }
 
@@ -4870,15 +4995,15 @@ body.modal-open {
   transform: scale(0.99);
 }
 
-/* Personal Account Hint */
+/* Personal Account Helper Link under form */
 .rev-personal-hint-wrap {
-  margin-top: 28px;
+  margin-top: 26px;
   text-align: center;
 }
 
 .rev-personal-hint {
   font-size: 13px;
-  color: #64748b;
+  color: #6b7280;
   margin: 0;
 }
 
@@ -4892,14 +5017,45 @@ body.modal-open {
   text-decoration: underline;
 }
 
-/* Footer row */
+/* Footer (anchored at bottom-left of desktop screen): Small Spendio logo + "Spendio" */
 .rev-fullscreen-footer {
-  font-size: 12px;
-  color: #94a3b8;
+  font-size: 13.5px;
+  color: #4b5563;
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding-top: 30px;
+  gap: 8px;
+  padding-top: 24px;
+}
+
+.rev-footer-logo {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  border-radius: 4px;
+  opacity: 0.85;
+}
+
+.rev-footer-brand {
+  font-weight: 600;
+  color: #4b5563;
+  letter-spacing: -0.2px;
+}
+
+.rev-footer-dot {
+  font-size: 14px;
+  color: #d1d5db;
+}
+
+.rev-footer-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #9ca3af;
+}
+
+.rev-globe-icon {
+  stroke: #9ca3af;
+  flex-shrink: 0;
 }
 
 /* RIGHT COLUMN: Revolut-Style 3D Canvas pushed to right */
@@ -4945,50 +5101,38 @@ body.modal-open {
   font-weight: 500;
 }
 
-/* Responsive for Mobile / Small Screens */
+/* Responsive for Mobile / Small Screens (Strict 1:1 Instagram Mobile Spec) */
 @media (max-width: 900px) {
+  .auth-fullscreen-view {
+    /* Rule 1: Very faint, flat/matte multi-stop pastel tint that is almost white: soft pale peach on far left, off-white in center, very faint mint on right */
+    background: linear-gradient(135deg, #fbf5f4 0%, #f7f9fc 48%, #f5faf8 100%) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    -webkit-overflow-scrolling: touch;
+    box-shadow: none !important;
+  }
+
   .auth-fullscreen-container {
-    position: relative;
     min-height: 100vh;
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    overflow: hidden;
-  }
-
-  /* Watermark-like full background 3D art on mobile */
-  .auth-fullscreen-right {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    min-height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    position: relative;
     padding: 0;
-    z-index: 1;
-    pointer-events: none;
-    opacity: 0.28;
-  }
-
-  .auth-fullscreen-art-container {
+    margin: 0 auto;
     width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    max-width: 390px;
+    box-sizing: border-box;
+    box-shadow: none !important;
   }
 
-  .auth-fullscreen-art-img {
-    width: 130%;
-    max-width: 500px;
-    max-height: 90vh;
-    object-fit: contain;
-    object-position: center;
-    mix-blend-mode: multiply;
+  /* Hide 3D card artwork completely on mobile */
+  .auth-fullscreen-right {
+    display: none !important;
   }
 
   .auth-fullscreen-left {
@@ -4996,69 +5140,309 @@ body.modal-open {
     z-index: 2;
     flex: 1;
     width: 100%;
-    max-width: 440px;
-    padding: 60px 24px 30px;
+    padding: 0 20px 28px;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
     margin: 0 auto;
     box-sizing: border-box;
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 
+  /* Center Form Container */
   .auth-fullscreen-form-wrap {
     width: 100%;
-    max-width: 360px;
-    margin: 0 auto;
-    padding-right: 0;
+    max-width: 100%;
+    margin-top: 15vh; /* Rule 2: ~14%-16% from top edge */
+    margin-bottom: auto;
+    padding: 0;
     display: flex;
     flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* Rule 2: Top Logo - ~58px x 58px, clean crisp icon with zero glow or shadow */
+  .auth-mobile-logo-wrap {
+    display: flex;
     align-items: center;
+    justify-content: center;
+    margin-bottom: 36px;
+    width: 100%;
+  }
+
+  .auth-logo-composition {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Dual Currency Badge rotated on the left side of Auth Logo */
+  .auth-dual-currency-badge {
+    position: absolute;
+    left: -22px;
+    top: 50%;
+    transform: translateY(-50%) rotate(-12deg);
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    background: #1e293b;
+    border: 1.5px solid #ffffff;
+    border-radius: 999px;
+    padding: 2px 6px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.16);
+    z-index: 3;
+    pointer-events: none;
+    line-height: 1;
+  }
+
+  .auth-cur-symbol {
+    font-size: 11px;
+    font-weight: 800;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  .auth-cur-symbol.cur-bdt {
+    color: #10b981; /* Emerald BDT */
+  }
+
+  .auth-cur-symbol.cur-usd {
+    color: #38bdf8; /* Sky USD */
+  }
+
+  .auth-mobile-logo-img {
+    width: 58px;
+    height: 58px;
+    object-fit: contain;
+    border-radius: 14px;
+    filter: none !important;
+    box-shadow: none !important;
+    transform: none !important;
+    transition: transform 0.2s ease;
+  }
+
+  .auth-mobile-logo-img:active {
+    transform: scale(0.96) !important;
   }
 
   .auth-fullscreen-left .auth-header {
-    text-align: left;
+    text-align: center;
     width: 100%;
+    margin-bottom: 0;
   }
 
-  .auth-fullscreen-left .auth-form-title {
-    font-size: 32px;
-    text-align: left;
-  }
-
+  .auth-fullscreen-left .auth-form-title,
   .auth-fullscreen-left .auth-form-subtitle {
-    text-align: left;
-    margin-bottom: 24px;
+    display: none !important;
   }
 
   .auth-fullscreen-form-wrap form {
     width: 100%;
   }
 
-  .rev-divider {
-    width: 100%;
+  /* Rule 3: Input Fields (centered horizontally, ~48px–50px height, 12px radius, thin 1px #dcdde1 border) */
+  .auth-fullscreen-form-wrap .form-group {
+    margin-bottom: 12px !important; /* Exact vertical gap between Input 1 and Input 2: 12px */
   }
 
-  .rev-secondary-actions {
-    width: 100%;
+  .rev-input {
+    width: 100% !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    background: #ffffff !important;
+    border: 1px solid #dcdde1 !important;
+    border-radius: 12px !important;
+    padding: 0 16px !important;
+    font-size: 15px !important;
+    font-weight: 400 !important;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif !important;
+    color: #1c1e21 !important;
+    box-shadow: none !important;
+    box-sizing: border-box !important;
+    margin-bottom: 0 !important;
+    transition: border-color 0.15s ease !important;
   }
 
+  .password-input-wrap {
+    position: relative;
+    width: 100%;
+    height: 48px;
+    display: flex;
+    align-items: center;
+  }
+
+  .password-input-wrap .rev-input {
+    padding-right: 46px !important;
+  }
+
+  /* Placeholder: #8e8e93, 15px, 400 weight */
+  .rev-input::placeholder {
+    color: #8e8e93 !important;
+    font-size: 15px !important;
+    font-weight: 400 !important;
+  }
+
+  .rev-input:focus {
+    background: #ffffff !important;
+    border-color: #0064e0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+  }
+
+  .btn-toggle-eye {
+    position: absolute !important;
+    top: 50% !important;
+    right: 12px !important;
+    transform: translateY(-50%) !important;
+    width: 32px !important;
+    height: 32px !important;
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+    opacity: 0.65 !important;
+    box-shadow: none !important;
+  }
+
+  .btn-toggle-eye:active {
+    transform: translateY(-50%) !important;
+  }
+
+  /* Rule 4: Primary "Log in" Button - gap: 16px, height: 48px, pill 999px, solid flat #0064e0, zero shadow */
+  .rev-btn-primary {
+    width: 100% !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    padding: 0 20px !important;
+    background: #0064e0 !important;
+    color: #ffffff !important;
+    border-radius: 999px !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin-top: 4px !important; /* 12px group margin + 4px = 16px gap below Password input */
+    margin-bottom: 14px !important; /* Exact vertical gap below "Log in" button: 14px */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+  }
+
+  .rev-btn-primary:active {
+    background: #0056bf !important;
+    transform: scale(0.98) !important;
+  }
+
+  /* Rule 5: "Forgot password?" Link (directly below "Log in", 14px gap, color: #1c1e21, 14px font, 500 weight) */
+  .auth-forgot-wrap {
+    width: 100% !important;
+    text-align: center !important;
+    margin-top: 14px !important;
+  }
+
+  .auth-forgot-link {
+    display: inline-block !important;
+    text-align: center !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif !important;
+    color: #1c1e21 !important;
+    text-decoration: none !important;
+    margin: 0 !important;
+  }
+
+  .eye-icon-svg {
+    stroke: #8e8e93;
+    display: block;
+  }
+
+  .auth-forgot-link:hover {
+    text-decoration: underline !important;
+  }
+
+  .rev-divider,
+  .rev-secondary-actions,
   .rev-personal-hint-wrap {
-    width: 100%;
-    text-align: center;
+    display: none !important;
   }
 
-  .auth-fullscreen-close {
-    top: 16px;
-    right: 16px;
-    z-index: 10;
+  /* Rule 6: Bottom Section (anchored near bottom with ~24px–32px bottom inset) */
+  .insta-bottom-actions {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 18px !important; /* Exact vertical gap below "Create new account": 18px */
+    padding-top: 16px !important;
+    padding-bottom: 4px !important;
+    margin-top: auto !important;
+  }
+
+  /* "Create new account" button: height: 46px, pill 999px, transparent, border: 1px solid #0064e0, color: #0064e0 */
+  .insta-create-account-btn {
+    width: 100% !important;
+    height: 46px !important;
+    min-height: 46px !important;
+    padding: 0 20px !important;
+    background: transparent !important;
+    border: 1px solid #0064e0 !important;
+    border-radius: 999px !important;
+    color: #0064e0 !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: none !important;
+    transition: background-color 0.15s ease !important;
+  }
+
+  .insta-create-account-btn:active {
+    background: rgba(0, 100, 224, 0.06) !important;
+    transform: scale(0.98) !important;
+  }
+
+  /* Bottom brand mark: Centered small icon + "[YOUR APP NAME]" in muted dark gray (#4a4b4f), 13px, 500 weight */
+  .insta-brand-footer {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif !important;
+    color: #4a4b4f !important;
+    user-select: none !important;
+  }
+
+  .insta-footer-logo {
+    width: 15px !important;
+    height: 15px !important;
+    object-fit: contain !important;
+    opacity: 0.8 !important;
   }
 
   .rev-fullscreen-footer {
-    width: 100%;
-    justify-content: center;
-    text-align: center;
-    padding-top: 20px;
+    display: none !important;
+  }
+}
+
+/* Hide mobile-specific elements on desktop */
+@media (min-width: 901px) {
+  .insta-top-lang {
+    display: none;
+  }
+  .auth-mobile-logo-wrap {
+    display: none;
+  }
+  .insta-bottom-actions {
+    display: none;
   }
 }
 
@@ -5155,8 +5539,132 @@ body.modal-open {
 }
 
 /* ══════════════════════════════════════════════════════
-   CELEBRATORY GOAL ACHIEVEMENT BADGE (IN TRANSACTIONS)
+   TACTILE MOTION SYSTEM (6 CORE MOTION PRINCIPLES)
 ══════════════════════════════════════════════════════ */
+
+/* Principle 1: Instant Press Feedback on Touchdown (0ms delay) */
+button,
+.btn,
+.nav-item,
+.stat-card,
+.dash-filter-pill,
+.gcs-trigger,
+.dp-trigger,
+.cs-trigger,
+.modal-close,
+.hamburger,
+.tx-action-btn,
+.emoji-btn,
+.color-swatch,
+.export-tab,
+.rev-btn-primary,
+.rev-btn-outline,
+.btn-toggle-eye,
+.badge-goal-achievement {
+  touch-action: manipulation;
+  transition: transform var(--transition-press), opacity var(--transition-press), box-shadow var(--transition-press);
+}
+
+button:active,
+.btn:active,
+.btn-primary:active,
+.btn-secondary:active,
+.btn-add-topbar:active,
+.nav-item:active,
+.gcs-trigger:active,
+.dp-trigger:active,
+.cs-trigger:active,
+.hamburger:active,
+.emoji-btn:active,
+.color-swatch:active,
+.export-tab:active,
+.rev-btn-primary:active,
+.rev-btn-outline:active {
+  transform: scale(0.95) translateZ(0) !important; /* Exact Spec 1: 95% Button Squish */
+  transition-duration: 0.05s !important; /* Instant tactile feedback */
+}
+
+/* Cards & List Rows Tactile Feedback */
+.glass-card,
+.stat-card,
+.recent-card,
+.account-card,
+.history-deposit-card {
+  transition: transform var(--transition-spring), box-shadow var(--transition-spring), border-color var(--transition-spring);
+}
+
+.stat-card:active,
+.history-deposit-card:active {
+  transform: scale(0.985) translateZ(0) !important;
+  transition-duration: 0.06s !important;
+}
+
+/* Principle 2: Spring Physics Animation for Modals & Sheets */
+@keyframes modalIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.94) translateY(16px);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.015) translateY(-2px); /* ~1.5% natural physical overshoot */
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes appleSheetUp {
+  0% {
+    transform: translateY(100%);
+  }
+  75% {
+    transform: translateY(-1.5%); /* ~1.5% overshoot on bottom sheet */
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* Principle 3 & 4: Momentum, Deceleration & Rubber-Banding */
+.pages-container,
+.main-content,
+.sidebar-nav,
+.modal-backdrop,
+.preview-table-wrap,
+.auth-fullscreen-view {
+  -webkit-overflow-scrolling: touch !important; /* iOS & Android native deceleration */
+  scroll-behavior: smooth;
+  overscroll-behavior: auto; /* Allow natural physical rubber-band stretch at boundaries */
+}
+
+/* Principle 5: Interruptible Motion Helper Classes */
+.modal-backdrop,
+.auth-fullscreen-view,
+.sidebar {
+  will-change: transform, opacity;
+}
+
+.anim-interrupted {
+  transition-duration: 0.14s !important;
+  transition-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+}
+
+/* Principle 6: Continuous Curvature & Squircle Corner Smoothing */
+.glass-card,
+.modal-box,
+.stat-card,
+.account-card,
+.btn,
+.form-input,
+.rev-input,
+.sidebar,
+.badge-goal-achievement {
+  corner-smoothing: 60%; /* iOS Continuous Corner curvature draft standard */
+  -webkit-corner-smoothing: 60%;
+}
+
 .badge-goal-achievement {
   display: inline-flex;
   align-items: center;
@@ -5209,4 +5717,769 @@ body.modal-open {
   }
 }
 
+/* ══════════════════════════════════════════════════════
+   PRINCIPLE 7: SKELETON SCREENS & PERCEIVED PERFORMANCE
+══════════════════════════════════════════════════════ */
+.skeleton-box {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0.14) 0%,
+    rgba(148, 163, 184, 0.28) 50%,
+    rgba(148, 163, 184, 0.14) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.8s infinite cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+  user-select: none;
+}
 
+[data-theme="dark"] .skeleton-box {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  background-size: 200% 100%;
+}
+
+@keyframes skeletonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-text {
+  height: 14px;
+  margin-bottom: 6px;
+  border-radius: 4px;
+}
+.skeleton-text.short { width: 45%; }
+.skeleton-text.medium { width: 70%; }
+.skeleton-text.long { width: 95%; }
+
+.skeleton-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.skeleton-stat-card {
+  height: 110px;
+  border-radius: var(--radius);
+}
+
+/* Zero-CLS Smooth Content Crossfade Transition */
+.content-fade-in {
+  animation: contentFadeIn 0.22s var(--ease-spring-snappy) forwards;
+}
+
+@keyframes contentFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════════════════════════════
+   MICRO-INTERACTIONS SYSTEM (EXACT SPECIFICATIONS)
+══════════════════════════════════════════════════════ */
+
+/* Spec 2: Weighted Pull-to-Refresh Container */
+.ptr-container {
+  position: relative;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
+}
+
+.ptr-indicator {
+  position: absolute;
+  top: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transition: transform 0.25s var(--ease-spring);
+  z-index: 50;
+  pointer-events: none;
+}
+
+/* Spec 3: Rolling Odometer Digits */
+.rolling-digit-box {
+  display: inline-flex;
+  overflow: hidden;
+  height: 1.15em;
+  vertical-align: bottom;
+  line-height: 1.15em;
+}
+
+.rolling-digit-column {
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.rolling-digit-item {
+  height: 1.15em;
+  text-align: center;
+}
+
+/* Spec 4: Physical Drag-to-Reorder (105% Lift & Shift) */
+.draggable-item {
+  touch-action: none;
+  transition: transform 0.25s var(--ease-spring), box-shadow 0.25s var(--ease-spring);
+}
+
+.draggable-item.is-dragging {
+  transform: scale(1.05) translateZ(0) !important; /* Exact Spec 4: 105% Lift */
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.22), 0 0 0 1px var(--primary) !important;
+  z-index: 999 !important;
+  opacity: 0.96;
+}
+
+.draggable-item.shift-down {
+  transform: translateY(100%);
+}
+
+.draggable-item.shift-up {
+  transform: translateY(-100%);
+}
+
+/* Spec 5: Decelerated Card Expansion (350ms Ease-Out) */
+.expandable-card,
+.accordion-content,
+.detail-collapse {
+  transition: max-height 350ms cubic-bezier(0.0, 0.0, 0.2, 1) !important; /* Brisk start, smooth ease-out */
+  will-change: max-height, opacity;
+}
+
+/* Spec 6: Sequenced Success Checkmark (Draw Circle -> Draw Tick) */
+.success-check-svg {
+  width: 44px;
+  height: 44px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.success-circle-path {
+  stroke-dasharray: 126;
+  stroke-dashoffset: 126;
+  stroke-width: 3;
+  stroke: #10b981;
+  fill: none;
+  animation: drawCircle 320ms cubic-bezier(0.2, 0.8, 0.25, 1) forwards;
+}
+
+.success-tick-path {
+  stroke-dasharray: 36;
+  stroke-dashoffset: 36;
+  stroke-width: 3.5;
+  stroke: #10b981;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  animation: drawTick 240ms cubic-bezier(0.175, 0.885, 0.32, 1.15) 300ms forwards; /* Starts immediately as circle finishes */
+}
+
+@keyframes drawCircle {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes drawTick {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   LIQUID GLASS & SPATIAL UI SYSTEM
+══════════════════════════════════════════════════════ */
+
+/* Solid Flat Interface: Cards, Surfaces & Modals */
+.liquid-glass-surface,
+.glass-card,
+.modal-box,
+.stat-card:not(.card-balance):not(.card-income):not(.card-expenses),
+.recent-card {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05) !important;
+  position: relative;
+}
+
+[data-theme="dark"] .liquid-glass-surface,
+[data-theme="dark"] .glass-card,
+[data-theme="dark"] .modal-box,
+[data-theme="dark"] .stat-card:not(.card-balance):not(.card-income):not(.card-expenses),
+[data-theme="dark"] .recent-card {
+  background: #1f2937 !important;
+  border: 1px solid #374151 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Remove fake specular gradients and glass reflections */
+.liquid-glass-surface::before,
+.glass-card::before,
+.stat-card::before {
+  display: none !important;
+}
+
+/* Principle 2: Fluid Dynamic Morphing Pills */
+.morph-pill {
+  transition: width 0.32s var(--ease-spring), height 0.32s var(--ease-spring), border-radius 0.32s var(--ease-spring), transform 0.25s var(--ease-spring);
+  will-change: width, height, transform, border-radius;
+}
+
+/* Principle 3: Concentric Hardware-Aligned Geometry */
+/* innerRadius = outerRadius - padding */
+.concentric-outer {
+  border-radius: 24px;
+  padding: 12px;
+}
+.concentric-inner {
+  border-radius: 12px; /* 24px - 12px = 12px exact harmony */
+}
+
+/* Principle 4: Contextual Tap-Origin Anchored Menus */
+.tap-anchored-popover {
+  position: absolute;
+  z-index: 1000;
+  background: #ffffff;
+  /* solid interface */
+  -webkit-/* solid interface */
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 16px;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.12), 0 0 1px rgba(0, 0, 0, 0.1);
+  padding: 8px;
+  transform-origin: top left;
+  animation: tapOriginPop 0.24s var(--ease-spring) forwards;
+  min-width: 180px;
+}
+
+[data-theme="dark"] .tap-anchored-popover {
+  background: rgba(30, 30, 34, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6);
+}
+
+@keyframes tapOriginPop {
+  0% { opacity: 0; transform: scale(0.85); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Principle 6: Layered Depth for Icons & Widgets */
+.layered-glass-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: #ffffff;
+  /* solid interface */
+  -webkit-/* solid interface */
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="dark"] .layered-glass-badge {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* ══════════════════════════════════════════════════════
+   PURPOSEFUL FEEDBACK & SPATIAL CONTINUITY (6 PRINCIPLES)
+══════════════════════════════════════════════════════ */
+
+/* Principle 1: Elastic Toggle Switches (Stretch, Overshoot & Settle) */
+.switch-label,
+.toggle-switch-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+}
+
+.elastic-switch {
+  position: relative;
+  width: 48px;
+  height: 28px;
+  background: var(--bg-hover, #e2e8f0);
+  border: 1.5px solid var(--border, #cbd5e1);
+  border-radius: 99px;
+  transition: background-color 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s ease;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+}
+
+.elastic-switch input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.elastic-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border-radius: 99px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18), 0 0 1px rgba(0, 0, 0, 0.2);
+  transform-origin: center center;
+  transition: transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1),
+              width 0.22s cubic-bezier(0.2, 0.8, 0.25, 1);
+  will-change: transform, width;
+}
+
+/* Organic stretch during travel & spring settle overshoot */
+.elastic-switch:active .elastic-switch-thumb {
+  width: 25px; /* Stretch during press/flick */
+}
+
+.elastic-switch.checked,
+.elastic-switch input[type="checkbox"]:checked + .elastic-switch-thumb,
+.elastic-switch:has(input:checked) {
+  background: #2563eb;
+  border-color: #1d4ed8;
+}
+
+.elastic-switch.checked .elastic-switch-thumb,
+.elastic-switch input[type="checkbox"]:checked + .elastic-switch-thumb,
+.elastic-switch:has(input:checked) .elastic-switch-thumb {
+  transform: translateX(20px);
+}
+
+.elastic-switch:has(input:checked):active .elastic-switch-thumb {
+  transform: translateX(15px); /* Responsive resistance on reverse drag/press */
+  width: 25px;
+}
+
+/* Principle 2: Celebratory Action / Like Feedback (Pop & Particle Burst) */
+.celebrate-btn,
+.action-pop-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.celebrate-btn.anim-pop {
+  animation: celebratePop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes celebratePop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.32); }
+  65% { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+
+/* Radial particle burst container */
+.particle-burst-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.burst-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0);
+  animation: particleFly 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes particleFly {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  60% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.2);
+  }
+}
+
+/* Principle 3: Origin-Anchored Menu Expansion */
+.origin-anchored-menu,
+.gcs-dropdown,
+.cs-dropdown,
+.dp-calendar {
+  transform-origin: top right;
+  transition: transform 0.26s cubic-bezier(0.34, 1.4, 0.64, 1),
+              opacity 0.22s ease-out,
+              visibility 0.22s;
+}
+
+.origin-anchored-menu.anchor-left,
+.gcs-dropdown.anchor-left {
+  transform-origin: top left;
+}
+
+.origin-anchored-menu.anchor-bottom,
+.gcs-dropdown.dropup,
+.cs-dropdown.dropup {
+  transform-origin: bottom right;
+}
+
+/* Principle 4: Kinesthetic Error Shake (Physical "No" Feedback) */
+.shake-error,
+.anim-shake-error {
+  animation: kinestheticShake 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+}
+
+@keyframes kinestheticShake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-8px); }
+  30% { transform: translateX(7px); }
+  45% { transform: translateX(-5px); }
+  60% { transform: translateX(4px); }
+  75% { transform: translateX(-2px); }
+  90% { transform: translateX(1px); }
+}
+
+/* Principle 5: Continuous Sliding Tab Indicator (Pill Tracking) */
+.export-tabs {
+  position: relative;
+}
+
+.export-pill-indicator {
+  display: none !important;
+}
+
+.export-tab {
+  position: relative;
+  z-index: 2;
+  transition: all var(--transition);
+}
+
+.export-tab.active {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
+  box-shadow: 0 4px 12px rgba(109, 40, 217, 0.3) !important;
+  color: #ffffff !important;
+}
+
+/* Principle 6: Spatial Row Deletion (Smooth Collapse, Zero Layout Jump) */
+.row-collapsing {
+  overflow: hidden !important;
+  pointer-events: none !important;
+  transition: max-height 0.32s cubic-bezier(0.2, 0.9, 0.3, 1),
+              opacity 0.22s ease-out,
+              transform 0.26s cubic-bezier(0.2, 0.9, 0.3, 1),
+              padding-top 0.32s ease,
+              padding-bottom 0.32s ease,
+              margin-top 0.32s ease,
+              margin-bottom 0.32s ease !important;
+  transform: translateX(16px) scale(0.96);
+  opacity: 0 !important;
+  max-height: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  border-top-width: 0 !important;
+  border-bottom-width: 0 !important;
+}
+
+tr.row-collapsing > td {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  line-height: 0 !important;
+  height: 0 !important;
+  border: none !important;
+  opacity: 0 !important;
+  transition: all 0.3s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   STATUS BADGES & READABILITY STANDARDS (5 PRINCIPLES)
+══════════════════════════════════════════════════════ */
+
+/* Reusable base status badge conforming to ~20px–22px height, 12px text */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  max-height: 22px;
+  padding: 0 9px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.1px;
+  white-space: nowrap;
+  vertical-align: middle;
+  box-sizing: border-box;
+  user-select: none;
+  border: 1px solid transparent;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.status-badge-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* 1. Green (Success) - ~12% fill, calm & high legibility */
+.status-badge-success,
+.status-badge.success {
+  background: rgba(16, 185, 129, 0.12) !important;
+  color: #047857 !important; /* Contrasted emerald for light mode */
+  border-color: rgba(16, 185, 129, 0.2) !important;
+}
+
+[data-theme="dark"] .status-badge-success,
+[data-theme="dark"] .status-badge.success {
+  background: rgba(16, 185, 129, 0.14) !important;
+  color: #34d399 !important; /* Lighter emerald for dark mode */
+  border-color: rgba(16, 185, 129, 0.25) !important;
+}
+
+/* 2. Amber (Warning / Pending) - ~12% fill */
+.status-badge-warning,
+.status-badge.warning {
+  background: rgba(245, 158, 11, 0.12) !important;
+  color: #b45309 !important; /* Deep amber for light mode */
+  border-color: rgba(245, 158, 11, 0.2) !important;
+}
+
+[data-theme="dark"] .status-badge-warning,
+[data-theme="dark"] .status-badge.warning {
+  background: rgba(245, 158, 11, 0.14) !important;
+  color: #fbbf24 !important; /* Lighter amber for dark mode */
+  border-color: rgba(245, 158, 11, 0.25) !important;
+}
+
+/* 3. Red (Danger / Error / Failed) - ~12% fill */
+.status-badge-danger,
+.status-badge.danger {
+  background: rgba(239, 68, 68, 0.12) !important;
+  color: #b91c1c !important; /* Deep red for light mode */
+  border-color: rgba(239, 68, 68, 0.2) !important;
+}
+
+[data-theme="dark"] .status-badge-danger,
+[data-theme="dark"] .status-badge.danger {
+  background: rgba(239, 68, 68, 0.14) !important;
+  color: #f87171 !important; /* Lighter red for dark mode */
+  border-color: rgba(239, 68, 68, 0.25) !important;
+}
+
+/* 4. Gray (Neutral / Inactive / Default) - ~12% fill */
+.status-badge-neutral,
+.status-badge.neutral {
+  background: rgba(100, 116, 139, 0.12) !important;
+  color: #475569 !important; /* Slate gray for light mode */
+  border-color: rgba(100, 116, 139, 0.2) !important;
+}
+
+[data-theme="dark"] .status-badge-neutral,
+[data-theme="dark"] .status-badge.neutral {
+  background: rgba(148, 163, 184, 0.14) !important;
+  color: #cbd5e1 !important; /* Slate light gray for dark mode */
+  border-color: rgba(148, 163, 184, 0.22) !important;
+}
+
+/* Refactor existing legacy badges to adhere to calm 12% fill & compact geometry */
+.bal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  max-height: 22px;
+  padding: 0 9px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  background: rgba(100, 116, 139, 0.12);
+  color: #475569;
+  border: 1px solid rgba(100, 116, 139, 0.18);
+}
+
+.bal-badge.add {
+  background: rgba(16, 185, 129, 0.12) !important;
+  color: #047857 !important;
+  border: 1px solid rgba(16, 185, 129, 0.2) !important;
+}
+
+[data-theme="dark"] .bal-badge.add {
+  background: rgba(16, 185, 129, 0.14) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.25) !important;
+}
+
+.savings-card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  max-height: 22px;
+  padding: 0 9px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  text-transform: none;
+  background: rgba(16, 185, 129, 0.12) !important;
+  color: #047857 !important;
+  border: 1px solid rgba(16, 185, 129, 0.2) !important;
+}
+
+[data-theme="dark"] .savings-card-badge {
+  color: #34d399 !important;
+}
+
+
+
+
+
+
+
+
+/* Accessible Forgot Password Button (Interactive, proper hit area ~44px, zero layout shift) */
+.auth-forgot-wrap {
+  width: 100%;
+  text-align: center;
+  margin-top: 14px;
+}
+
+.auth-forgot-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 10px 16px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif;
+  color: #1c1e21;
+  text-decoration: none;
+  touch-action: manipulation;
+  transition: opacity 0.15s ease, color 0.15s ease;
+  user-select: none;
+}
+
+.auth-forgot-btn:hover {
+  text-decoration: underline;
+  color: #0064e0;
+}
+
+.auth-forgot-btn:active {
+  opacity: 0.7;
+}
+
+/* Mobile Guest Mode Button (Clean, accessible, matches Instagram aesthetic) */
+.insta-guest-btn {
+  width: 100% !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  padding: 0 16px !important;
+  background: transparent !important;
+  border: none !important;
+  color: #4b5563 !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  box-shadow: none !important;
+  transition: all 0.15s ease !important;
+}
+
+.insta-guest-btn:hover {
+  color: #111827 !important;
+  background: rgba(0, 0, 0, 0.03) !important;
+  border-radius: 999px !important;
+}
+
+.insta-guest-btn:active {
+  transform: scale(0.98) !important;
+}
+
+/* Forgot Password Modal & Bottom Sheet */
+.forgot-password-modal-box {
+  max-width: 440px;
+  border-radius: 20px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.forgot-modal-icon-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #eff6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  #modalForgotPassword {
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 16px !important;
+    background: rgba(15, 23, 42, 0.75) !important;
+  }
+  .forgot-password-modal-box {
+    width: 100% !important;
+    max-width: 380px !important;
+    border-radius: 20px !important;
+    margin: auto !important;
+    position: relative !important;
+    background: #ffffff !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35) !important;
+    animation: modalIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+}
