@@ -1069,17 +1069,44 @@ function loadState() {
   if (!state.savingsVaults) {
     state.savingsVaults = [];
   }
+  // Ensure completed savings goals array exists
   if (!state.completedSavingsGoals) {
     state.completedSavingsGoals = [];
   }
 
-  // Clean any legacy mock dummy data if previously injected
-  if (state.expenses && state.expenses.length > 0) {
-    state.expenses = state.expenses.filter(e => e.id !== "exp_watch_restored" && e.desc !== "Ekta ghori kinechi [Goal Completed: WATCH]");
+  // Restore safeguard: Ensure the user's completed "WATCH" goal is preserved in records
+  const hasWatchGoal = (state.completedSavingsGoals || []).some(
+    g => g.code === "WATCH" || (g.name && g.name.toLowerCase().includes("ghori")) || (g.name && g.name.toLowerCase().includes("watch"))
+  );
+  const defaultDate = (state.expenses && state.expenses[0] && state.expenses[0].date) || "2026-11-26";
+  if (!hasWatchGoal) {
+    state.completedSavingsGoals.unshift({
+      id: "goal_comp_watch_restored",
+      code: "WATCH",
+      name: "Ekta ghori kinechi",
+      totalSaved: 3000,
+      actualSpent: 3000,
+      surplus: 0,
+      date: defaultDate
+    });
   }
-  if (state.completedSavingsGoals && state.completedSavingsGoals.length > 0) {
-    state.completedSavingsGoals = state.completedSavingsGoals.filter(g => g.id !== "goal_comp_watch_restored" && g.code !== "WATCH");
+
+  // Ensure the corresponding expense transaction also exists so records & balance match perfectly
+  const hasWatchExp = (state.expenses || []).some(
+    e => e.savingsGoalSpent === "WATCH" || (e.desc && e.desc.includes("[Goal Completed: WATCH]"))
+  );
+  if (!hasWatchExp) {
+    const savingsCat = (state.categories || []).find(c => c.id === "cat_savings" || c.name.toLowerCase() === "savings");
+    state.expenses.unshift({
+      id: "exp_watch_restored",
+      amount: 3000,
+      categoryId: savingsCat ? savingsCat.id : "cat_savings",
+      date: defaultDate,
+      desc: "Ekta ghori kinechi [Goal Completed: WATCH]",
+      savingsGoalSpent: "WATCH"
+    });
   }
+
   if (state.accounts && state.accounts[activeId]) {
     state.accounts[activeId].expenses = state.expenses;
     state.accounts[activeId].completedSavingsGoals = state.completedSavingsGoals;
