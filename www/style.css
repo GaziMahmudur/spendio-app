@@ -5365,9 +5365,18 @@ body.auth-open .pages-container {
   }
 
   .rev-divider,
-  .rev-secondary-actions,
   .rev-personal-hint-wrap {
     display: none !important;
+  }
+
+  .rev-secondary-actions {
+    display: flex !important;
+    width: 100% !important;
+    margin-top: 14px !important;
+  }
+
+  .rev-secondary-actions .btn-auth-guest {
+    display: none !important; /* Mobile already has insta-guest-btn at bottom */
   }
 
   /* Rule 6: Bottom Section (anchored near bottom with ~24px–32px bottom inset) */
