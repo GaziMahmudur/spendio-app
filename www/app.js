@@ -2850,8 +2850,15 @@ function exportJSON() {
   const incSum = document.getElementById("exportSummary").checked;
 
   const data = {
+    _format: "spendio_backup",
+    _version: "2.0",
+    _exportedAt: new Date().toISOString(),
     exportDate: new Date().toISOString(),
     currentBalance: computeCurrentBalance(),
+    // Always include categories and savings vaults so import works fully
+    categories: state.categories || [],
+    savingsVaults: state.savingsVaults || [],
+    currency: state.currency || "taka",
   };
 
   if (incExp)
